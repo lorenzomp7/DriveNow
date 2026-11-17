@@ -41,9 +41,8 @@ Clic su un'auto per seguirla, rotella per lo zoom, trascina per spostarti.
 
 ### Con le reti di Traffc_light_control
 
-DriveNow parte dalla repository
-[lorenzomp7/Traffc_light_control](https://github.com/lorenzomp7/Traffc_light_control):
-legge le stesse reti SUMO (`.net.xml`, copiate in `data/sumo/`) e può far
+DriveNow è nato dalla repository Traffc_light_control (ora dismessa): ne usa
+le reti SUMO a griglia 1×1, 2×2, 3×3 e 4×4 (`.net.xml`, copiate in `data/sumo/`) e può far
 girare il traffico direttamente in SUMO tramite TraCI.
 
 ```bash
@@ -410,7 +409,7 @@ drivenow/
   hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
-data/sumo/        reti della repository Traffc_light_control
+data/sumo/        reti a griglia 1×1–4×4 (dalla vecchia Traffc_light_control)
 data/hamburg/     scenario reale di Amburgo (rete, semafori registrati, traffico)
 tools/            costruzione dello scenario di Amburgo, esperimenti, registrazione delle pagine
 tests/            pytest (i test SUMO si saltano se SUMO non è installato)
