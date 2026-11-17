@@ -48,7 +48,11 @@ def main():
                     expect(page.locator('[data-speed="2"]')).to_have_class('on')
                     for selector, value, payload in [('#pen', '75', {'penetration': .75}), ('#dem', '400', {'demand': 400})]:
                         with page.expect_response(lambda r: '/api/settings' in r.url and r.request.method == 'POST' and r.request.post_data_json == payload) as response:
-                            page.locator(selector).fill(value)
+                            page.locator(selector).evaluate("""(el, value) => {
+                                el.value = value;
+                                el.dispatchEvent(new Event('input', {bubbles: true}));
+                                el.dispatchEvent(new Event('change', {bubbles: true}));
+                            }""", value)
                         assert response.value.ok
                         assert response.value.request.post_data_json == payload
                     with runner.lock:

@@ -35,4 +35,4 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r requirements-libsignal.txt pytest==9.2.0
       - run: python -m pytest tests/test_libsignal.py -q
-      - run: python tools/libsignal_smoke.py --libsignal-root .ci-libsignal
+      - run: python tools/libsignal_smoke.py --libsignal-root .ci-libsignal --steps 900 --learn-signals

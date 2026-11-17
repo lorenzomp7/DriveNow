@@ -89,3 +89,11 @@ un altro modello obsoleto e può mascherare agenti falliti. Non modifica il
 pacchetto installato. Un aggiornamento upstream richiede di verificare anche
 questi punti di integrazione. L'ambiente, i rapporti e le chiavi restano esclusi
 dal versionamento; nessuna dipendenza AI entra nel runtime del server.
+
+Il flusso unificato `python tools/devtools.py setup browser` e
+`python tools/devtools.py run browser` evita l'attivazione manuale dell'ambiente.
+La CI usa Chrome già installato nel runner tramite `DRIVENOW_CHROMIUM`, evitando
+il download Chromium che bloccava le verifiche. Gli slider vengono aggiornati
+con gli eventi `input` e `change`: non si usa `fill()` sui controlli `range`.
+Vibetest può usare lo stesso eseguibile e dispone anche di un server MCP:
+[avvio operativo](operational.md).

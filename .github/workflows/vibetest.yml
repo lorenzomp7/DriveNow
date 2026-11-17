@@ -18,7 +18,7 @@ permissions:
   contents: read
 jobs:
   install-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -26,5 +26,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements-vibetest.txt
-      - run: python -m playwright install chromium
+      - name: Use installed Chrome
+        run: |
+          chrome=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          echo "DRIVENOW_CHROMIUM=$chrome" >> "$GITHUB_ENV"
       - run: python tools/vibetest_drive.py --check

@@ -51,3 +51,21 @@ def test_success_preserves_findings_without_claiming_test_pass(monkeypatch):
     assert report['review_required'] is True
     assert report['raw']['results'][0]['result'] == 'Zoom button is broken'
     assert 'test-only' not in str(report)
+
+
+def test_real_backend_close_contract_is_restored_after_run(monkeypatch):
+    monkeypatch.setenv('GOOGLE_API_KEY', 'test-only')
+    backend = backend_with_result([{'status':'success', 'result':'Checked demo'}])
+    class Session:
+        killed = False
+        async def kill(self):
+            Session.killed = True
+    backend.BrowserSession = Session
+    original_pool = backend.run_pool
+    async def pool(*args, **kwargs):
+        await backend.BrowserSession().aclose()
+        return await original_pool(*args, **kwargs)
+    backend.run_pool = pool
+    result = asyncio.run(run_test('http://127.0.0.1:8000', 'chosen-model', 30, backend))
+    assert result['execution_status'] == 'completed'
+    assert Session.killed and not hasattr(Session, 'aclose')

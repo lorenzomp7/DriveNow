@@ -100,3 +100,12 @@ Nessun sorgente o dataset di LibSignal viene redistribuito: restano nel checkout
 esterno con le proprie condizioni d'uso e attribuzioni. Il commit fissato e i
 punti di collegamento (`World.net`, `World.eng`, `World.interval`, `step/reset`)
 vanno ricontrollati prima di aggiornare upstream.
+
+### Previsione attiva dai segnali osservati
+
+È disponibile anche `LibSignalAdvisor(world, learn_signals=True)`: campiona gli
+stati effettivi e applica il previsore ciclico DriveNow ai soli dati già
+osservati. Non richiede un callback esterno, si astiene durante il riscaldamento
+e produce finestre probabilistiche, non impegni del controllore. È mutuamente
+esclusivo con `windows_fn`. La prova estesa si avvia con
+`python tools/devtools.py run libsignal`; vedere [il flusso operativo](operational.md).

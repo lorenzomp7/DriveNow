@@ -74,3 +74,13 @@ A configured client can also use the user's explicitly enabled DriveNow tab.
 Operate only on the intended DriveNow page; close only tabs created for this
 work. The disposable direct-CDP check does not prove the user's extension or
 personal profile is connected. No AI agent is launched by this check.
+
+## Executable toolchain
+
+Use `python tools/devtools.py setup [tool...]` to install project-local tools,
+`status` to see missing prerequisites, and `run TOOL` to execute them. Project
+MCP entry points are in `.mcp.json`; `mcp-config` emits absolute paths for other
+clients. See `docs/operational.md`. A status report is not an executed test.
+Vibetest model calls require the user's Google credential; never fabricate it
+or substitute a passing mock for a real AI run. LibSignal's learned forecast
+is opt-in and probabilistic; do not describe it as a signal commitment.

@@ -460,3 +460,14 @@ test e demo HTTP dentro il container. Richiede un motore Docker disponibile.
 L'[integrazione Playwriter](docs/playwriter.md) esegue controlli desktop/mobile
 attraverso il server MCP reale, salva screenshot e genera la configurazione
 per collegare il proprio client al browser.
+
+## Installare e avviare tutti gli strumenti
+
+```bash
+python tools/devtools.py setup
+python tools/devtools.py status
+```
+
+Un solo comando di avvio per ogni strumento, ad esempio
+`python tools/devtools.py run playwriter`. La configurazione MCP di progetto
+è in `.mcp.json`; [comandi, attivazione e prerequisiti](docs/operational.md).

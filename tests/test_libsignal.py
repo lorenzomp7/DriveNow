@@ -99,3 +99,25 @@ def test_duplicate_tick_is_rejected_and_coasting_is_gradual():
     bridge.world.eng.simulation.getTime = lambda: 11.0
     bridge.step(apply=True)
     assert vehicles.commands[-1] == ('car', -1)
+
+
+def test_observed_source_learns_only_past_protected_greens():
+    from drivenow.libsignal import ObservedSignalSource
+    light = SimpleNamespace(getIDList=lambda:['tls'],
+        getControlledLinks=lambda _: [(('a_0','b_0',''),)],
+        getRedYellowGreenState=lambda _: 'G')
+    engine = SimpleNamespace(trafficlight=light, lane=SimpleNamespace(getEdgeID=lambda lane: lane[:-2]))
+    source = ObservedSignalSource(engine)
+    source.observe(0)
+    assert source('a','b',0) is None  # not enough past cycles
+    for t in range(1, 721):
+        light.getRedYellowGreenState = lambda _, t=t: 'G' if t % 60 < 25 else 'r'
+        source.observe(t)
+    windows, label = source('a','b',720)
+    assert windows and label.startswith('learned:')
+    assert source('a','b',721) is None  # do not reuse a stale forecast at a new time
+    for t in range(721, 750):
+        light.getRedYellowGreenState = lambda _: 'y'
+        source.observe(t)
+    got, _ = source('a','b',749)
+    assert not any(a <= 0 < b for a,b in got)  # yellow is never observed as green
