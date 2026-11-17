@@ -259,6 +259,50 @@ bottiglia quindi non è la previsione, che è quasi buona quanto l'oracolo, ma
 la **copertura**: dei 35 impianti semaforici della zona simulata, solo 9
 hanno dati reali. Per questo c'è il secondo scenario.
 
+### Semafori senza dati: imparati dalle auto
+
+Molti semafori non pubblicano nulla. Le auto DriveNow però li vedono ogni
+giorno, e da quello che fanno si ricava il loro orario
+(`drivenow/probe.py`):
+
+- un'auto ferma alla linea che riparte: il verde è appena cominciato;
+- un'auto che passa la linea: è verde;
+- un'auto ferma alla linea: è rosso.
+
+Dagli inizi del verde si trova la durata del ciclo (quella per cui cadono
+tutti nello stesso punto del ciclo); la fine del verde sta tra gli ultimi
+passaggi e le prime auto ferme al rosso. Se le osservazioni non stanno in un
+ciclo fisso, il semaforo resta senza previsione.
+
+Willy-Brandt-Straße, dopo 40 minuti di ora di punta con il 100% di auto
+DriveNow: 48 dei 98 accessi semaforici senza dati di Amburgo sono stati
+imparati (gli altri hanno visto troppo poche auto). Su questi la previsione è
+giusta il 93,5% delle volte, da 0 a 60 s in avanti: un verde promesso che non
+arriva nel 2,7% dei casi, un verde reale non previsto nel 3,8%. È quanto la
+previsione costruita sui dati ufficiali.
+
+Effetto in simulazione, un'ora, previsione e consiglio sulle precedenze
+attivi in entrambi i casi:
+
+| Scenario | Semafori senza dati | Fermate | Frenate | Energia nei freni | Tempo |
+|---|---|---|---|---|---|
+| Willy-Brandt-Straße (media di 2 semi) | nessun consiglio | 3,22 | 10,59 | 288 kJ | 333 s |
+| | imparati dalle auto | 3,15 | 10,11 | 249 kJ | 349 s |
+| Gärtnerstraße (metà traffico) | nessun consiglio | 1,03 | 2,87 | 118 kJ | 184 s |
+| | imparati dalle auto | 0,97 | 2,80 | 107 kJ | 184 s |
+
+L'energia buttata nei freni cala del 14% a Willy-Brandt-Straße (−21% per chi
+percorre l'asse) e del 9% a Gärtnerstraße; le fermate del 2–6%. A
+Willy-Brandt-Straße il tempo di viaggio sale del 5%: la previsione è
+prudente e chi la segue a volte rallenta per un verde che sarebbe durato.
+La misura è anche pessimista: le auto partono senza sapere nulla e nei primi
+10–15 minuti nessun semaforo è ancora imparato, mentre in un servizio reale
+l'orario imparato resta da un giorno all'altro.
+
+Rispetto a nessun consiglio (tabella più sopra), a Willy-Brandt-Straße
+DriveNow ora toglie l'8% delle fermate e il 36% dell'energia nei freni, per
+il 6% di tempo in più.
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
