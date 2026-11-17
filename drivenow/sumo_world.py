@@ -69,6 +69,7 @@ class SumoWorld:
         self.stats = {True: GroupStats(), False: GroupStats()}
         self._advice_clock = 0.0
         self._xy: Dict[str, tuple] = {}
+        self._internal: set = set()  # vehicles crossing a junction right now
 
         self._tmp = tempfile.mkdtemp(prefix="drivenow_")
         self.routes = self._write_routes(demand, duration)
@@ -138,6 +139,7 @@ class SumoWorld:
         for vid in c.simulation.getArrivedIDList():
             veh = self.vehicles.pop(vid, None)
             self._xy.pop(vid, None)
+            self._internal.discard(vid)
             if veh is not None:
                 self.stats[veh.equipped].add(veh, self.t)
 
@@ -150,6 +152,10 @@ class SumoWorld:
             veh.idx = max(d[tc.VAR_ROUTE_INDEX], 0)
             veh.v = d[tc.VAR_SPEED]
             on_internal = road.startswith(":") or road not in self.net.edges
+            if on_internal:
+                self._internal.add(vid)
+            else:
+                self._internal.discard(vid)
             edge = self.net.edges[veh.edge]
             veh.pos = edge.length if on_internal else min(d[tc.VAR_LANEPOSITION], edge.length)
             x, y = d[tc.VAR_POSITION]
@@ -170,9 +176,14 @@ class SumoWorld:
         for vid, veh in self.vehicles.items():
             if not veh.equipped or veh.advice is None or veh.advice.target is None:
                 continue
+            to_line = self.net.edges[veh.edge].length - veh.pos
+            if vid in self._internal or to_line < 10.0:
+                # Inside or right before the junction SUMO's own driver decides:
+                # never hold a car still on a junction with an old target.
+                self.conn.vehicle.setSpeed(vid, -1)
+                continue
             target = veh.advice.target
             if veh.advice.kind == "stop" and veh.next_control is not None:
-                to_line = self.net.edges[veh.edge].length - veh.pos
                 target = min(target, math.sqrt(2 * coast * max(to_line - 2.0, 0.0)))
             if veh.advice.kind == "free":
                 self.conn.vehicle.setSpeed(vid, -1)

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DriveNow · Mappa velocità</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"></span>
+    <div>
+      <h1>DriveNow</h1>
+      <p class="sub">La velocità giusta per non frenare</p>
+    </div>
+  </div>
+  <div class="meta">
+    <span id="net-name">…</span>
+    <span class="sep">·</span>
+    <span id="clock">00:00</span>
+    <span id="live" class="live" title="Connessione in tempo reale">LIVE</span>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="map-wrap">
+    <canvas id="map" aria-label="Mappa del traffico con le fasce di velocità"></canvas>
+    <div class="map-tools">
+      <button id="btn-fit" title="Inquadra tutta la rete">Inquadra</button>
+      <button id="btn-follow" class="toggle" aria-pressed="true" title="La mappa segue il veicolo scelto">Segui veicolo</button>
+      <button id="btn-next" title="Scegli un altro veicolo DriveNow">Altro veicolo</button>
+    </div>
+    <div class="legend" aria-label="Legenda">
+      <div><i class="sw go"></i>Arrivi col verde al limite</div>
+      <div><i class="sw slow"></i>Rallenta: arrivi col verde</div>
+      <div><i class="sw stop"></i>Rosso inevitabile</div>
+      <div><i class="sw cap"></i>Rotonda o precedenza: alza il piede</div>
+      <div><i class="car dn"></i>Auto DriveNow <i class="car nn"></i>Auto normale</div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <section class="card hud" id="hud">
+      <div class="hud-head">
+        <h2>Il tuo veicolo</h2>
+        <span id="veh-tag" class="tag">—</span>
+      </div>
+      <div class="hud-main">
+        <svg id="gauge" viewBox="0 0 220 130" aria-hidden="true">
+          <path class="g-track" d="M20 115 A90 90 0 0 1 200 115"/>
+          <path id="g-band" class="g-band" d=""/>
+          <line id="g-limit" class="g-limit" x1="0" y1="0" x2="0" y2="0"/>
+          <line id="g-needle" class="g-needle" x1="110" y1="115" x2="110" y2="30"/>
+          <circle cx="110" cy="115" r="5" class="g-hub"/>
+        </svg>
+        <div class="readout">
+          <div class="big"><span id="target">—</span><small>km/h</small></div>
+          <div id="kind" class="kind">Scegli un veicolo sulla mappa</div>
+        </div>
+      </div>
+      <p id="advice" class="advice">&nbsp;</p>
+      <dl class="facts">
+        <div><dt>Fascia senza frenare</dt><dd id="band">—</dd></div>
+        <div><dt>Velocità attuale</dt><dd id="speed">—</dd></div>
+        <div><dt>Prossimo</dt><dd id="next">—</dd></div>
+        <div><dt>Semaforo</dt><dd id="light">—</dd></div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Confronto</h2>
+      <p class="hint">Media per viaggio completato, da quando è partita la simulazione.</p>
+      <table class="stats">
+        <thead><tr><th></th><th class="dn">DriveNow</th><th>Normali</th></tr></thead>
+        <tbody>
+          <tr><th>Fermate</th><td id="s-stops-d">—</td><td id="s-stops-n">—</td></tr>
+          <tr><th>Frenate</th><td id="s-brakes-d">—</td><td id="s-brakes-n">—</td></tr>
+          <tr><th>Energia nei freni</th><td id="s-energy-d">—</td><td id="s-energy-n">—</td></tr>
+          <tr><th>Tempo di viaggio</th><td id="s-time-d">—</td><td id="s-time-n">—</td></tr>
+          <tr><th>Viaggi</th><td id="s-trips-d">—</td><td id="s-trips-n">—</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Simulazione</h2>
+      <div class="row">
+        <span>Velocità</span>
+        <div class="seg" id="speed-seg" role="group" aria-label="Velocità della simulazione">
+          <button data-speed="1">1×</button><button data-speed="2">2×</button>
+          <button data-speed="5">5×</button><button data-speed="10">10×</button>
+        </div>
+      </div>
+      <label class="row slider">
+        <span>Auto con DriveNow <b id="pen-val">50%</b></span>
+        <input id="pen" type="range" min="0" max="100" step="5" value="50">
+      </label>
+      <label class="row slider" id="demand-row">
+        <span>Traffico <b id="dem-val">240</b> auto/h per ingresso</span>
+        <input id="dem" type="range" min="60" max="600" step="20" value="240">
+      </label>
+    </section>
+  </aside>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
