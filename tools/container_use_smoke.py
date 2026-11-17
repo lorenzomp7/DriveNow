@@ -61,6 +61,15 @@ async def exercise(source):
                 subprocess.run([str(BINARY), 'delete', env], cwd=source, check=True, timeout=120)
 
 
+def prepare_source(root, source):
+    subprocess.run(['git', 'clone', '--no-hardlinks', str(root), str(source)], check=True)
+    # v0.4.2 accepts a local repository with no origin, but rejects an origin
+    # whose URL is a plain filesystem path (as produced by this local clone).
+    subprocess.run(['git', 'remote', 'remove', 'origin'], cwd=source, check=True)
+    subprocess.run(['git', 'config', 'user.name', 'DriveNow container check'], cwd=source, check=True)
+    subprocess.run(['git', 'config', 'user.email', 'container-check@example.invalid'], cwd=source, check=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.parse_args()
@@ -70,9 +79,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='drivenow_container_') as directory:
         source = Path(directory) / 'source'
         # This clone receives only the committed source, with no host secrets.
-        subprocess.run(['git', 'clone', '--no-hardlinks', str(ROOT), str(source)], check=True)
-        subprocess.run(['git', 'config', 'user.name', 'DriveNow container check'], cwd=source, check=True)
-        subprocess.run(['git', 'config', 'user.email', 'container-check@example.invalid'], cwd=source, check=True)
+        prepare_source(ROOT, source)
         asyncio.run(asyncio.wait_for(exercise(source), timeout=900))
     return 0
 
