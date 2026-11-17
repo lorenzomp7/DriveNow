@@ -434,3 +434,10 @@ oltre ai test Python del motore. Comandi e procedura facoltativa con
 La repo include le procedure di sviluppo di **agent-skills**, collegate da
 [`AGENTS.md`](AGENTS.md) e adattate al flusso di lavoro DriveNow tramite le
 regole del progetto. Vedi la [guida](docs/agent-skills.md).
+
+## Esperimenti con LibSignal
+
+Il [ponte SUMO per LibSignal](docs/libsignal.md) legge i veicoli dal suo mondo
+simulato e può applicare i consigli DriveNow mentre LibSignal controlla i
+semafori. Include una verifica eseguibile con il sorgente upstream reale;
+le finestre di verde devono essere fornite esplicitamente dal controllore.
