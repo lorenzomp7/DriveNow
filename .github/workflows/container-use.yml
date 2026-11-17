@@ -1,0 +1,35 @@
+name: Container-use integration
+on:
+  push:
+    branches: [main, main_chatgpt]
+    paths:
+      - '.container-use/**'
+      - 'tools/container_use*.py'
+      - 'tools/container_demo_check.py'
+      - 'tests/test_container_use.py'
+      - 'requirements-container-use.txt'
+      - '.github/workflows/container-use.yml'
+  pull_request:
+    paths:
+      - '.container-use/**'
+      - 'tools/container_use*.py'
+      - 'tools/container_demo_check.py'
+      - 'tests/test_container_use.py'
+      - 'requirements-container-use.txt'
+      - '.github/workflows/container-use.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-container-use.txt
+      - run: python tools/container_use.py install
+      - run: python tools/container_use.py doctor
+      - run: python tools/container_use_smoke.py

@@ -5,3 +5,5 @@ __pycache__/
 test-results/
 .venv-libsignal/
 .venv-darts/
+.tools/
+.venv-container-use/

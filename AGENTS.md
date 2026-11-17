@@ -55,3 +55,13 @@ Report checks actually executed, failures, skips and environment limitations.
 Do not describe configured checks as passed checks or a prepared integration as
 an active external service. The completion report should state what changed,
 what was verified and any remaining setup that depends on user credentials.
+
+## Optional isolated development
+
+Container-use is configured in `.container-use/environment.json`. When this
+MCP server is connected and Docker is available, it can provide a separate
+container and Git ref for the requested change. See `docs/container-use.md`.
+This configuration does not authorize extra agents or automatic merges.
+Use `main_chatgpt` as the starting ref, preserve unrelated work, and inspect the
+environment diff before applying it. Run the same DriveNow checks inside it.
+Do not claim isolation when commands actually ran directly on the host.

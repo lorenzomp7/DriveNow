@@ -448,3 +448,9 @@ L'[esperimento offline Darts](docs/darts.md) confronta NaiveSeasonal con il
 previsore DriveNow sui dati di Amburgo, usando solo il passato per prevedere.
 Include un rapporto riproducibile e non modifica automaticamente il modello
 usato per i consigli alle auto.
+
+## Sviluppo in container isolati
+
+[Container-use](docs/container-use.md) dispone di configurazione Python per
+DriveNow, installer verificato, avvio MCP e una prova automatica che esegue
+test e demo HTTP dentro il container. Richiede un motore Docker disponibile.
