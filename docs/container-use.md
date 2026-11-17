@@ -12,7 +12,7 @@ ma non è fissata a un digest immutabile.
 
 ## Installazione locale
 
-Serve Git e un **motore Docker avviato**. Su Windows la strada consigliata è
+Serve Git con cronologia completa (checkout non shallow) e un **motore Docker avviato**. Su Windows la strada consigliata è
 WSL2 con l'integrazione Docker Desktop abilitata; tenere repo, Python e client
 MCP nello stesso ambiente WSL. Su Linux/macOS usare il Docker locale.
 Il codice dell'installer gestisce anche i pacchetti Windows nativi, ma questo

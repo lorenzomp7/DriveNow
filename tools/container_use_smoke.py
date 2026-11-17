@@ -62,6 +62,9 @@ async def exercise(source):
 
 
 def prepare_source(root, source):
+    shallow = subprocess.check_output(['git', 'rev-parse', '--is-shallow-repository'], cwd=root, text=True).strip()
+    if shallow == 'true':
+        raise ValueError('Container-use requires full Git history; fetch --unshallow before this check')
     subprocess.run(['git', 'clone', '--no-hardlinks', str(root), str(source)], check=True)
     # v0.4.2 accepts a local repository with no origin, but rejects an origin
     # whose URL is a plain filesystem path (as produced by this local clone).
