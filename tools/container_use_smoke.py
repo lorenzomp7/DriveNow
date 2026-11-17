@@ -33,6 +33,12 @@ async def exercise(source):
     env = {key: value for key, value in os.environ.items()
            if key in {'DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_CONFIG', 'DOCKER_TLS_VERIFY',
                       'DOCKER_CERT_PATH', '_EXPERIMENTAL_DAGGER_CLI_BIN'}}
+    # container-use creates a separate bare repository, so the disposable
+    # clone's local identity settings do not reach its worktree commits.
+    env.update({'GIT_AUTHOR_NAME': 'DriveNow container check',
+                'GIT_AUTHOR_EMAIL': 'container-check@example.invalid',
+                'GIT_COMMITTER_NAME': 'DriveNow container check',
+                'GIT_COMMITTER_EMAIL': 'container-check@example.invalid'})
     if os.name != 'nt':
         env['CONTAINER_USE_STDERR_FILE'] = '/dev/stderr'
     params = StdioServerParameters(command=str(BINARY), args=['stdio'], cwd=str(source), env=env)
