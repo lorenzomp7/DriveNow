@@ -37,6 +37,7 @@ async function call(name, arguments_) {
   return text;
 }
 async function execute(code, check) {
+  if (typeof code === 'function') code = `await (${code.toString()})()`;
   const text = await call('execute', {code, timeout:45000});
   if (check) {checks.push(check); console.log(`PASS: ${check}`);}
   return text;
@@ -51,15 +52,15 @@ try {
   if (!endpoint) throw new Error(`Chrome debugging endpoint unavailable: ${browserError}`);
   await client.connect(transport);
   await call('session_new', {direct:endpoint});
-  await execute('state.page = await context.newPage(); state.errors = []; state.page.on("pageerror", e => state.errors.push(String(e)))');
+  await execute(async () => { state.page = await context.newPage(); state.errors = []; state.page.on("pageerror", e => state.errors.push(String(e))) });
   for (const [width,height] of [[1440,900],[390,844]]) {
     const label = `${width}x${height}`;
     await execute(`await state.page.setViewportSize({width:${width},height:${height}}); await state.page.goto(${JSON.stringify(url)}, {waitUntil:"domcontentloaded"}); await state.page.waitForFunction(() => document.querySelector("#live").classList.contains("on") && document.querySelector("#clock").textContent !== "00:00", {timeout:15000})`, `live demo ${label}`);
-    await execute('await state.page.waitForFunction(() => document.querySelector("#veh-tag").textContent === "Segue DriveNow" && document.querySelector("#target").textContent !== "—"); const box = await state.page.locator("#map").boundingBox(); if (!box || box.width < 100 || box.height < 100) throw new Error("Map is not visible")', `map and vehicle advice ${label}`);
-    await execute('await state.page.locator("#btn-fit").click(); if (await state.page.locator("#btn-follow").getAttribute("aria-pressed") !== "false") throw new Error("Fit did not stop following"); await state.page.locator("#btn-follow").click(); if (await state.page.locator("#btn-follow").getAttribute("aria-pressed") !== "true") throw new Error("Follow toggle failed"); state.oldSelected = await state.page.evaluate(() => selected); await state.page.locator("#btn-next").click(); await state.page.waitForFunction(old => selected !== old, state.oldSelected)', `vehicle selection and follow ${label}`);
-    await execute('const response = state.page.waitForResponse(r => r.url().endsWith("/api/settings") && r.request().method() === "POST"); await state.page.locator("[data-speed=\"2\"]").click(); if (!(await response).ok()) throw new Error("Settings request failed"); await state.page.waitForFunction(() => document.querySelector("#speed-seg .on")?.dataset.speed === "2")', `simulation speed ${label}`);
-    await execute('state.nextPen = Number(await state.page.locator("#pen").inputValue()) > 0 ? 0 : 100; const response = state.page.waitForResponse(r => r.url().endsWith("/api/settings") && r.request().postDataJSON()?.penetration === state.nextPen/100); await state.page.locator("#pen").focus(); await state.page.locator("#pen").press(state.nextPen === 0 ? "Home" : "End"); if (!(await response).ok()) throw new Error("Penetration setting failed")', `penetration slider ${label}`);
-    await execute('state.oldZoom = await state.page.evaluate(() => view.s); await state.page.locator("#map").hover(); await state.page.mouse.wheel(0,-200); await state.page.waitForFunction(old => view.s !== old, state.oldZoom); if (state.errors.length) throw new Error(state.errors.join("; "))', `zoom and JavaScript errors ${label}`);
+    await execute(async () => { await state.page.waitForFunction(() => document.querySelector("#veh-tag").textContent === "Segue DriveNow" && document.querySelector("#target").textContent !== "—"); const box = await state.page.locator("#map").boundingBox(); if (!box || box.width < 100 || box.height < 100) throw new Error("Map is not visible") }, `map and vehicle advice ${label}`);
+    await execute(async () => { await state.page.locator("#btn-fit").click(); if (await state.page.locator("#btn-follow").getAttribute("aria-pressed") !== "false") throw new Error("Fit did not stop following"); await state.page.locator("#btn-follow").click(); if (await state.page.locator("#btn-follow").getAttribute("aria-pressed") !== "true") throw new Error("Follow toggle failed"); state.oldSelected = await state.page.evaluate(() => selected); await state.page.locator("#btn-next").click(); await state.page.waitForFunction(old => selected !== old, state.oldSelected) }, `vehicle selection and follow ${label}`);
+    await execute(async () => { const response = state.page.waitForResponse(r => r.url().endsWith("/api/settings") && r.request().method() === "POST"); await state.page.locator("#speed-seg button").nth(1).click(); if (!(await response).ok()) throw new Error("Settings request failed"); await state.page.waitForFunction(() => document.querySelector("#speed-seg .on")?.dataset.speed === "2") }, `simulation speed ${label}`);
+    await execute(async () => { state.nextPen = Number(await state.page.locator("#pen").inputValue()) > 0 ? 0 : 100; const response = state.page.waitForResponse(r => r.url().endsWith("/api/settings") && r.request().postDataJSON()?.penetration === state.nextPen/100); await state.page.locator("#pen").focus(); await state.page.locator("#pen").press(state.nextPen === 0 ? "Home" : "End"); if (!(await response).ok()) throw new Error("Penetration setting failed") }, `penetration slider ${label}`);
+    await execute(async () => { state.oldZoom = await state.page.evaluate(() => view.s); await state.page.locator("#map").hover(); await state.page.mouse.wheel(0,-200); await state.page.waitForFunction(old => view.s !== old, state.oldZoom); if (state.errors.length) throw new Error(state.errors.join("; ")) }, `zoom and JavaScript errors ${label}`);
     await execute(`await state.page.screenshot({path:${JSON.stringify(path.join(output,`${label}.png`))}, fullPage:true})`);
   }
   await call('session_delete', {closeTabs:true});
