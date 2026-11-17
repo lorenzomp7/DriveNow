@@ -303,6 +303,41 @@ Rispetto a nessun consiglio (tabella più sopra), a Willy-Brandt-Straße
 DriveNow ora toglie l'8% delle fermate e il 36% dell'energia nei freni, per
 il 6% di tempo in più.
 
+### Code e incroci "precedenza a destra"
+
+Due cause di fermata alle precedenze, sull'asse principale:
+
+- **La coda del semaforo successivo che arriva fino all'incrocio.** La coda
+  ora si conta lungo tutto il percorso fino al semaforo, non solo sul suo
+  tratto d'accesso. E se davanti c'è una coda ferma senza un semaforo noto
+  dietro (un semaforo senza dati, un incrocio intasato), si lascia scorrere
+  l'auto fino alla fine della coda invece di frenare lì.
+- **Gli incroci senza strada principale.** OpenStreetMap li segna come
+  "precedenza a destra" (35 a Willy-Brandt-Straße); prima erano trattati
+  come se nessuno dovesse dare precedenza. Ora ogni accesso dà precedenza a
+  chi arriva da destra, con lo stesso consiglio sui varchi.
+
+| Willy-Brandt-Straße | Fermate | Frenate | Energia nei freni | Tempo | Viaggi finiti |
+|---|---|---|---|---|---|
+| Prima (media di 2 semi) | 3,15 | 10,11 | 249 kJ | 349 s | 2.931 |
+| Con code e precedenza a destra | 3,04 | 9,54 | 221 kJ | 337 s | 2.877 |
+
+L'energia nei freni cala di un altro 11%, le fermate del 4% e anche il
+tempo di viaggio scende del 4%. Le due parti contano in modo diverso: la
+precedenza a destra da sola accorcia i tempi (−2,5%) senza cambiare
+l'energia; il conteggio delle code toglie il 12% dell'energia. Un limite: le
+auto finite nell'ora sono il 2% in meno, quindi qualche auto lenta in più
+resta in rete alla fine e il tempo medio è un po' ottimista. A Gärtnerstraße,
+che ha poche code di questo tipo, l'energia cala del 5% e il resto non
+cambia.
+
+Il modello non conosce le corsie: un'auto ferma nella corsia di svolta può
+far rallentare chi va dritto. Nonostante questo il bilancio resta positivo.
+
+Riassunto, Willy-Brandt-Straße all'ora di punta, 0% contro 100% di auto
+DriveNow: fermate 3,44 → 3,04 (−12%), energia nei freni 387 → 221 kJ (−43%),
+tempo di viaggio 329 → 337 s (+2%).
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
