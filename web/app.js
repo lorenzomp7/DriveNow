@@ -12,7 +12,7 @@ const $ = (id) => document.getElementById(id);
 let NET = null;
 const edges = new Map();
 const nodes = new Map();
-let frame = null, prevFrame = null, frameAt = 0;
+let frame = null, prevFrame = null, frameAt = 0, frameDur = 200;
 let field = {};
 let selected = null;
 let follow = true;
@@ -300,7 +300,7 @@ function draw() {
 function interpolated() {
   if (!frame) return [];
   if (!prevFrame) return frame.vehicles;
-  const f = Math.min((performance.now() - frameAt) / 200, 1);
+  const f = Math.min((performance.now() - frameAt) / frameDur, 1);
   const prev = new Map(prevFrame.vehicles.map((v) => [v[0], v]));
   return frame.vehicles.map((v) => {
     const p = prev.get(v[0]);
@@ -414,29 +414,80 @@ function updateMeta() {
 }
 
 // ---------------------------------------------------------------- data
-async function start() {
-  resize();
-  window.addEventListener("resize", resize);
-  NET = await (await fetch("/api/network")).json();
+function loadNetwork(net) {
+  NET = net;
   for (const n of NET.nodes) nodes.set(n.id, n);
   for (const e of NET.edges) { prepEdge(e); edges.set(e.id, e); }
   $("net-name").textContent = NET.name;
   fit();
   requestAnimationFrame(draw);
+}
 
+function showFrame(f) {
+  prevFrame = frame;
+  frame = f;
+  frameAt = performance.now();
+  if (selected === null) {
+    pickEquipped(false);
+    if (selected !== null) view.s = Math.max(view.s, 1.4);
+  }
+  updateHud(); updateStats(); updateMeta();
+}
+
+// Live: frames from the Python server.
+async function startLive() {
+  loadNetwork(await (await fetch("/api/network")).json());
   const es = new EventSource("/api/stream");
   es.onopen = () => $("live").classList.add("on");
   es.onerror = () => $("live").classList.remove("on");
-  es.addEventListener("frame", (ev) => {
-    prevFrame = frame;
-    frame = JSON.parse(ev.data);
-    frameAt = performance.now();
-    if (selected === null) {
-      pickEquipped(false);
-      if (selected !== null) view.s = Math.max(view.s, 1.4);
-    }
-    updateHud(); updateStats(); updateMeta();
-  });
+  es.addEventListener("frame", (ev) => showFrame(JSON.parse(ev.data)));
   es.addEventListener("field", (ev) => { field = JSON.parse(ev.data).field; });
+}
+
+// Replay: a recording made by tools/record_replay.py, played back in a loop.
+async function startReplay(url) {
+  const data = await (await fetch(url)).json();
+  loadNetwork(data.network);
+  const fields = new Map(data.fields);
+  const stepMs = data.dt * 1000;
+  let i = 0, speed = 1, acc = 0, last = performance.now();
+  const live = $("live");
+  live.textContent = "REPLAY"; live.classList.add("on");
+  live.title = "Registrazione della simulazione, riprodotta in ciclo";
+  $("replay-note").hidden = false;
+  $("replay-note").textContent = data.note;
+  for (const id of ["pen-row", "demand-row"]) $(id).hidden = true;
+  for (const b of document.querySelectorAll("#speed-seg button")) {
+    b.onclick = () => { speed = Number(b.dataset.speed); };
+  }
+  const tick = (now) => {
+    acc += (now - last) * speed;
+    last = now;
+    let next = null;
+    while (acc >= stepMs) {
+      acc -= stepMs;
+      i = (i + 1) % data.frames.length;
+      if (i === 0) { prevFrame = null; frame = null; }
+      next = data.frames[i];
+      if (fields.has(i)) field = fields.get(i);
+    }
+    if (next) {
+      frameDur = stepMs / speed;
+      next.speed = speed;
+      showFrame(next);
+    }
+    requestAnimationFrame(tick);
+  };
+  field = fields.get(0) || {};
+  data.frames[0].speed = speed;
+  showFrame(data.frames[0]);
+  requestAnimationFrame(tick);
+}
+
+function start() {
+  resize();
+  window.addEventListener("resize", resize);
+  const host = document.querySelector("[data-replay]");
+  return host ? startReplay(host.dataset.replay) : startLive();
 }
 start();

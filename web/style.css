@@ -12,10 +12,12 @@
   --cap: #818cf8;
   --road: #2b333e;
   --lane: #3a4452;
+  color-scheme: dark;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
 body { display: flex; flex-direction: column; }
 button { font: inherit; color: inherit; }
