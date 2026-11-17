@@ -441,3 +441,10 @@ Il [ponte SUMO per LibSignal](docs/libsignal.md) legge i veicoli dal suo mondo
 simulato e può applicare i consigli DriveNow mentre LibSignal controlla i
 semafori. Include una verifica eseguibile con il sorgente upstream reale;
 le finestre di verde devono essere fornite esplicitamente dal controllore.
+
+## Confronto previsioni con Darts
+
+L'[esperimento offline Darts](docs/darts.md) confronta NaiveSeasonal con il
+previsore DriveNow sui dati di Amburgo, usando solo il passato per prevedere.
+Include un rapporto riproducibile e non modifica automaticamente il modello
+usato per i consigli alle auto.

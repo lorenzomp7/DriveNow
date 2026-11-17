@@ -4,3 +4,4 @@ __pycache__/
 .venv-vibetest/
 test-results/
 .venv-libsignal/
+.venv-darts/

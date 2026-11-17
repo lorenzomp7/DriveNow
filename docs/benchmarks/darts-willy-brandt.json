@@ -1,0 +1,146 @@
+{
+  "scenario": "willy-brandt",
+  "signals": [
+    10050,
+    10738,
+    12198,
+    13028,
+    13033
+  ],
+  "origin_start": 1694703600,
+  "origin_end_exclusive": 1694704800,
+  "stride_seconds": 17,
+  "training_lookback_seconds": 1800,
+  "horizons_seconds": [
+    5,
+    15,
+    30,
+    60,
+    90
+  ],
+  "model": "Darts NaiveSeasonal; period inferred from past only",
+  "threshold": 0.8,
+  "darts_version": "0.39.0",
+  "dataset_sha256": {
+    "scenario.json": "7210dd6f6fa3d15ebafa2637f44db82e67a7fa4d60ec0dc9a32ac1ee5278b638",
+    "links.json": "b00f52937b8393e15fcd6c71595a8f0f19c842c76ae80ba1a5abc65327976f7c",
+    "lanes.json": "f24b9eeae15f42df2b34a25b49057d7d61b36710ae6a86b10d7d2b7956ca7362",
+    "signals.csv.gz": "aaf62d8ade395d482a17e8318d4d5571f7af5c41a1db7f1e6de491288cb41520"
+  },
+  "metrics": {
+    "5": {
+      "samples": 355,
+      "drivenow": {
+        "accuracy": 0.9605633802816902,
+        "false_green_fraction": 0.0,
+        "missed_green_fraction": 0.03943661971830986
+      },
+      "darts": {
+        "accuracy": 0.9577464788732394,
+        "false_green_fraction": 0.01971830985915493,
+        "missed_green_fraction": 0.022535211267605635
+      },
+      "eligible_targets": 355,
+      "paired_coverage": 1.0
+    },
+    "15": {
+      "samples": 355,
+      "drivenow": {
+        "accuracy": 0.9661971830985916,
+        "false_green_fraction": 0.0028169014084507044,
+        "missed_green_fraction": 0.030985915492957747
+      },
+      "darts": {
+        "accuracy": 0.9774647887323944,
+        "false_green_fraction": 0.014084507042253521,
+        "missed_green_fraction": 0.008450704225352112
+      },
+      "eligible_targets": 355,
+      "paired_coverage": 1.0
+    },
+    "30": {
+      "samples": 355,
+      "drivenow": {
+        "accuracy": 0.9549295774647887,
+        "false_green_fraction": 0.0,
+        "missed_green_fraction": 0.04507042253521127
+      },
+      "darts": {
+        "accuracy": 0.9549295774647887,
+        "false_green_fraction": 0.022535211267605635,
+        "missed_green_fraction": 0.022535211267605635
+      },
+      "eligible_targets": 355,
+      "paired_coverage": 1.0
+    },
+    "60": {
+      "samples": 355,
+      "drivenow": {
+        "accuracy": 0.952112676056338,
+        "false_green_fraction": 0.005633802816901409,
+        "missed_green_fraction": 0.04225352112676056
+      },
+      "darts": {
+        "accuracy": 0.9549295774647887,
+        "false_green_fraction": 0.02535211267605634,
+        "missed_green_fraction": 0.01971830985915493
+      },
+      "eligible_targets": 355,
+      "paired_coverage": 1.0
+    },
+    "90": {
+      "samples": 355,
+      "drivenow": {
+        "accuracy": 0.9577464788732394,
+        "false_green_fraction": 0.0,
+        "missed_green_fraction": 0.04225352112676056
+      },
+      "darts": {
+        "accuracy": 0.9464788732394366,
+        "false_green_fraction": 0.028169014084507043,
+        "missed_green_fraction": 0.02535211267605634
+      },
+      "eligible_targets": 355,
+      "paired_coverage": 1.0
+    }
+  },
+  "signal_diagnostics": {
+    "10050": {
+      "origins": 71,
+      "paired_origins": 71,
+      "periods_seconds": [
+        60
+      ]
+    },
+    "10738": {
+      "origins": 71,
+      "paired_origins": 71,
+      "periods_seconds": [
+        60
+      ]
+    },
+    "12198": {
+      "origins": 71,
+      "paired_origins": 71,
+      "periods_seconds": [
+        60
+      ]
+    },
+    "13028": {
+      "origins": 71,
+      "paired_origins": 71,
+      "periods_seconds": [
+        60
+      ]
+    },
+    "13033": {
+      "origins": 71,
+      "paired_origins": 71,
+      "periods_seconds": [
+        60
+      ]
+    }
+  },
+  "live_model_changed": false,
+  "traffic_benefit_measured": false
+}
