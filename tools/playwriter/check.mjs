@@ -20,11 +20,11 @@ await mkdir(output, {recursive: true});
 const temp = await mkdtemp(path.join(tmpdir(), 'drivenow-playwriter-'));
 const port = await new Promise(resolve => {const server = net.createServer(); server.listen(0, '127.0.0.1', () => {const p = server.address().port; server.close(() => resolve(p));});});
 const relay = await startPlayWriterCDPRelayServer({port, host:'127.0.0.1', sessionCounterFile:path.join(temp,'counter.json')});
-const args = ['--headless=new', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=0', `--user-data-dir=${temp}/chrome`, '--no-first-run', '--no-default-browser-check', 'about:blank'];
+const args = ['--headless=new', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=0', `--user-data-dir=${temp}/chrome`, '--no-first-run', '--no-default-browser-check', '--disable-background-networking', '--disable-component-update', '--disable-default-apps', '--disable-dev-shm-usage', '--disable-gpu', '--password-store=basic', 'about:blank'];
 if (process.env.DRIVENOW_CHROME_NO_SANDBOX === '1') args.unshift('--no-sandbox');
 const browser = spawn(chrome, args, {stdio:['ignore','ignore','pipe']});
 let browserError = '';
-browser.stderr.on('data', data => {browserError = (browserError + data).slice(-4000);});
+browser.stderr.on('data', data => {browserError = (browserError + data).slice(-12000);});
 browser.on('error', error => {browserError = error.message;});
 const client = new Client({name:'drivenow-playwriter-check', version:'1.0.0'});
 const transport = new StdioClientTransport({command:process.execPath, args:[path.join(here,'node_modules/playwriter/bin.js')],
@@ -43,7 +43,7 @@ async function execute(code, check) {
 }
 try {
   let endpoint;
-  for (let attempt=0; attempt<100; attempt++) {
+  for (let attempt=0; attempt<600; attempt++) {
     if (browser.exitCode !== null || browser.signalCode !== null || browserError.includes('spawn ')) throw new Error(`Chrome exited: ${browserError}`);
     try {const [p, ws] = (await readFile(path.join(temp,'chrome/DevToolsActivePort'),'utf8')).trim().split('\n'); endpoint = `ws://127.0.0.1:${p}${ws}`; break;} catch {}
     await new Promise(resolve => setTimeout(resolve,100));
@@ -66,6 +66,7 @@ try {
   await writeFile(path.join(output,'report.json'), JSON.stringify({status:'passed', playwriter:'0.12.0', transport:'real MCP, direct CDP', checks, personalBrowserUsed:false}, null, 2)+'\n');
   console.log('DRIVENOW_PLAYWRITER_OK');
 } finally {
+  await writeFile(path.join(output,'chrome-stderr.log'), browserError);
   await client.close().catch(()=>{});
   await relay.close();
   if (browser.pid && browser.exitCode === null && browser.signalCode === null) {
