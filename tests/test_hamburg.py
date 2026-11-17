@@ -84,8 +84,8 @@ def test_sumo_runs_the_recorded_lights():
             w.step()
         checked = 0
         for key, rec in w.links.items():
-            if rec["how"] != "direct":
-                continue
+            if rec["how"] != "direct" or rec["ds"] not in w.history:
+                continue  # links without recorded data follow SUMO's own programme
             tls, idx = key.split("|")
             state = w.conn.trafficlight.getRedYellowGreenState(tls)[int(idx)]
             expected = SUMO_CHAR.get(w.history.code_at(rec["ds"], w.T0 + w.t), "O")
