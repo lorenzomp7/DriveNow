@@ -3,6 +3,7 @@ import argparse
 import asyncio
 from datetime import timedelta
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -29,7 +30,12 @@ def environment_id(text):
 async def exercise(source):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
-    params = StdioServerParameters(command=str(BINARY), args=['stdio'], cwd=str(source))
+    env = {key: value for key, value in os.environ.items()
+           if key in {'DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_CONFIG', 'DOCKER_TLS_VERIFY',
+                      'DOCKER_CERT_PATH', '_EXPERIMENTAL_DAGGER_CLI_BIN'}}
+    if os.name != 'nt':
+        env['CONTAINER_USE_STDERR_FILE'] = '/dev/stderr'
+    params = StdioServerParameters(command=str(BINARY), args=['stdio'], cwd=str(source), env=env)
     async with stdio_client(params) as (reader, writer):
         async with ClientSession(reader, writer, read_timeout_seconds=timedelta(minutes=12)) as session:
             await session.initialize()

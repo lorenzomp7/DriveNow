@@ -33,3 +33,10 @@ jobs:
       - run: python tools/container_use.py install
       - run: python tools/container_use.py doctor
       - run: python tools/container_use_smoke.py
+      - name: Docker diagnostics on failure
+        if: failure()
+        run: |
+          docker ps -a
+          for id in $(docker ps -aq --filter name=dagger-engine); do
+            docker logs --tail 100 "$id"
+          done
