@@ -7,3 +7,5 @@ test-results/
 .venv-darts/
 .tools/
 .venv-container-use/
+node_modules/
+.venv-playwriter/

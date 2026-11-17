@@ -65,3 +65,12 @@ This configuration does not authorize extra agents or automatic merges.
 Use `main_chatgpt` as the starting ref, preserve unrelated work, and inspect the
 environment diff before applying it. Run the same DriveNow checks inside it.
 Do not claim isolation when commands actually ran directly on the host.
+
+## Optional Playwriter browser checks
+
+Use `python tools/playwriter_check.py` for the real MCP checks in a disposable
+Chrome profile after `npm ci --prefix tools/playwriter`. See `docs/playwriter.md`.
+A configured client can also use the user's explicitly enabled DriveNow tab.
+Operate only on the intended DriveNow page; close only tabs created for this
+work. The disposable direct-CDP check does not prove the user's extension or
+personal profile is connected. No AI agent is launched by this check.

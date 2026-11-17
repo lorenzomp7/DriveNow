@@ -454,3 +454,9 @@ usato per i consigli alle auto.
 [Container-use](docs/container-use.md) dispone di configurazione Python per
 DriveNow, installer verificato, avvio MCP e una prova automatica che esegue
 test e demo HTTP dentro il container. Richiede un motore Docker disponibile.
+
+## Verifica browser con Playwriter
+
+L'[integrazione Playwriter](docs/playwriter.md) esegue controlli desktop/mobile
+attraverso il server MCP reale, salva screenshot e genera la configurazione
+per collegare il proprio client al browser.
