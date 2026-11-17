@@ -1,0 +1,7 @@
+# Optional QA environment, separate from requirements-ui.txt and server runtime.
+vibetest @ git+https://github.com/browser-use/vibetest-use.git@fe0b90ac9d6a129ce06f5b53074241a9f205015b
+# Upstream imports BrowserSession, removed in browser-use 1.0.
+browser-use==0.7.9
+mcp<2
+# Match the browser checks' tested Chromium toolchain.
+playwright==1.56.0
