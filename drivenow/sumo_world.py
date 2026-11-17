@@ -30,6 +30,22 @@ from .network import SIGNAL, load_sumo_net, sumo_link_states
 from .simulation import GroupStats, Vehicle, record_motion, signal_states, vehicle_row
 
 
+def read_routes(path: str) -> Dict[str, List[str]]:
+    """Vehicle id -> list of edges, from a SUMO route file (inline or named routes)."""
+    import xml.etree.ElementTree as ET
+
+    root = ET.parse(path).getroot()
+    named = {r.attrib["id"]: r.attrib["edges"].split() for r in root.findall("route") if "id" in r.attrib}
+    out: Dict[str, List[str]] = {}
+    for v in root.iter("vehicle"):
+        inline = v.find("route")
+        if inline is not None:
+            out[v.attrib["id"]] = inline.attrib["edges"].split()
+        elif v.attrib.get("route") in named:
+            out[v.attrib["id"]] = named[v.attrib["route"]]
+    return out
+
+
 def _sumo_binary(gui: bool) -> str:
     if "SUMO_HOME" not in os.environ:
         try:
@@ -55,6 +71,8 @@ class SumoWorld:
         gui: bool = False,
         cycle_length: float = 40.0,
         label: str = "drivenow",
+        route_file: Optional[str] = None,
+        teleport: float = -1,
     ) -> None:
         import traci
 
@@ -72,11 +90,15 @@ class SumoWorld:
         self._internal: set = set()  # vehicles crossing a junction right now
 
         self._tmp = tempfile.mkdtemp(prefix="drivenow_")
-        self.routes = self._write_routes(demand, duration)
+        if route_file:
+            self._route_file = os.path.abspath(route_file)
+            self.routes = read_routes(self._route_file)
+        else:
+            self.routes = self._write_routes(demand, duration)
         cmd = [
             _sumo_binary(gui), "-n", self.net_path, "-r", self._route_file,
             "--step-length", str(dt), "--no-step-log", "true", "--no-warnings", "true",
-            "--time-to-teleport", "-1", "--seed", str(seed),
+            "--time-to-teleport", str(teleport), "--seed", str(seed),
         ]
         traci.start(cmd, label=label)
         self.conn = traci.getConnection(label)
@@ -122,6 +144,9 @@ class SumoWorld:
             self.conn.trafficlight.setPhase(node.id, i)
             self.conn.trafficlight.setPhaseDuration(node.id, left)
 
+    def _before_step(self) -> None:
+        """Hook for subclasses: runs before every SUMO step."""
+
     # -- stepping ---------------------------------------------------------------
 
     def step(self) -> None:
@@ -129,6 +154,7 @@ class SumoWorld:
 
         c = self.conn
         v_old = {vid: v.v for vid, v in self.vehicles.items()}
+        self._before_step()
         c.simulationStep()
         self.t = c.simulation.getTime()
 
@@ -149,6 +175,8 @@ class SumoWorld:
             if not d:
                 continue
             road = d[tc.VAR_ROAD_ID]
+            if d[tc.VAR_SPEED] < 0 or not road:
+                continue  # teleporting or not on the road: SUMO reports invalid values
             veh.idx = max(d[tc.VAR_ROUTE_INDEX], 0)
             veh.v = d[tc.VAR_SPEED]
             on_internal = road.startswith(":") or road not in self.net.edges

@@ -3,6 +3,7 @@
     python -m drivenow.server                         # demo town, built-in simulation
     python -m drivenow.server --net data/sumo/2_2_intersections.net.xml
     python -m drivenow.server --sumo --net data/sumo/3_3_intersections.net.xml
+    python -m drivenow.server --hamburg               # real map and real traffic lights
 
 Then open http://localhost:8000. Only the Python standard library is needed
 (plus SUMO and TraCI for ``--sumo``).
@@ -166,6 +167,10 @@ def make_handler(runner: Runner):
 
 
 def build_world(args):
+    if args.hamburg:
+        from .hamburg.world import HamburgWorld
+
+        return HamburgWorld(penetration=args.penetration, forecast=args.forecast, seed=args.seed, gui=args.gui)
     if args.sumo:
         from .sumo_world import SumoWorld
 
@@ -181,6 +186,10 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description="DriveNow live speed map")
     ap.add_argument("--net", help="SUMO .net.xml network (default: the demo town)")
     ap.add_argument("--sumo", action="store_true", help="run the traffic in SUMO through TraCI")
+    ap.add_argument("--hamburg", action="store_true",
+                    help="real Hamburg corridor: OSM map, recorded traffic lights (needs SUMO)")
+    ap.add_argument("--forecast", choices=["predict", "oracle"], default="predict",
+                    help="with --hamburg: forecast the lights from the past, or use the recorded future")
     ap.add_argument("--gui", action="store_true", help="with --sumo, open sumo-gui as well")
     ap.add_argument("--port", type=int, default=8000)
     ap.add_argument("--host", default="127.0.0.1")

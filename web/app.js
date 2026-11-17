@@ -401,8 +401,15 @@ function updateStats() {
 }
 
 function updateMeta() {
-  const t = Math.floor(frame.t);
-  $("clock").textContent = `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+  if (frame.clock) {
+    // Real recording: show Hamburg's local time of that moment.
+    $("clock").textContent = new Date(frame.clock * 1000).toLocaleString("it-IT", {
+      timeZone: "Europe/Berlin", weekday: "short", day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } else {
+    const t = Math.floor(frame.t);
+    $("clock").textContent = `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+  }
   for (const b of document.querySelectorAll("#speed-seg button")) b.classList.toggle("on", Number(b.dataset.speed) === frame.speed);
   if (!settingsSynced) {
     settingsSynced = true;

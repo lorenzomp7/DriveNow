@@ -30,15 +30,26 @@ PAGE_EXTRA_CSS = """
 """
 
 
-def record(minutes: float, penetration: float, warmup: float, seed: int, every: int = 1) -> dict:
-    sim = Simulation(demo_city(), SimConfig(penetration=penetration, seed=seed))
-    sim.run(warmup)
+def record(minutes: float, penetration: float, warmup: float, seed: int, every: int = 1,
+           hamburg: bool = False) -> dict:
+    if hamburg:
+        from drivenow.hamburg.world import HamburgWorld
+
+        sim = HamburgWorld(penetration=penetration, seed=seed, label="replay")
+        dt = sim.dt
+        place = ("del corridoio di Willy-Brandt-Straße ad Amburgo, con i semafori reali registrati il "
+                 "14 settembre 2023 dalle 17:00 e la mappa di OpenStreetMap")
+    else:
+        sim = Simulation(demo_city(), SimConfig(penetration=penetration, seed=seed))
+        dt = sim.cfg.dt
+        place = "della città demo"
+    for _ in range(int(warmup / dt)):
+        sim.step()
     frames, fields = [], []
-    steps_per_frame = 1 * every  # 0.2 s per frame
-    n = int(minutes * 60 / (sim.cfg.dt * steps_per_frame))
-    per_field = max(1, int(1.0 / (sim.cfg.dt * steps_per_frame)))
+    n = int(minutes * 60 / (dt * every))
+    per_field = max(1, int(1.0 / (dt * every)))
     for i in range(n):
-        for _ in range(steps_per_frame):
+        for _ in range(every):
             sim.step()
         snap = sim.snapshot()
         snap["penetration"] = penetration
@@ -46,10 +57,12 @@ def record(minutes: float, penetration: float, warmup: float, seed: int, every: 
         frames.append(snap)
         if i % per_field == 0:
             fields.append([i, sim.advisor.speed_field(sim.t, sim.occupancy())])
-    note = (f"Registrazione di {minutes:g} minuti della città demo, con il {penetration:.0%} di auto DriveNow, "
+    if hamburg:
+        sim.close()
+    note = (f"Registrazione di {minutes:g} minuti {place}, con il {penetration:.0%} di auto DriveNow, "
             "riprodotta in ciclo. Per la simulazione dal vivo, con i comandi, avvia python -m drivenow.server.")
     return {"network": static_network(sim.net), "frames": frames, "fields": fields,
-            "dt": sim.cfg.dt * steps_per_frame, "note": note}
+            "dt": dt * every, "note": note}
 
 
 def build_page() -> str:
@@ -75,9 +88,11 @@ def main() -> None:
     ap.add_argument("--penetration", type=float, default=0.5)
     ap.add_argument("--warmup", type=float, default=900)
     ap.add_argument("--seed", type=int, default=3)
+    ap.add_argument("--hamburg", action="store_true", help="record the real Hamburg corridor (needs SUMO)")
+    ap.add_argument("--every", type=int, default=2, help="simulation steps (0.2 s) between saved frames")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
-    data = record(args.minutes, args.penetration, args.warmup, args.seed, every=2)
+    data = record(args.minutes, args.penetration, args.warmup, args.seed, every=args.every, hamburg=args.hamburg)
     with open(os.path.join(args.out, "replay.json"), "w") as f:
         json.dump(data, f, separators=(",", ":"))
     with open(os.path.join(args.out, "index.html"), "w", encoding="utf-8") as f:

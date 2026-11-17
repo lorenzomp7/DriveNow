@@ -8,7 +8,7 @@ the vehicles on it as ``(position, speed)`` pairs sorted by position.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from .glosa import (
     Advice,
@@ -23,6 +23,10 @@ from .glosa import (
 from .network import BORDER, PRIORITY, ROUNDABOUT, SIGNAL, Network
 
 Occupancy = Dict[str, List[Tuple[float, float]]]  # edge -> [(pos, speed), ...] ascending pos
+
+# Optional signal source: (approach edge, next edge or None, time) -> (green windows, group label),
+# or None when that movement has no known signal. Used instead of the nodes' fixed plans.
+WindowsFn = Callable[[str, Optional[str], float], Optional[Tuple[List[Tuple[float, float]], str]]]
 
 STOPPED = 2.0  # m/s; slower than this counts as queued
 
@@ -44,8 +48,10 @@ class Advisor:
         horizon: float = 180.0,
         lookahead: float = 700.0,
         max_signals: int = 1,
+        windows_fn: Optional[WindowsFn] = None,
     ) -> None:
         self.net = net
+        self.windows_fn = windows_fn
         self.profile = profile
         self.margins = margins
         self.horizon = horizon
@@ -67,6 +73,16 @@ class Advisor:
             earliest = (edge.length - leader_pos) / leader_v + self.margins.follow_headway
         return queue, earliest
 
+    def _signal(self, edge_id: str, next_edge: Optional[str], t: float):
+        """Green windows and group for a movement, from the source or the node's plan."""
+        if self.windows_fn is not None:
+            return self.windows_fn(edge_id, next_edge, t)
+        node = self.net.nodes[self.net.edges[edge_id].to_node]
+        if node.plan is None:
+            return None
+        group = node.group_of.get(edge_id, "")
+        return node.plan.green_windows(t, group, self.horizon), group
+
     # -- controls along a route -----------------------------------------------
 
     def controls_ahead(
@@ -81,9 +97,11 @@ class Advisor:
             node = self.net.nodes[edge.to_node]
             if node.kind == BORDER:
                 break
-            if node.kind == SIGNAL and node.plan is not None:
-                group = node.group_of.get(edge.id, "")
-                windows = node.plan.green_windows(t, group, self.horizon)
+            sig = None
+            if node.kind == SIGNAL:
+                sig = self._signal(edge.id, route[k + 1] if k + 1 < len(route) else None, t)
+            if sig is not None:
+                windows, group = sig
                 queue, earliest = (0, 0.0)
                 if k == idx:
                     queue, earliest = self._traffic_ahead(edge.id, pos, occupancy)
@@ -127,9 +145,9 @@ class Advisor:
             limit = edge.speed
             samples: List[List[Optional[float]]] = []
             positions = [s * step for s in range(int(edge.length // step) + 1)]
-            if node.kind == SIGNAL and node.plan is not None:
-                group = node.group_of.get(edge.id, "")
-                raw = node.plan.green_windows(t, group, self.horizon)
+            sig = self._signal(edge.id, None, t) if node.kind == SIGNAL else None
+            if sig is not None:
+                raw = sig[0]
                 queue = sum(1 for _, v in occupancy.get(edge.id, []) if v < STOPPED)
                 wins = effective_windows(raw, self.margins, queue)
                 for s in positions:

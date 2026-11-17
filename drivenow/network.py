@@ -344,6 +344,17 @@ def load_sumo_net(path: str, fallback_cycle: float = 40.0) -> Network:
             _parse_shape(lane.attrib["shape"]), name=e.attrib.get("name", ""),
         )
 
+    # Right of way at unsignalised junctions: the highest-priority approaches are major.
+    prio = {e.attrib["id"]: int(e.attrib.get("priority", "0")) for e in root.iter("edge") if "function" not in e.attrib}
+    for node in nodes.values():
+        inc = [e for e in edges.values() if e.to_node == node.id]
+        if inc:
+            top = max(prio.get(e.id, 0) for e in inc)
+            node.major = {e.id for e in inc if prio.get(e.id, 0) == top}
+            names = sorted({e.name for e in inc if e.name})
+            if names:
+                node.name = " / ".join(names[:2])
+
     tl_links: Dict[str, Dict[int, Tuple[str, str]]] = {}
     for c in root.iter("connection"):
         frm, to = c.attrib["from"], c.attrib["to"]
