@@ -421,3 +421,10 @@ Test:
 pip install pytest
 python -m pytest
 ```
+
+## Test dell’interfaccia
+
+I controlli browser automatici verificano la demo su desktop e telefono,
+oltre ai test Python del motore. Comandi e procedura facoltativa con
+[vibetest-use](https://github.com/browser-use/vibetest-use) sono nella
+[guida ai test browser](docs/browser-testing.md).
