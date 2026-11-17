@@ -333,11 +333,19 @@ function updateHud() {
 
   $("target").textContent = target ?? "—";
   const labels = { free: "Strada libera", go: "Verde in arrivo", slow: "Rallenta senza frenare", stop: "Rosso inevitabile", cap: "Alza il piede" };
+  const giveWay = nk === "yield";
+  if (giveWay) labels.stop = "Dai precedenza";
   const k = $("kind"); k.textContent = labels[kind]; k.className = "kind " + kind;
 
   const node = nn ? nodes.get(nn) : null;
   const where = node ? node.name : "";
-  const texts = {
+  const texts = giveWay ? {
+    free: "Strada principale libera: guida normalmente entro il limite.",
+    go: `Strada principale libera: puoi tenere fino a ${hi} km/h.`,
+    slow: `Sulla strada principale arriva un'auto: scendi a circa ${target} km/h (tra ${lo} e ${hi}) e arrivi all'incrocio quando è passata, senza fermarti.`,
+    stop: "La strada principale è trafficata: lascia scorrere l'auto fino alla linea e dai la precedenza.",
+    cap: `Precedenza tra ${nd} m, strada principale libera: non superare ${hi} km/h e rallenterai solo rilasciando l'acceleratore.`,
+  } : {
     free: "Niente semafori o rotonde a breve: guida normalmente entro il limite.",
     go: `Il verde ti aspetta: puoi tenere fino a ${hi} km/h e passi senza fermarti.`,
     slow: `Lascia l'acceleratore e scendi a circa ${target} km/h. Tra ${lo} e ${hi} km/h arrivi al semaforo quando scatta il verde, senza frenare.`,

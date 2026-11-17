@@ -117,3 +117,101 @@ def test_chained_signals_narrow_the_band():
     assert one.kind == "go"
     assert two.controls_used == 2
     assert two.high < one.high
+
+
+def test_gap_clear_keeps_the_usual_cap():
+    # Main road empty: same advice as a plain give-way line.
+    c = Control("gap", 80.0, "J", windows=[(0.0, 1e9)], entry_speed=20 * KMH)
+    a = advise([c], 50 * KMH, 50 * KMH, P)
+    assert a.kind == "cap"
+    assert a.high == pytest.approx(coast_cap(80.0, 20 * KMH, P))
+
+
+def test_gap_slows_to_arrive_after_the_main_road_car():
+    # A main-road car blocks the junction for the next 12 s: arrive just after it.
+    c = Control("gap", 120.0, "J", windows=[(12.0, 1e9)], entry_speed=20 * KMH)
+    a = advise([c], 50 * KMH, 50 * KMH, P)
+    assert a.kind == "slow"
+    assert 12.0 <= a.eta <= 12.0 + Margins().target_buffer + 0.5
+    assert a.target < 50 * KMH
+
+
+def test_gap_unreachable_rolls_to_the_line():
+    c = Control("gap", 40.0, "J", windows=[(60.0, 1e9)], entry_speed=20 * KMH)
+    a = advise([c], 30 * KMH, 50 * KMH, P)
+    assert a.kind == "stop"
+
+
+def test_main_road_gaps_from_traffic():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    node = net.nodes["J02"]
+    major = sorted(node.major)[0]
+    length = net.edges[major].length
+    # One car 50 m away at 10 m/s: arrives in 5 s, so the junction is busy from 1.5 s to 6.5 s.
+    occ = {major: [(length - 50.0, 10.0)]}
+    gaps = adv.main_road_gaps("J02", occ)
+    assert gaps[0] == pytest.approx((0.0, 5.0 - adv.gap_before))
+    assert gaps[1][0] == pytest.approx(5.0 + adv.gap_after)
+    assert adv.main_road_gaps("J02", {}) == [(0.0, 1e9)]
+
+
+def test_advisor_waits_for_the_gap_at_a_give_way_line():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    route = ["W2>J02", "J02>J12"]  # minor road, straight across the main road
+    pos = net.edges["W2>J02"].length - 120.0
+    # A queue-free main road: the usual cap.
+    a, nc = adv.advise(route, 0, pos, 50 * KMH, 0.0, {})
+    assert nc.kind == "yield" and a.kind in ("cap", "free")
+    # A main-road car 80 m away at 10 m/s reaches the junction in 8 s, just when we would:
+    # slow down and arrive after it.
+    occ = {"N0>J02": [(net.edges["N0>J02"].length - 80.0, 10.0)]}
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
+    assert a.kind == "slow"
+    assert a.eta >= 8.0 + adv.gap_after
+    # The old behaviour is still available.
+    adv.gap_aware = False
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
+    assert a.kind in ("cap", "free")
+
+
+def test_right_turn_only_yields_to_traffic_heading_the_same_way():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    route = ["W2>J02", "J02>J01"]  # minor road, turning right
+    pos = net.edges["W2>J02"].length - 120.0
+    # Traffic from J01 drives away from J01: it does not feed the lane we turn into.
+    far_side = {"J01>J02": [(net.edges["J01>J02"].length - 80.0, 10.0)]}
+    assert "J02>J01" not in net.edges["J01>J02"].next_edges
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, far_side)
+    assert a.kind in ("cap", "free")
+    same_way = {"N0>J02": [(net.edges["N0>J02"].length - 80.0, 10.0)]}
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, same_way)
+    assert a.kind == "slow"
+
+
+def test_no_early_slowing_with_a_car_close_behind():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    route = ["W2>J02", "J02>J12"]
+    pos = net.edges["W2>J02"].length - 120.0
+    occ = {"N0>J02": [(net.edges["N0>J02"].length - 80.0, 10.0)],
+           "W2>J02": [(pos - 15.0, 13.0), (pos, 13.9)]}  # a follower 15 m behind
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
+    assert a.kind in ("cap", "free")  # just the usual cap: do not hold the follower up
+    adv.considerate = False
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
+    assert a.kind == "slow"

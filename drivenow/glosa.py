@@ -67,6 +67,10 @@ class Advice:
       ``slow``  lift off and settle between ``low`` and ``high``.
       ``stop``  no speed reaches a green; coast towards the stop line.
       ``cap``   no light ahead, but a roundabout or yield point caps the speed.
+
+    At a give-way line where the main road can be seen (a ``gap`` control),
+    ``slow`` and ``stop`` mean the same as at a light, with "green" read as
+    "a gap in the main-road traffic".
       ``free``  nothing to manage: drive at the limit.
     """
 
@@ -240,6 +244,10 @@ class Control:
     approach, and optionally the queue length and earliest arrival.
     kind ``yield``: a roundabout entry or give-way line, crossed at no more
     than ``entry_speed``.
+    kind ``gap``: a give-way line whose main-road traffic is known. Also
+    crossed at no more than ``entry_speed``; ``windows`` are the gaps in
+    that traffic (times when no main-road car is close to the junction),
+    already including the safety margins.
     """
 
     kind: str
@@ -299,12 +307,15 @@ def advise(
     v_cap = speed_limit
     notes: List[str] = []
     signals: List[Control] = []
+    gap: Optional[Control] = None
     for c in controls:
-        if c.kind == "yield":
+        if c.kind in ("yield", "gap"):
             cap = coast_cap(c.distance, c.entry_speed, profile)
             if cap < v_cap:
                 v_cap = cap
                 notes.append(f"yield:{c.node}")
+            if c.kind == "gap" and not signals:
+                gap = c
             break
         if c.kind == "signal":
             signals.append(c)
@@ -312,6 +323,9 @@ def advise(
                 break
 
     v_floor = min(profile.min_speed, v_cap)
+
+    if gap is not None:
+        return _gap_advice(gap, v0, v_cap, v_floor, speed_limit, profile, margins, notes)
 
     if not signals:
         if v_cap < speed_limit - 1e-6:
@@ -367,3 +381,44 @@ def advise(
     eta = arr_first(target)
     kind = "go" if target >= speed_limit - 1e-6 else "slow"
     return Advice(kind, low, high, target, window=window, eta=eta, controls_used=used, notes=notes)
+
+
+def _gap_advice(
+    c: Control,
+    v0: float,
+    v_cap: float,
+    v_floor: float,
+    speed_limit: float,
+    profile: DriverProfile,
+    margins: Margins,
+    notes: List[str],
+) -> Advice:
+    """Give way without stopping: reach the line when the main road is clear.
+
+    If the car already gets there in a gap at the usual approach speed, the
+    advice is the plain cap. Otherwise it is the speed band that arrives in
+    the next gap, exactly as for a green light; and if no reasonable speed
+    does, roll slowly to the line.
+    """
+
+    def arr(v: float) -> float:
+        return arrival_time(c.distance, v0, v, profile)
+
+    wins = []
+    for s, e in c.windows:
+        s = max(s, c.earliest)
+        if e > s:
+            wins.append((s, e))
+    notes.append(f"gap:{c.node}")
+    t_fast = arr(v_cap)
+    if any(s <= t_fast < e for s, e in wins):
+        kind = "cap" if v_cap < speed_limit - 1e-6 else "free"
+        return Advice(kind, None, v_cap, v_cap, eta=t_fast, controls_used=1, notes=notes)
+    bands = [b for w in wins if (b := band_for_window(arr, w, v_floor, v_cap)) is not None]
+    if not bands:
+        target = min(v_cap, coast_cap(max(c.distance - 2.0, 0.0), 0.0, profile))
+        return Advice("stop", None, None, target, controls_used=1, notes=notes)
+    best = max(bands, key=lambda b: b.high)  # the earliest gap that can be reached
+    target = recommend(arr, best.low, best.high, best.window, v_cap, margins.target_buffer)
+    return Advice("slow", best.low, best.high, target, window=best.window, eta=arr(target),
+                  controls_used=1, notes=notes)
