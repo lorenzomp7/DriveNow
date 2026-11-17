@@ -60,6 +60,7 @@ class Advisor:
         self.gap_before = 3.5    # s: enter at least this long before the next main-road car arrives
         self.gap_after = 1.5     # s: and at least this long after the previous one has passed
         self.observe = 150.0     # m of main road watched on each side
+        self.queue_aware = True   # count queues over the whole route; coast up to a standing queue
         self.considerate = True  # no early slowing for a gap with a car close behind
         self.follower_gap = 30.0  # m
         self.windows_fn = windows_fn
@@ -160,9 +161,17 @@ class Advisor:
         controls: List[Control] = []
         first: Optional[NextControl] = None
         dist = 0.0
+        stopped = 0                       # cars standing between us and the current point of the route
+        tail: Optional[float] = None      # distance to the nearest standing car ahead
         for k in range(idx, len(route)):
             edge = self.net.edges[route[k]]
+            start = dist - (pos if k == idx else 0.0)  # distance to where this edge begins
             dist += edge.length - (pos if k == idx else 0.0)
+            standing = [p for p, v in occupancy.get(edge.id, []) if v < STOPPED and (k != idx or p > pos + 0.5)]
+            if standing:
+                stopped += len(standing)
+                if tail is None:
+                    tail = start + min(standing)
             node = self.net.nodes[edge.to_node]
             if node.kind == BORDER:
                 break
@@ -174,7 +183,10 @@ class Advisor:
                 queue, earliest = (0, 0.0)
                 if k == idx:
                     queue, earliest = self._traffic_ahead(edge.id, pos, occupancy)
-                    if queue and windows and windows[0][0] <= 0:
+                # The queue can reach back over several edges (and over junctions before the light).
+                if self.queue_aware:
+                    queue = max(queue, stopped)
+                if queue and windows and windows[0][0] <= 0:
                         # Green now, but the queue in front is still pulling away.
                         earliest = max(earliest, self.margins.startup_lost_time + queue * self.margins.queue_headway)
                 controls.append(Control("signal", dist, node.id, windows, queue, earliest))
@@ -183,7 +195,11 @@ class Advisor:
                 controls.append(Control("yield", dist, node.id, entry_speed=node.entry_speed))
                 first = first or NextControl("roundabout", node.id, dist)
             elif node.kind == PRIORITY and edge.id not in node.major:
-                if self.gap_aware:
+                if self.gap_aware and node.right_before_left:
+                    # No main road: give way to whoever comes from the right.
+                    foes = {f for f in self.net.in_edges[node.id] if f != edge.id and self.net.turn(f, edge.id) == "r"}
+                    controls.append(self._gap_control(edge.id, node.id, dist, k == idx, pos, occupancy, foes))
+                elif self.gap_aware:
                     foes = node.major
                     nxt = route[k + 1] if k + 1 < len(route) else None
                     if nxt is not None and self.net.turn(edge.id, nxt) == "r":
@@ -202,6 +218,11 @@ class Advisor:
                 first = first or NextControl("yield", node.id, dist)
             if dist > self.lookahead:
                 break
+        if self.queue_aware and tail is not None and not any(c.kind == "signal" for c in controls):
+            # A queue ahead with no known light behind it (a light without data, a busy junction):
+            # coast up to its end instead of braking there.
+            q = Control("yield", max(tail - 2.0, 0.0), "queue", entry_speed=0.0)
+            controls.insert(next((i for i, c in enumerate(controls) if c.distance > q.distance), len(controls)), q)
         return controls, first
 
     def advise(

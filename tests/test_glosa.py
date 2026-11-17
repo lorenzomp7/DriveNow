@@ -215,3 +215,55 @@ def test_no_early_slowing_with_a_car_close_behind():
     adv.considerate = False
     a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
     assert a.kind == "slow"
+
+
+def test_coast_up_to_a_standing_queue():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    route = ["N0>J02"]  # main road towards a give-way junction, no light ahead
+    pos = 0.0
+    tail = 90.0
+    occ = {"N0>J02": [(tail, 0.0)]}  # a car standing 90 m ahead
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
+    assert a.kind == "cap"
+    assert a.high == pytest.approx(coast_cap(tail - 2.0, 0.0, P))
+    adv.queue_aware = False
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
+    assert a.kind == "free"
+
+
+def test_right_before_left_gives_way_to_the_right():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    node = net.nodes["J02"]
+    node.right_before_left, node.major = True, set()
+    adv = Advisor(net)
+    route = ["W2>J02", "J02>J12"]  # heading east
+    pos = net.edges["W2>J02"].length - 120.0
+    from_right = [f for f in net.in_edges["J02"] if f != "W2>J02" and net.turn(f, "W2>J02") == "r"]
+    from_left = [f for f in net.in_edges["J02"] if f != "W2>J02" and net.turn(f, "W2>J02") == "l"]
+    assert from_right and from_left
+    near = lambda e: {e: [(net.edges[e].length - 80.0, 10.0)]}
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, near(from_right[0]))
+    assert a.kind == "slow"
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, near(from_left[0]))
+    assert a.kind in ("cap", "free")
+
+
+def test_queue_behind_a_light_counts_over_several_edges():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    route = ["N0>J02", "J02>J12"]  # through the give-way junction, then a light
+    occ = {"J02>J12": [(net.edges["J02>J12"].length - 5.0 * k, 0.0) for k in range(1, 4)],
+           "N0>J02": [(net.edges["N0>J02"].length - 3.0, 0.0)]}  # the queue spills back over J02
+    controls, _ = adv.controls_ahead(route, 0, 0.0, 0.0, occ)
+    sig = [c for c in controls if c.kind == "signal"][0]
+    assert sig.queue_len == 4

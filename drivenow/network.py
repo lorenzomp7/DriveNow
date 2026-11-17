@@ -43,6 +43,7 @@ class Node:
     entry_speed: float = 25 / 3.6                           # roundabout / give-way crossing speed
     name: str = ""
     plan_source: str = ""                                   # 'sumo': read from the net file; 'drivenow': ours
+    right_before_left: bool = False                         # unsignalised, everyone gives way to the right
 
 
 @dataclass
@@ -319,6 +320,7 @@ def load_sumo_net(path: str, fallback_cycle: float = 40.0) -> Network:
     """
     root = ET.parse(path).getroot()
     nodes: Dict[str, Node] = {}
+    rbl: Set[str] = set()
     for j in root.iter("junction"):
         if j.attrib.get("type") == "internal":
             continue
@@ -330,6 +332,8 @@ def load_sumo_net(path: str, fallback_cycle: float = 40.0) -> Network:
         else:
             kind = PRIORITY
         nodes[j.attrib["id"]] = Node(j.attrib["id"], float(j.attrib["x"]), float(j.attrib["y"]), kind, name=j.attrib["id"])
+        if t == "right_before_left":
+            rbl.add(j.attrib["id"])
 
     edges: Dict[str, Edge] = {}
     for e in root.iter("edge"):
@@ -351,6 +355,10 @@ def load_sumo_net(path: str, fallback_cycle: float = 40.0) -> Network:
         if inc:
             top = max(prio.get(e.id, 0) for e in inc)
             node.major = {e.id for e in inc if prio.get(e.id, 0) == top}
+            if node.id in rbl and len(inc) > 1:
+                # Nobody has priority: every approach gives way to the one on its right.
+                node.right_before_left = True
+                node.major = set()
             names = sorted({e.name for e in inc if e.name})
             if names:
                 node.name = " / ".join(names[:2])
