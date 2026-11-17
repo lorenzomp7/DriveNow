@@ -421,3 +421,57 @@ Test:
 pip install pytest
 python -m pytest
 ```
+
+## Sviluppo su `main_chatgpt`
+
+Le funzionalità qui sotto sono disponibili sul [branch `main_chatgpt`](https://github.com/lorenzomp7/DriveNow/tree/main_chatgpt). Selezionalo prima di eseguire i comandi degli strumenti.
+
+## Test dell’interfaccia
+
+I controlli browser automatici verificano la demo su desktop e telefono,
+oltre ai test Python del motore. Comandi e procedura facoltativa con
+[vibetest-use](https://github.com/browser-use/vibetest-use) sono nella
+[guida ai test browser](https://github.com/lorenzomp7/DriveNow/blob/main_chatgpt/docs/browser-testing.md).
+
+## Istruzioni per gli agenti di sviluppo
+
+La repo include le procedure di sviluppo di **agent-skills**, collegate da
+[`AGENTS.md`](https://github.com/lorenzomp7/DriveNow/blob/main_chatgpt/AGENTS.md) e adattate al flusso di lavoro DriveNow tramite le
+regole del progetto. Vedi la [guida](https://github.com/lorenzomp7/DriveNow/blob/main_chatgpt/docs/agent-skills.md).
+
+## Esperimenti con LibSignal
+
+Il [ponte SUMO per LibSignal](https://github.com/lorenzomp7/DriveNow/blob/main_chatgpt/docs/libsignal.md) legge i veicoli dal suo mondo
+simulato e può applicare i consigli DriveNow mentre LibSignal controlla i
+semafori. Include una verifica eseguibile con il sorgente upstream reale;
+le finestre di verde possono essere fornite dal controllore o stimate dagli stati già osservati con `learn_signals=True`.
+
+## Confronto previsioni con Darts
+
+L'[esperimento offline Darts](https://github.com/lorenzomp7/DriveNow/blob/main_chatgpt/docs/darts.md) confronta NaiveSeasonal con il
+previsore DriveNow sui dati di Amburgo, usando solo il passato per prevedere.
+Include un rapporto riproducibile e non modifica automaticamente il modello
+usato per i consigli alle auto.
+
+## Sviluppo in container isolati
+
+[Container-use](https://github.com/lorenzomp7/DriveNow/blob/main_chatgpt/docs/container-use.md) dispone di configurazione Python per
+DriveNow, installer verificato, avvio MCP e una prova automatica che esegue
+test e demo HTTP dentro il container. Richiede un motore Docker disponibile.
+
+## Verifica browser con Playwriter
+
+L'[integrazione Playwriter](https://github.com/lorenzomp7/DriveNow/blob/main_chatgpt/docs/playwriter.md) esegue controlli desktop/mobile
+attraverso il server MCP reale, salva screenshot e genera la configurazione
+per collegare il proprio client al browser.
+
+## Installare e avviare tutti gli strumenti
+
+```bash
+python tools/devtools.py setup
+python tools/devtools.py status
+```
+
+Un solo comando di avvio per ogni strumento, ad esempio
+`python tools/devtools.py run playwriter`. La configurazione MCP di progetto
+è in `.mcp.json`; [comandi, attivazione e prerequisiti](https://github.com/lorenzomp7/DriveNow/blob/main_chatgpt/docs/operational.md).
