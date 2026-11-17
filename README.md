@@ -134,6 +134,84 @@ più d'uno (`max_signals`) per cercare un'onda verde. In simulazione però
 costava circa 3 s a viaggio senza togliere fermate, perché le code ai
 semafori successivi non sono prevedibili.
 
+## Dati reali: Amburgo
+
+Per provare DriveNow su dati veri c'è uno scenario reale: il corridoio di
+Willy-Brandt-Straße / Ludwig-Erhard-Straße, nel centro di Amburgo (circa
+1,9 km, 9 impianti semaforici), nell'ora di punta di giovedì 14 settembre
+2023, dalle 17 alle 18.
+
+```bash
+pip install eclipse-sumo traci sumolib
+python -m drivenow.server --hamburg
+```
+
+Da dove vengono i dati:
+
+- **Semafori: reali.** Sono gli stati registrati secondo per secondo dalla
+  città di Amburgo, nella raccolta pubblicata dalla TU Dresden. Ogni passo,
+  SUMO mostra lo stato registrato in quel momento.
+- **Mappa: reale.** Viene da OpenStreetMap, convertita in rete SUMO. I
+  semafori stanno dove li ha Amburgo; dove Amburgo non fornisce dati restano
+  quelli di OpenStreetMap, con un programma fisso stimato da SUMO.
+- **Traffico: in parte reale.** Dove esistono, i volumi sono tarati sui
+  conteggi dei rilevatori di Amburgo in quell'ora. L'asse principale non ha
+  rilevatori, quindi lì il volume è un'ipotesi (400 auto/ora per tratto).
+
+Dettagli, fonti e licenze sono in [`data/hamburg/README.md`](data/hamburg/README.md).
+Tutto si ricostruisce con `python tools/hamburg_build.py --cache CARTELLA`.
+
+### Previsione dei semafori
+
+Questi semafori hanno un ciclo fisso (45–90 s a seconda dell'impianto e
+dell'ora), ma la durata del verde varia con il traffico. DriveNow non
+guarda il futuro registrato. Per ogni segnale impara dagli ultimi 20 cicli
+la probabilità di verde in ogni secondo del ciclo, e considera verde un
+secondo futuro solo se quella probabilità arriva all'80%
+(`drivenow/hamburg/signals.py`).
+
+Ecco quanto la previsione indovina lo stato reale nell'ora di prova:
+
+| Fra | 5 s | 15 s | 30 s | 60 s | 90 s |
+|---|---|---|---|---|---|
+| Stato corretto | 93,4% | 92,5% | 92,1% | 92,2% | 91,7% |
+| Previsto verde, era rosso | 1,0% | 1,1% | 0,5% | 0,5% | 0,5% |
+| Verde reale non previsto | 5,6% | 6,4% | 7,4% | 7,4% | 7,8% |
+
+L'errore pericoloso, cioè promettere un verde che non arriva, è raro. Quello
+più frequente è prudente: un verde reale che il modello non dà per certo.
+
+### Effetto in simulazione
+
+Ogni esperimento dura un'ora; il confronto è tra 0% e 100% di auto DriveNow.
+L'"oracolo" usa il futuro registrato al posto della previsione e indica il
+massimo ottenibile con una previsione perfetta.
+
+| Traffico | Consiglio | Fermate | Frenate | Energia nei freni | Tempo |
+|---|---|---|---|---|---|
+| Ora di punta | nessuno | 3,44 | 12,15 | 387 kJ | 329 s |
+| | previsione | 3,21 | 10,63 | 308 kJ | 336 s |
+| | oracolo | 3,15 | 10,78 | 317 kJ | 327 s |
+| Metà traffico | nessuno | 2,93 | 10,54 | 398 kJ | 254 s |
+| | previsione | 2,90 | 10,13 | 326 kJ | 259 s |
+| | oracolo | 2,89 | 10,13 | 328 kJ | 259 s |
+
+L'energia buttata nei freni cala del 18–20% e le frenate dal 4 al 13%. Le
+fermate, invece, quasi non cambiano. Contando dove si fermano le auto (metà
+traffico, primi 25 minuti), il motivo si vede:
+
+| Dove avviene la fermata | Quota |
+|---|---|
+| Semafori presi da OpenStreetMap, senza dati reali e quindi senza consiglio | 53% |
+| Incroci con precedenza | 24% |
+| I 9 impianti con dati reali di Amburgo | 23% |
+
+Su questi ultimi, con l'oracolo, le fermate calano del 10%. Il collo di
+bottiglia quindi non è la previsione, che è quasi buona quanto l'oracolo, ma
+la **copertura**: dei 35 impianti semaforici della zona simulata, solo 9
+hanno dati reali. Il passo successivo è scegliere un corridoio in cui tutti i semafori
+sono coperti (la città ne pubblica circa 800) e ripetere la misura.
+
 ## Dal simulatore alla strada vera
 
 Il motore di calcolo non sa da dove arrivano i dati. La simulazione interna e
@@ -164,9 +242,12 @@ drivenow/
   advisor.py      unisce rete, traffico e calcolo: consiglio per veicolo e campo per la mappa
   simulation.py   simulatore interno (IDM, semafori, rotonda, precedenza)
   sumo_world.py   ponte TraCI con SUMO
+  hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
 data/sumo/        reti della repository Traffc_light_control
+data/hamburg/     scenario reale di Amburgo (rete, semafori registrati, traffico)
+tools/            costruzione dello scenario di Amburgo, esperimenti, registrazione delle pagine
 tests/            pytest (i test SUMO si saltano se SUMO non è installato)
 ```
 

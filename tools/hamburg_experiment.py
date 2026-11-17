@@ -10,16 +10,17 @@ ap = argparse.ArgumentParser()
 ap.add_argument("mode", choices=["none", "predict", "oracle"])
 ap.add_argument("--minutes", type=float, default=60)
 ap.add_argument("--out", default=None)
+ap.add_argument("--scale", type=float, default=1.0, help="share of the hour's traffic to run (1 = all)")
 a = ap.parse_args()
 w = HamburgWorld(penetration=0.0 if a.mode == "none" else 1.0, forecast="oracle" if a.mode == "oracle" else "predict",
-                 label="exp_" + a.mode)
+                 label="exp_" + a.mode, scale=a.scale)
 t0 = time.time()
 for i in range(int(a.minutes * 60 / w.dt)):
     w.step()
     if i % 3000 == 0:
         print(a.mode, round(w.t), "s, vehicles", len(w.vehicles), "wall", round(time.time() - t0), flush=True)
 grp = w.stats[a.mode != "none"]
-res = {"mode": a.mode, "minutes": a.minutes, **grp.summary(), "still_in_network": len(w.vehicles)}
+res = {"mode": a.mode, "minutes": a.minutes, "scale": a.scale, **grp.summary(), "still_in_network": len(w.vehicles)}
 print(json.dumps(res))
 if a.out:
     json.dump(res, open(a.out, "w"))

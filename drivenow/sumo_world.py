@@ -73,6 +73,7 @@ class SumoWorld:
         label: str = "drivenow",
         route_file: Optional[str] = None,
         teleport: float = -1,
+        scale: float = 1.0,
     ) -> None:
         import traci
 
@@ -98,7 +99,7 @@ class SumoWorld:
         cmd = [
             _sumo_binary(gui), "-n", self.net_path, "-r", self._route_file,
             "--step-length", str(dt), "--no-step-log", "true", "--no-warnings", "true",
-            "--time-to-teleport", str(teleport), "--seed", str(seed),
+            "--time-to-teleport", str(teleport), "--seed", str(seed), "--scale", str(scale),
         ]
         traci.start(cmd, label=label)
         self.conn = traci.getConnection(label)

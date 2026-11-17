@@ -70,7 +70,6 @@ def test_built_files_are_consistent():
 
 def test_sumo_runs_the_recorded_lights():
     pytest.importorskip("traci")
-    pytest.importorskip("pyproj")
     if not os.path.exists(os.path.join(DATA, "routes.rou.xml")):
         pytest.skip("Hamburg data not built")
     from drivenow.hamburg.world import SUMO_CHAR, HamburgWorld

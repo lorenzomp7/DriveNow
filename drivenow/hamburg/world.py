@@ -32,7 +32,7 @@ UI_CHAR = {3: "G", 6: "G", 2: "y", 4: "y", 1: "r"}
 class HamburgWorld(SumoWorld):
     def __init__(self, data_dir: str = DATA, penetration: float = 0.5, forecast: str = "predict",
                  seed: int = 1, dt: float = 0.2, gui: bool = False, label: str = "hamburg",
-                 threshold: float = 0.8) -> None:
+                 threshold: float = 0.8, scale: float = 1.0) -> None:
         scen = json.load(open(os.path.join(data_dir, "scenario.json")))
         self.T0 = scen["start"]
         self.forecast = forecast
@@ -48,7 +48,9 @@ class HamburgWorld(SumoWorld):
             self._tls_links[tls].append((int(idx), rec))
         self._last_state: Dict[str, str] = {}
         super().__init__(os.path.join(data_dir, "corridor.net.xml"), penetration=penetration, seed=seed, dt=dt,
-                         gui=gui, label=label, route_file=os.path.join(data_dir, "routes.rou.xml"), teleport=300)
+                         gui=gui, label=label, route_file=os.path.join(data_dir, "routes.rou.xml"), teleport=300,
+                         scale=scale)
+        self.net.name = "Amburgo · Willy-Brandt-Straße"
         self._index_movements()
         self.advisor = Advisor(self.net, windows_fn=self._windows)
         self._wcache: Dict[Tuple[int, int], List[Tuple[float, float]]] = {}
@@ -140,11 +142,19 @@ class HamburgWorld(SumoWorld):
         snap = super().snapshot()
         signals: Dict[str, Dict[str, list]] = {}
         real = self.T0 + self.t
+        wanted: Dict[str, set] = defaultdict(set)
         for node in self.net.nodes.values():
-            if node.kind != SIGNAL or not node.group_of:
+            if node.kind == SIGNAL:
+                wanted[node.id].update(node.group_of.values())
+        for v in self.vehicles.values():  # the exact movement each car is heading for
+            nc = v.next_control
+            if nc is not None and nc.kind == "signal" and nc.group:
+                wanted[nc.node].add(nc.group)
+        for node_id, groups_wanted in wanted.items():
+            if not groups_wanted:
                 continue
             groups = {}
-            for ds_s in set(node.group_of.values()):
+            for ds_s in groups_wanted:
                 ds = int(ds_s)
                 code = self.history.code_at(ds, real)
                 st = UI_CHAR.get(code, "r")
@@ -158,7 +168,7 @@ class HamburgWorld(SumoWorld):
                         if first is not None:
                             change, nxt = first, "G"
                 groups[ds_s] = [st, None if change is None else round(change, 1), nxt]
-            signals[node.id] = groups
+            signals[node_id] = groups
         snap["signals"] = signals
         snap["clock"] = real
         return snap

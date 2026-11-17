@@ -116,7 +116,9 @@ $("btn-next").onclick = () => { pickEquipped(true); setFollow(true); };
 
 function pickEquipped(other) {
   if (!frame) return;
-  const pool = frame.vehicles.filter((v) => v[5] === 1 && v[0] !== selected && v[7] >= 1);
+  // Prefer a DriveNow car heading for a traffic light, where the advice is most interesting.
+  let pool = frame.vehicles.filter((v) => v[5] === 1 && v[0] !== selected && v[7] >= 1 && v[7] <= 3);
+  if (!pool.length) pool = frame.vehicles.filter((v) => v[5] === 1 && v[0] !== selected && v[7] >= 1);
   const any = frame.vehicles.filter((v) => v[5] === 1 && (!other || v[0] !== selected));
   const list = pool.length ? pool : any;
   if (list.length) selected = list[Math.floor(Math.random() * list.length)][0];
@@ -190,20 +192,15 @@ function draw() {
   ctx.fillRect(0, 0, view.W, view.H);
   const m = view.s;
 
-  // Asphalt: one wide band per road (both directions).
-  const done = new Set();
-  for (const e of edges.values()) {
-    const key = [e.from, e.to].sort().join("|");
-    if (done.has(key)) continue;
-    done.add(key);
-    const a = nodes.get(e.from), b = nodes.get(e.to);
-    strokePath([[a.x, a.y], [b.x, b.y]], Math.max(10 * m, 4), C.road);
-  }
+  // Asphalt along each lane's own shape, so curved streets stay curved.
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  for (const e of edges.values()) strokePath(e.shape, Math.max(6.5 * m, 3), C.road);
+  ctx.lineCap = "butt";
   for (const n of nodes.values()) {
     if (n.kind === "border") continue;
     const [sx, sy] = toScreen(n.x, n.y);
     ctx.fillStyle = C.node;
-    ctx.beginPath(); ctx.arc(sx, sy, Math.max((n.r + 3) * m, 4), 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx, sy, Math.max(Math.min(n.r + 3, 14) * m, 3), 0, 7); ctx.fill();
     if (n.kind === "roundabout") {
       ctx.fillStyle = "#16301e";
       ctx.beginPath(); ctx.arc(sx, sy, Math.max((n.r - 6) * m, 2), 0, 7); ctx.fill();

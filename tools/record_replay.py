@@ -35,10 +35,10 @@ def record(minutes: float, penetration: float, warmup: float, seed: int, every: 
     if hamburg:
         from drivenow.hamburg.world import HamburgWorld
 
-        sim = HamburgWorld(penetration=penetration, seed=seed, label="replay")
+        sim = HamburgWorld(penetration=penetration, seed=seed, label="replay", scale=0.5)
         dt = sim.dt
         place = ("del corridoio di Willy-Brandt-Straße ad Amburgo, con i semafori reali registrati il "
-                 "14 settembre 2023 dalle 17:00 e la mappa di OpenStreetMap")
+                 "14 settembre 2023 dalle 17:00, la mappa di OpenStreetMap e metà del traffico dell'ora di punta")
     else:
         sim = Simulation(demo_city(), SimConfig(penetration=penetration, seed=seed))
         dt = sim.cfg.dt
@@ -65,7 +65,7 @@ def record(minutes: float, penetration: float, warmup: float, seed: int, every: 
             "dt": dt * every, "note": note}
 
 
-def build_page() -> str:
+def build_page(title: str = "DriveNow") -> str:
     html = open(os.path.join(ROOT, "web", "index.html"), encoding="utf-8").read()
     css = open(os.path.join(ROOT, "web", "style.css"), encoding="utf-8").read()
     js = open(os.path.join(ROOT, "web", "app.js"), encoding="utf-8").read()
@@ -73,7 +73,7 @@ def build_page() -> str:
     body = body.replace('<script src="app.js"></script>', "")
     return (
         "<meta charset=\"utf-8\">\n"
-        "<title>DriveNow</title>\n"
+        f"<title>{title}</title>\n"
         '<meta name="claude:viewport-fit-sides" content="cover">\n'
         f"<style>\n{css}\n{PAGE_EXTRA_CSS}</style>\n"
         f'<div class="app" data-replay="replay.json">{body}</div>\n'
@@ -96,7 +96,7 @@ def main() -> None:
     with open(os.path.join(args.out, "replay.json"), "w") as f:
         json.dump(data, f, separators=(",", ":"))
     with open(os.path.join(args.out, "index.html"), "w", encoding="utf-8") as f:
-        f.write(build_page())
+        f.write(build_page("DriveNow Amburgo" if args.hamburg else "DriveNow"))
     print("frames", len(data["frames"]), "size MB", round(os.path.getsize(os.path.join(args.out, "replay.json")) / 1e6, 2))
 
 
