@@ -19,6 +19,7 @@ from typing import Dict, List, Optional, Tuple
 
 from ..advisor import Advisor
 from ..network import SIGNAL
+from ..probe import ProbeLearner
 from ..simulation import GroupStats
 from ..sumo_world import SumoWorld
 from .signals import GREEN, CyclePredictor, SignalHistory
@@ -65,6 +66,12 @@ class HamburgWorld(SumoWorld):
         self.main_roads = set(scen.get("main_roads") or [])
         self.corridor_stats = {True: GroupStats(), False: GroupStats()}
         self._wcache: Dict[Tuple[int, int], Optional[List[Tuple[float, float]]]] = {}
+        # Lights without Hamburg data: learn their timing from the DriveNow cars that pass them.
+        self.learn_lights = True
+        self.probe = ProbeLearner()
+        self._probe_edges = {e for n in self.net.nodes.values() if n.kind == SIGNAL
+                             for e in self.net.in_edges[n.id] if e not in self.edge_ds}
+        self._probe_prev: Dict[str, Tuple[str, bool]] = {}
 
     # -- which recorded signal controls which movement ------------------------
 
@@ -92,6 +99,9 @@ class HamburgWorld(SumoWorld):
         if ds is None:
             ds = self.edge_ds.get(edge)
         if ds is None:
+            if self.learn_lights and edge in self._probe_edges:
+                w = self.probe.green_windows(edge, t, 120)
+                return None if w is None else (w, "probe:" + edge)
             return None
         key = (ds, int(t * 2))
         if key in self._wcache:
@@ -119,6 +129,31 @@ class HamburgWorld(SumoWorld):
     def _on_arrival(self, veh) -> None:
         if self.along_corridor(veh.route):
             self.corridor_stats[veh.equipped].add(veh, self.t)
+
+    # -- learning lights without data -------------------------------------------
+
+    def step(self) -> None:
+        super().step()
+        if self.learn_lights:
+            self._report_probes()
+
+    def _report_probes(self) -> None:
+        """What each DriveNow car tells about the light ahead: waiting, driving off, crossing."""
+        for vid, veh in self.vehicles.items():
+            if not veh.equipped or not veh.route:
+                continue
+            edge, inside = veh.edge, vid in self._internal
+            prev = self._probe_prev.get(vid)
+            if prev is not None and prev[0] in self._probe_edges and not prev[1] and (inside or edge != prev[0]):
+                self.probe.report(self.t, vid, prev[0], 0.0, veh.v, crossed=True)
+            if edge in self._probe_edges and not inside:
+                to_line = self.net.edges[edge].length - veh.pos
+                self.probe.report(self.t, vid, edge, to_line, veh.v, crossed=False)
+            self._probe_prev[vid] = (edge, inside)
+        if len(self._probe_prev) > len(self.vehicles) + 200:
+            for vid in [v for v in self._probe_prev if v not in self.vehicles]:
+                del self._probe_prev[vid]
+                self.probe.forget(vid)
 
     # -- driving SUMO's lights from the recording --------------------------------
 
@@ -180,10 +215,14 @@ class HamburgWorld(SumoWorld):
                 continue
             groups = {}
             for ds_s in groups_wanted:
-                ds = int(ds_s)
-                code = self.history.code_at(ds, real)
-                st = UI_CHAR.get(code, "r")
-                w = self._windows_for_ui(ds)
+                if ds_s.startswith("probe:"):
+                    # Learnt from the cars: show the forecast, the only thing DriveNow knows.
+                    w = self.probe.green_windows(ds_s[6:], self.t, 120)
+                    st = "G" if w and w[0][0] <= 0 else "r"
+                else:
+                    ds = int(ds_s)
+                    st = UI_CHAR.get(self.history.code_at(ds, real), "r")
+                    w = self._windows_for_ui(ds)
                 change, nxt = None, None
                 if w:
                     if st == "G" and w[0][0] <= 0:
