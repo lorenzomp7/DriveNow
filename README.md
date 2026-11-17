@@ -136,14 +136,18 @@ semafori successivi non sono prevedibili.
 
 ## Dati reali: Amburgo
 
-Per provare DriveNow su dati veri c'è uno scenario reale: il corridoio di
-Willy-Brandt-Straße / Ludwig-Erhard-Straße, nel centro di Amburgo (circa
-1,9 km, 9 impianti semaforici), nell'ora di punta di giovedì 14 settembre
-2023, dalle 17 alle 18.
+Per provare DriveNow su dati veri ci sono due scenari reali di Amburgo,
+entrambi nell'ora di punta di giovedì 14 settembre 2023, dalle 17 alle 18:
+
+- **Gärtnerstraße** (default): Osterstraße → Gärtnerstraße → Breitenfelder
+  Straße, circa 1,8 km. Quasi tutti i semafori del tratto hanno dati reali.
+- **Willy-Brandt-Straße / Ludwig-Erhard-Straße**, nel centro (circa 1,9 km,
+  9 impianti semaforici con dati, molti altri senza).
 
 ```bash
 pip install eclipse-sumo traci sumolib
-python -m drivenow.server --hamburg
+python -m drivenow.server --hamburg                 # Gärtnerstraße
+python -m drivenow.server --hamburg willy-brandt
 ```
 
 Da dove vengono i dati:
@@ -155,11 +159,14 @@ Da dove vengono i dati:
   semafori stanno dove li ha Amburgo; dove Amburgo non fornisce dati restano
   quelli di OpenStreetMap, con un programma fisso stimato da SUMO.
 - **Traffico: in parte reale.** Dove esistono, i volumi sono tarati sui
-  conteggi dei rilevatori di Amburgo in quell'ora. L'asse principale non ha
-  rilevatori, quindi lì il volume è un'ipotesi (400 auto/ora per tratto).
+  conteggi dei rilevatori di Amburgo in quell'ora. Dove mancano rilevatori
+  (l'asse principale di Willy-Brandt-Straße, alcuni tratti di Gärtnerstraße)
+  il volume è un'ipotesi, scritta in `scenario.json`.
 
 Dettagli, fonti e licenze sono in [`data/hamburg/README.md`](data/hamburg/README.md).
-Tutto si ricostruisce con `python tools/hamburg_build.py --cache CARTELLA`.
+Tutto si ricostruisce con
+`python tools/hamburg_build.py --scenario gaertnerstrasse --cache CARTELLA`
+(o `--scenario willy-brandt`).
 
 ### Previsione dei semafori
 
@@ -170,7 +177,17 @@ la probabilità di verde in ogni secondo del ciclo, e considera verde un
 secondo futuro solo se quella probabilità arriva all'80%
 (`drivenow/hamburg/signals.py`).
 
-Ecco quanto la previsione indovina lo stato reale nell'ora di prova:
+Il ciclo viene dal dato "secondo del ciclo" che ogni impianto pubblica. Quel
+dato però ha buchi lunghi nella registrazione: a Gärtnerstraße manca per
+quasi tutta l'ora di prova. In quel caso il ciclo si ricava dagli inizi del
+verde del semaforo stesso. Se non c'è un ciclo regolare (una strada
+principale che diventa rossa solo a richiesta), la previsione è la quota di
+tempo in cui il semaforo è stato verde nell'ultima mezz'ora. Se non si sa
+proprio nulla, DriveNow non dà consigli per quel semaforo, invece di
+considerarlo sempre rosso.
+
+Ecco quanto la previsione indovina lo stato reale nell'ora di prova
+(Willy-Brandt-Straße):
 
 | Fra | 5 s | 15 s | 30 s | 60 s | 90 s |
 |---|---|---|---|---|---|
@@ -209,8 +226,46 @@ traffico, primi 25 minuti), il motivo si vede:
 Su questi ultimi, con l'oracolo, le fermate calano del 10%. Il collo di
 bottiglia quindi non è la previsione, che è quasi buona quanto l'oracolo, ma
 la **copertura**: dei 35 impianti semaforici della zona simulata, solo 9
-hanno dati reali. Il passo successivo è scegliere un corridoio in cui tutti i semafori
-sono coperti (la città ne pubblica circa 800) e ripetere la misura.
+hanno dati reali. Per questo c'è il secondo scenario.
+
+### Gärtnerstraße: un corridoio coperto
+
+Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
+53% dei link semaforici di SUMO (gli altri sono soprattutto corsie di svolta
+e strade laterali senza dati). La rete comprende solo una fascia di 80 m
+attorno al corridoio, quindi le strade laterali sono brevi.
+
+La previsione, misurata sui segnali usati dalla simulazione:
+
+| Fra | 5 s | 15 s | 30 s | 60 s | 90 s |
+|---|---|---|---|---|---|
+| Stato corretto | 96,8% | 96,5% | 96,3% | 96,0% | 95,9% |
+| Previsto verde, era rosso | 1,5% | 1,7% | 1,8% | 2,0% | 2,0% |
+| Verde reale non previsto | 1,7% | 1,8% | 1,9% | 1,9% | 2,2% |
+
+Metà del traffico stimato (a pieno traffico la rete ritagliata si
+intasa), un'ora, 0% contro 100% di auto DriveNow. "Asse" sono i viaggi che
+percorrono il corridoio per almeno il 60% della strada (circa 360 viaggi);
+"tutti" sono tutti i viaggi (circa 610):
+
+| Viaggi | Consiglio | Fermate | Frenate | Energia nei freni | Tempo |
+|---|---|---|---|---|---|
+| Asse | nessuno | 0,98 | 2,71 | 136 kJ | 160 s |
+| | previsione | 0,94 | 2,48 | 100 kJ | 169 s |
+| | oracolo | 0,91 | 2,46 | 101 kJ | 164 s |
+| Tutti | nessuno | 1,06 | 3,15 | 159 kJ | 189 s |
+| | previsione | 1,02 | 2,86 | 118 kJ | 178 s |
+| | oracolo | 1,02 | 2,83 | 117 kJ | 180 s |
+
+Con la copertura quasi completa l'energia buttata nei freni cala di un
+quarto (−26%), le frenate dell'8–9% e le fermate del 4–7%. Sull'asse la
+previsione costa 9 s a viaggio (+5,5%) contro i 3,5 s dell'oracolo: sono i
+verdi che il modello non dà per certi, per cui l'auto rallenta per niente.
+Sull'insieme dei viaggi il tempo invece cala, perché si formano meno code.
+
+È una sola simulazione per caso, con un solo seme casuale: le differenze
+piccole (le fermate, il tempo) vanno prese come indicazioni, non come
+misure precise.
 
 ## Dal simulatore alla strada vera
 

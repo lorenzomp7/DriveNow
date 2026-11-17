@@ -19,10 +19,16 @@ from typing import Dict, List, Optional, Tuple
 
 from ..advisor import Advisor
 from ..network import SIGNAL
+from ..simulation import GroupStats
 from ..sumo_world import SumoWorld
 from .signals import GREEN, CyclePredictor, SignalHistory
 
 DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "hamburg")
+SCENARIOS = ("gaertnerstrasse", "willy-brandt")
+
+
+def scenario_dir(scenario: str) -> str:
+    return os.path.join(DATA, scenario)
 
 # Hamburg code -> SUMO signal character. Links without Hamburg data follow SUMO's own programme.
 SUMO_CHAR = {3: "G", 6: "G", 2: "y", 4: "u", 1: "r", 5: "o", 0: "O", 9: "O"}
@@ -30,10 +36,12 @@ UI_CHAR = {3: "G", 6: "G", 2: "y", 4: "y", 1: "r"}
 
 
 class HamburgWorld(SumoWorld):
-    def __init__(self, data_dir: str = DATA, penetration: float = 0.5, forecast: str = "predict",
+    def __init__(self, scenario: str = "gaertnerstrasse", penetration: float = 0.5, forecast: str = "predict",
                  seed: int = 1, dt: float = 0.2, gui: bool = False, label: str = "hamburg",
                  threshold: float = 0.8, scale: float = 1.0) -> None:
+        data_dir = scenario_dir(scenario)
         scen = json.load(open(os.path.join(data_dir, "scenario.json")))
+        self.scenario = scenario
         self.T0 = scen["start"]
         self.forecast = forecast
         self.history = SignalHistory.load(os.path.join(data_dir, "signals.csv.gz"))
@@ -50,10 +58,13 @@ class HamburgWorld(SumoWorld):
         super().__init__(os.path.join(data_dir, "corridor.net.xml"), penetration=penetration, seed=seed, dt=dt,
                          gui=gui, label=label, route_file=os.path.join(data_dir, "routes.rou.xml"), teleport=300,
                          scale=scale)
-        self.net.name = "Amburgo · Willy-Brandt-Straße"
+        self.net.name = scen.get("title", "Amburgo")
         self._index_movements()
         self.advisor = Advisor(self.net, windows_fn=self._windows)
-        self._wcache: Dict[Tuple[int, int], List[Tuple[float, float]]] = {}
+        # Trips that mostly follow the corridor's main road (long approaches between lights).
+        self.main_roads = set(scen.get("main_roads") or [])
+        self.corridor_stats = {True: GroupStats(), False: GroupStats()}
+        self._wcache: Dict[Tuple[int, int], Optional[List[Tuple[float, float]]]] = {}
 
     # -- which recorded signal controls which movement ------------------------
 
@@ -83,17 +94,31 @@ class HamburgWorld(SumoWorld):
         if ds is None:
             return None
         key = (ds, int(t * 2))
-        w = self._wcache.get(key)
-        if w is None:
+        if key in self._wcache:
+            w = self._wcache[key]
+        else:
             real = self.T0 + t
             if self.forecast == "oracle":
-                w = self.history.green_windows(ds, real, 120)
+                w = self.history.green_windows(ds, real, 120) if ds in self.history else None
             else:
                 w = self.predictor.green_windows(ds, real, 120)
             if len(self._wcache) > 20000:
                 self._wcache.clear()
             self._wcache[key] = w
+        if w is None:
+            return None  # nothing known about this light: no advice for it, rather than "never green"
         return w, str(ds)
+
+    def along_corridor(self, route) -> bool:
+        """At least 60% of the trip's length is on the main road."""
+        total = sum(self.net.edges[e].length for e in route if e in self.net.edges)
+        main = sum(self.net.edges[e].length for e in route
+                   if e in self.net.edges and self.net.edges[e].name in self.main_roads)
+        return total > 0 and main / total >= 0.6
+
+    def _on_arrival(self, veh) -> None:
+        if self.along_corridor(veh.route):
+            self.corridor_stats[veh.equipped].add(veh, self.t)
 
     # -- driving SUMO's lights from the recording --------------------------------
 

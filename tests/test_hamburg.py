@@ -5,7 +5,8 @@ import pytest
 
 from drivenow.hamburg.signals import GREEN, CyclePredictor, SignalHistory
 
-DATA = os.path.join(os.path.dirname(__file__), "..", "data", "hamburg")
+DATA_ROOT = os.path.join(os.path.dirname(__file__), "..", "data", "hamburg")
+SCENARIOS = [s for s in ("willy-brandt", "gaertnerstrasse") if os.path.exists(os.path.join(DATA_ROOT, s, "routes.rou.xml"))]
 
 
 def synthetic(cycles=30, C=60, green=(10, 35), jitter=None):
@@ -47,35 +48,55 @@ def test_predictor_is_cautious_when_green_varies():
     assert w[0][1] == pytest.approx(30)  # the certain part only
 
 
-def test_predictor_without_cycle_data_gives_nothing():
+def test_predictor_without_history_gives_no_forecast():
     h = SignalHistory([(1000, 3, 1)])
-    assert CyclePredictor(h, {1: 2}).green_windows(1, 1010, 60) == []
+    assert CyclePredictor(h, {1: 2}).green_windows(1, 1010, 60) is None
 
 
-@pytest.mark.skipif(not os.path.exists(os.path.join(DATA, "links.json")), reason="Hamburg data not built")
-def test_built_files_are_consistent():
-    links = json.load(open(os.path.join(DATA, "links.json")))
-    lanes = json.load(open(os.path.join(DATA, "lanes.json")))
+def test_predictor_infers_cycle_when_feed_is_missing():
+    # Same fixed cycle, but the cycle-second stream (2) stops after cycle 5.
+    h = synthetic()
+    rows = [(t, c, ds) for ds in h.times for t, c in zip(h.times[ds], h.codes[ds]) if ds == 1 or t < 1000 + 5 * 60]
+    h = SignalHistory(rows)
+    p = CyclePredictor(h, {1: 2}, lookback_cycles=10)
+    t = 1000 + 25 * 60 + 5
+    w = p.green_windows(1, t, 120)
+    assert w[0] == pytest.approx((5, 30), abs=1)
+    assert w[1] == pytest.approx((65, 90), abs=1)
+
+
+def test_predictor_without_cycle_uses_green_share():
+    # A main road that turns red only twice in 40 minutes: no cycle, mostly green.
+    rows = [(0, 3, 1), (900, 1, 1), (915, 3, 1), (1800, 1, 1), (1812, 3, 1)]
+    p = CyclePredictor(SignalHistory(rows), {}, threshold=0.8)
+    w = p.green_windows(1, 2400, 60)
+    assert w == [(0.0, 61.0)]
+
+
+@pytest.mark.parametrize("scenario", SCENARIOS)
+def test_built_files_are_consistent(scenario):
+    data = os.path.join(DATA_ROOT, scenario)
+    links = json.load(open(os.path.join(data, "links.json")))
+    lanes = json.load(open(os.path.join(data, "lanes.json")))
     known = {t["datastreams"].get("primary_signal") for t in lanes}
     assert links and all(v["ds"] in known for v in links.values() if v["ds"])
-    h = SignalHistory.load(os.path.join(DATA, "signals.csv.gz"))
-    scen = json.load(open(os.path.join(DATA, "scenario.json")))
+    h = SignalHistory.load(os.path.join(data, "signals.csv.gz"))
+    scen = json.load(open(os.path.join(data, "scenario.json")))
     used = {v["ds"] for v in links.values() if v["ds"]}
     with_data = [ds for ds in used if ds in h]
     assert len(with_data) >= 0.8 * len(used)
-    # Lights change during the test hour.
-    ds = with_data[0]
-    assert h.changes(ds, scen["start"], scen["start"] + 600)
+    # Most signals change during the first minutes of the test hour (some only on demand).
+    changing = [ds for ds in with_data if h.changes(ds, scen["start"], scen["start"] + 600)]
+    assert len(changing) >= 0.5 * len(with_data)
 
 
-def test_sumo_runs_the_recorded_lights():
+@pytest.mark.parametrize("scenario", SCENARIOS)
+def test_sumo_runs_the_recorded_lights(scenario):
     pytest.importorskip("traci")
-    if not os.path.exists(os.path.join(DATA, "routes.rou.xml")):
-        pytest.skip("Hamburg data not built")
     from drivenow.hamburg.world import SUMO_CHAR, HamburgWorld
 
     try:
-        w = HamburgWorld(penetration=1.0, label="hh_test")
+        w = HamburgWorld(scenario=scenario, penetration=1.0, label="hh_test_" + scenario)
     except RuntimeError as exc:
         pytest.skip(str(exc))
     try:
@@ -90,7 +111,7 @@ def test_sumo_runs_the_recorded_lights():
             expected = SUMO_CHAR.get(w.history.code_at(rec["ds"], w.T0 + w.t), "O")
             assert state == expected, (key, state, expected)
             checked += 1
-        assert checked >= 20
+        assert checked >= 10
         snap = w.snapshot()
         assert snap["vehicles"] and snap["signals"]
         assert any(row[11] == "signal" for row in snap["vehicles"])

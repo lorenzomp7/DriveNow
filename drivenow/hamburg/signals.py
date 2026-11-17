@@ -16,6 +16,7 @@ from __future__ import annotations
 import bisect
 import csv
 import gzip
+import math
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -90,63 +91,132 @@ class SignalHistory:
 class CycleInfo:
     start: float    # absolute time the current cycle started
     length: float   # seconds
+    source: str = "feed"   # "feed": the controller's cycle-second stream; "onsets": inferred; "flat": no cycle
 
 
 class CyclePredictor:
-    """Green probability per second of the cycle, learned from recent cycles."""
+    """Green probability per second of the cycle, learned from recent cycles.
+
+    The cycle comes from the controller's cycle-second stream when it is
+    live. That stream has long gaps in the recording (hours at some
+    junctions), so otherwise the cycle is inferred from the signal's own
+    green starts; and when there is no regular cycle at all (a main road
+    that only turns red on demand), the forecast is the plain share of time
+    the signal was green recently, the same for every future second.
+    """
 
     def __init__(self, history: SignalHistory, cycle_ds: Dict[int, int], lookback_cycles: int = 20,
-                 threshold: float = 0.8) -> None:
+                 threshold: float = 0.8, window: float = 1800.0) -> None:
         self.h = history
         self.cycle_ds = cycle_ds          # signal datastream -> its cycle-second datastream
         self.lookback = lookback_cycles
         self.threshold = threshold
-        self._cache: Dict[Tuple[int, int], Tuple[CycleInfo, List[float]]] = {}
+        self.window = window              # seconds of the past used when inferring
+        self._cache: Dict[Tuple[int, int, str], List[float]] = {}
+
+    # -- where are we in the cycle ------------------------------------------------
 
     def cycle(self, ds: int, t: float) -> Optional[CycleInfo]:
+        return self._from_feed(ds, t) or self._from_onsets(ds, t)
+
+    def _from_feed(self, ds: int, t: float) -> Optional[CycleInfo]:
         cds = self.cycle_ds.get(ds)
         if cds is None or cds not in self.h:
             return None
-        resets = self.h.changes(cds, t - 6 * 90, t)
-        resets = [tc for tc, _ in resets]
+        resets = [tc for tc, _ in self.h.changes(cds, t - 6 * 90, t)]
         if len(resets) < 2:
             return None
-        lengths = [b - a for a, b in zip(resets, resets[1:])]
-        lengths.sort()
-        return CycleInfo(start=resets[-1], length=float(lengths[len(lengths) // 2]))
+        lengths = sorted(b - a for a, b in zip(resets, resets[1:]))
+        length = float(lengths[len(lengths) // 2])
+        if t - resets[-1] > 2 * length:
+            return None  # the stream went quiet: stale
+        return CycleInfo(start=resets[-1], length=length, source="feed")
+
+    def _onsets(self, ds: int, t0: float, t1: float) -> List[float]:
+        prev = self.h.code_at(ds, t0) in GREEN
+        out = []
+        for tc, code in self.h.changes(ds, t0 + 1e-6, t1):
+            g = code in GREEN
+            if g and not prev:
+                out.append(float(tc))
+            prev = g
+        return out
+
+    def _from_onsets(self, ds: int, t: float) -> Optional[CycleInfo]:
+        onsets = self._onsets(ds, t - self.window, t)
+        if len(onsets) < 6:
+            return None
+        diffs = sorted(b - a for a, b in zip(onsets, onsets[1:]))
+        C = round(diffs[len(diffs) // 2])
+        if not 30 <= C <= 150:
+            return None
+        regular = sum(1 for d in diffs if min(abs(d - k * C) for k in (1, 2, 3)) <= 3)
+        if regular < 0.7 * len(diffs):
+            return None
+        # Anchor the cycle at the usual green start (circular mean of the phases).
+        ang = [2 * math.pi * (o % C) / C for o in onsets]
+        phase = (math.atan2(sum(map(math.sin, ang)), sum(map(math.cos, ang))) / (2 * math.pi) * C) % C
+        start = t - ((t - phase) % C)
+        return CycleInfo(start=start, length=float(C), source="onsets")
+
+    # -- how likely is green ------------------------------------------------------
 
     def profile(self, ds: int, t: float) -> Optional[Tuple[CycleInfo, List[float]]]:
+        if ds not in self.h:
+            return None
         info = self.cycle(ds, t)
         if info is None:
-            return None
-        key = (ds, int(info.start))
+            return self._flat(ds, t)
+        key = (ds, int(info.start), info.source)
         if key in self._cache:
-            return self._cache[key]
+            return info, self._cache[key]
         C = int(round(info.length))
+        if info.source == "feed":
+            cds = self.cycle_ds[ds]
+            resets = [tc for tc, _ in self.h.changes(cds, info.start - (self.lookback + 2) * C, info.start)]
+            # Only cycles of the current length: a different programme was running otherwise.
+            starts = [a for a, b in zip(resets, resets[1:]) if round(b - a) == C]
+        else:
+            first = self.h.times[ds][0]
+            starts = [info.start - k * C for k in range(1, self.lookback + 1) if info.start - k * C >= first]
+        if not starts:
+            return self._flat(ds, t)
         hits = [0] * C
-        n = 0
-        cds = self.cycle_ds[ds]
-        resets = [tc for tc, _ in self.h.changes(cds, info.start - (self.lookback + 2) * C, info.start)]
-        for a, b in zip(resets, resets[1:]):
-            if round(b - a) != C:
-                continue  # a different programme was running
-            n += 1
+        for a in starts:
             for s in range(C):
                 if self.h.code_at(ds, a + s + 0.5) in GREEN:
                     hits[s] += 1
-        if n == 0:
-            return None
-        prof = [x / n for x in hits]
-        self._cache[key] = (info, prof)
+        prof = [x / len(starts) for x in hits]
         if len(self._cache) > 5000:
             self._cache.clear()
+        self._cache[key] = prof
         return info, prof
 
-    def green_windows(self, ds: int, t: float, horizon: float) -> List[Window]:
-        """Forecast green intervals (relative to ``t``), using only data up to ``t``."""
+    def _flat(self, ds: int, t: float) -> Optional[Tuple[CycleInfo, List[float]]]:
+        """No cycle: the share of the recent past the signal was green."""
+        ts, codes = self.h.times[ds], self.h.codes[ds]
+        t0 = max(t - self.window, ts[0])
+        if t - t0 < 600:
+            return None  # too little history to say anything
+        i = max(bisect.bisect_right(ts, t0) - 1, 0)
+        green, cur = 0.0, t0
+        while i < len(ts) and ts[i] < t:
+            nxt = ts[i + 1] if i + 1 < len(ts) else t
+            a, b = max(ts[i], t0), min(nxt, t)
+            if b > a and codes[i] in GREEN:
+                green += b - a
+            i += 1
+        return CycleInfo(start=t, length=1.0, source="flat"), [green / (t - t0)]
+
+    def green_windows(self, ds: int, t: float, horizon: float) -> Optional[List[Window]]:
+        """Forecast green intervals (relative to ``t``), using only data up to ``t``.
+
+        ``None`` means no forecast at all (unknown signal, or too little history):
+        not the same as "no green coming".
+        """
         got = self.profile(ds, t)
         if got is None:
-            return []
+            return None
         info, prof = got
         C = len(prof)
         out: List[Window] = []

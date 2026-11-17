@@ -3,7 +3,8 @@
     python -m drivenow.server                         # demo town, built-in simulation
     python -m drivenow.server --net data/sumo/2_2_intersections.net.xml
     python -m drivenow.server --sumo --net data/sumo/3_3_intersections.net.xml
-    python -m drivenow.server --hamburg               # real map and real traffic lights
+    python -m drivenow.server --hamburg               # real map and real traffic lights (Gärtnerstraße)
+    python -m drivenow.server --hamburg willy-brandt
 
 Then open http://localhost:8000. Only the Python standard library is needed
 (plus SUMO and TraCI for ``--sumo``).
@@ -170,7 +171,8 @@ def build_world(args):
     if args.hamburg:
         from .hamburg.world import HamburgWorld
 
-        return HamburgWorld(penetration=args.penetration, forecast=args.forecast, seed=args.seed, gui=args.gui)
+        return HamburgWorld(scenario=args.hamburg, penetration=args.penetration, forecast=args.forecast,
+                            seed=args.seed, gui=args.gui)
     if args.sumo:
         from .sumo_world import SumoWorld
 
@@ -186,8 +188,8 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description="DriveNow live speed map")
     ap.add_argument("--net", help="SUMO .net.xml network (default: the demo town)")
     ap.add_argument("--sumo", action="store_true", help="run the traffic in SUMO through TraCI")
-    ap.add_argument("--hamburg", action="store_true",
-                    help="real Hamburg corridor: OSM map, recorded traffic lights (needs SUMO)")
+    ap.add_argument("--hamburg", nargs="?", const="gaertnerstrasse", default=None, metavar="SCENARIO",
+                    help="real Hamburg corridor: gaertnerstrasse (default) or willy-brandt (needs SUMO)")
     ap.add_argument("--forecast", choices=["predict", "oracle"], default="predict",
                     help="with --hamburg: forecast the lights from the past, or use the recorded future")
     ap.add_argument("--gui", action="store_true", help="with --sumo, open sumo-gui as well")

@@ -148,6 +148,9 @@ class SumoWorld:
     def _before_step(self) -> None:
         """Hook for subclasses: runs before every SUMO step."""
 
+    def _on_arrival(self, veh: Vehicle) -> None:
+        """Hook for subclasses: a vehicle finished its trip."""
+
     # -- stepping ---------------------------------------------------------------
 
     def step(self) -> None:
@@ -169,6 +172,7 @@ class SumoWorld:
             self._internal.discard(vid)
             if veh is not None:
                 self.stats[veh.equipped].add(veh, self.t)
+                self._on_arrival(veh)
 
         data = c.vehicle.getAllSubscriptionResults()
         for vid, veh in self.vehicles.items():

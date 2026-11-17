@@ -31,13 +31,13 @@ PAGE_EXTRA_CSS = """
 
 
 def record(minutes: float, penetration: float, warmup: float, seed: int, every: int = 1,
-           hamburg: bool = False) -> dict:
+           hamburg: str = "") -> dict:
     if hamburg:
         from drivenow.hamburg.world import HamburgWorld
 
-        sim = HamburgWorld(penetration=penetration, seed=seed, label="replay", scale=0.5)
+        sim = HamburgWorld(scenario=hamburg, penetration=penetration, seed=seed, label="replay", scale=0.5)
         dt = sim.dt
-        place = ("del corridoio di Willy-Brandt-Straße ad Amburgo, con i semafori reali registrati il "
+        place = (f"di {sim.net.name.split('·')[-1].strip()} ad Amburgo, con i semafori reali registrati il "
                  "14 settembre 2023 dalle 17:00, la mappa di OpenStreetMap e metà del traffico dell'ora di punta")
     else:
         sim = Simulation(demo_city(), SimConfig(penetration=penetration, seed=seed))
@@ -88,7 +88,8 @@ def main() -> None:
     ap.add_argument("--penetration", type=float, default=0.5)
     ap.add_argument("--warmup", type=float, default=900)
     ap.add_argument("--seed", type=int, default=3)
-    ap.add_argument("--hamburg", action="store_true", help="record the real Hamburg corridor (needs SUMO)")
+    ap.add_argument("--hamburg", nargs="?", const="gaertnerstrasse", default="", metavar="SCENARIO",
+                    help="record a real Hamburg corridor (needs SUMO)")
     ap.add_argument("--every", type=int, default=2, help="simulation steps (0.2 s) between saved frames")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
@@ -96,7 +97,8 @@ def main() -> None:
     with open(os.path.join(args.out, "replay.json"), "w") as f:
         json.dump(data, f, separators=(",", ":"))
     with open(os.path.join(args.out, "index.html"), "w", encoding="utf-8") as f:
-        f.write(build_page("DriveNow Amburgo" if args.hamburg else "DriveNow"))
+        f.write(build_page("DriveNow Amburgo" if args.hamburg == "willy-brandt"
+                           else "DriveNow Gärtnerstraße" if args.hamburg else "DriveNow"))
     print("frames", len(data["frames"]), "size MB", round(os.path.getsize(os.path.join(args.out, "replay.json")) / 1e6, 2))
 
 
