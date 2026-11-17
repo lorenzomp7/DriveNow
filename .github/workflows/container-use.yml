@@ -32,6 +32,11 @@ jobs:
       - run: python -m pip install -r requirements-container-use.txt
       - run: python tools/container_use.py install
       - run: python tools/container_use.py doctor
+      - name: Load legacy NAT modules required by Dagger 0.18
+        run: |
+          sudo modprobe ip_tables
+          sudo modprobe iptable_nat
+          sudo iptables-legacy -t nat -S
       - run: python tools/container_use_smoke.py
       - name: Docker diagnostics on failure
         if: failure()

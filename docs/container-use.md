@@ -89,3 +89,8 @@ sul computer in cui si vuole utilizzare il tool.
 
 Per aggiornare la versione ricontrollare protocollo, schema della configurazione
 e checksum degli archivi ufficiali; poi ripetere la verifica con Docker.
+
+Su runner Linux che usano soltanto nftables, Dagger 0.18 può riavviarsi perché
+le tabelle NAT legacy non sono caricate. La CI carica `ip_tables` e
+`iptable_nat` sul proprio host temporaneo e verifica `iptables-legacy -t nat -S`
+prima dell'avvio. Il tool non applica questa modifica al computer dell'utente.
