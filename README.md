@@ -428,3 +428,9 @@ I controlli browser automatici verificano la demo su desktop e telefono,
 oltre ai test Python del motore. Comandi e procedura facoltativa con
 [vibetest-use](https://github.com/browser-use/vibetest-use) sono nella
 [guida ai test browser](docs/browser-testing.md).
+
+## Istruzioni per gli agenti di sviluppo
+
+La repo include le procedure di sviluppo di **agent-skills**, collegate da
+[`AGENTS.md`](AGENTS.md) e adattate al flusso di lavoro DriveNow tramite le
+regole del progetto. Vedi la [guida](docs/agent-skills.md).
