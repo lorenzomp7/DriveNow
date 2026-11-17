@@ -103,6 +103,19 @@ Tutto il calcolo è in `drivenow/glosa.py`, separato da mappa e simulazione.
 6. **Rotonde e precedenze.** La velocità massima è quella da cui, alzando il
    piede, si arriva all'ingresso a 25 km/h (20 km/h per una precedenza):
    `v = √(v_ingresso² + 2·0,7·d)`.
+7. **Varchi nella strada principale.** A una precedenza DriveNow guarda le
+   auto sulla strada principale, fino a 150 m per lato, e calcola quando
+   l'incrocio è libero: da 3,5 s prima a 1,5 s dopo il passaggio di ogni auto
+   è occupato. Se alla solita velocità si arriva in un varco, il consiglio
+   resta il tetto del punto 6. Altrimenti è la fascia di velocità che porta
+   all'incrocio nel varco successivo, come per un verde; se nessuna velocità
+   ragionevole ci arriva, si lascia scorrere l'auto fino alla linea. Chi gira
+   a destra dà precedenza solo a chi va nella stessa direzione; chi gira a
+   sinistra lasciando la strada principale dà precedenza al traffico che
+   arriva di fronte. Se un'auto segue a meno di 30 m, niente rallentamento in
+   anticipo: la si costringerebbe a frenare. Serve sapere dove sono le auto
+   sulla strada principale: un sensore all'incrocio o le auto stesse che
+   condividono la posizione.
 
 Se nessuna velocità prende il verde, il consiglio è di lasciar scorrere l'auto
 fino alla linea, così si arriva piano e senza frenate brusche.
@@ -118,7 +131,7 @@ viaggio:
 
 | Rete | Fermate | Frenate | Energia nei freni | Tempo di viaggio |
 |---|---|---|---|---|
-| Città demo (simulatore interno, 3 semi) | 1,33 → 0,55 | 2,49 → 1,32 | 96 → 25 kJ | 107 → 112 s (+4%) |
+| Città demo (simulatore interno, 3 semi) | 1,33 → 0,52 | 2,49 → 1,31 | 96 → 23 kJ | 107 → 112 s (+4%) |
 | Griglia 2×2 della repo base (SUMO, 30 min) | 1,35 → 0,16 | 2,60 → 0,73 | 146 → 20 kJ | 92 → 95 s (+3%) |
 | Griglia 3×3 della repo base (SUMO, 30 min) | 2,23 → 0,23 | 4,59 → 1,11 | 230 → 28 kJ | 133 → 136 s (+2%) |
 
@@ -223,7 +236,25 @@ traffico, primi 25 minuti), il motivo si vede:
 | Incroci con precedenza | 24% |
 | I 9 impianti con dati reali di Amburgo | 23% |
 
-Su questi ultimi, con l'oracolo, le fermate calano del 10%. Il collo di
+Le fermate alle precedenze sono quasi tutte inevitabili: l'asse principale
+ha tanto traffico che varchi di 5 secondi non se ne aprono quasi mai, e il
+consiglio giusto resta lasciar scorrere l'auto fino alla linea. Il consiglio
+sui varchi (punto 7) aiuta invece chi gira a sinistra lasciando l'asse. Media
+di due simulazioni, ora di punta, previsione:
+
+| Precedenze | Fermate | Frenate | Energia nei freni | Tempo |
+|---|---|---|---|---|
+| Solo tetto di velocità | 3,21 | 10,67 | 309 kJ | 331 s |
+| Varchi | 3,23 | 10,48 | 283 kJ | 340 s |
+| Varchi, ma non con un'auto vicina dietro (default) | 3,22 | 10,59 | 288 kJ | 333 s |
+
+Puntare ai varchi toglie il 7–8% dell'energia nei freni. Senza la regola
+sull'auto che segue costa però il 2,6% di tempo, perché chi rallenta per
+girare a sinistra rallenta anche chi gli sta dietro; con la regola il costo
+scende allo 0,7%. Nella città demo, dove la precedenza ha meno traffico, i
+varchi tolgono l'11–13% dell'energia nei freni senza costi di tempo.
+
+Sui 9 impianti con dati reali, con l'oracolo, le fermate calano del 10%. Il collo di
 bottiglia quindi non è la previsione, che è quasi buona quanto l'oracolo, ma
 la **copertura**: dei 35 impianti semaforici della zona simulata, solo 9
 hanno dati reali. Per questo c'è il secondo scenario.
