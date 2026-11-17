@@ -47,9 +47,8 @@ def main():
                     assert response.value.ok
                     expect(page.locator('[data-speed="2"]')).to_have_class('on')
                     for selector, value, payload in [('#pen', '75', {'penetration': .75}), ('#dem', '400', {'demand': 400})]:
-                        with page.expect_response(lambda r: '/api/settings' in r.url and r.request.method == 'POST') as response:
+                        with page.expect_response(lambda r: '/api/settings' in r.url and r.request.method == 'POST' and r.request.post_data_json == payload) as response:
                             page.locator(selector).fill(value)
-                            page.locator(selector).dispatch_event('change')
                         assert response.value.ok
                         assert response.value.request.post_data_json == payload
                     with runner.lock:
