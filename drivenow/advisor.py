@@ -68,6 +68,9 @@ class Advisor:
         # already counts that queue.
         self.slow_traffic = True
         self.slow_diff = 15 / 3.6   # m/s: traffic this much slower than us counts as slow
+        self.slow_moving = True     # moving slow traffic counts, not only standing queues...
+        self.slow_min_gap = 0.0     # m: ...when at least this far ahead...
+        self.slow_min_speed = 0.0   # m/s: ...and we drive at least this fast
         self.light_buffer = 50.0    # m: slow traffic this close to a known light (beyond its queue) is its queue
         self.car_space = 7.5        # m of road per queued car (length plus gap)
         self.considerate = True  # no early slowing for a gap with a car close behind
@@ -173,7 +176,9 @@ class Advisor:
         dist = 0.0
         stopped = 0                       # cars standing between us and the current point of the route
         tail: Optional[float] = None      # distance to the nearest standing car ahead
-        slow_below = max(STOPPED, v - self.slow_diff)
+        slow_below = STOPPED
+        if self.slow_moving and v >= self.slow_min_speed:
+            slow_below = max(STOPPED, v - self.slow_diff)
         slow: Optional[Tuple[float, float, int]] = None  # nearest slow car: distance, speed, cars before it
         seen = 0                          # cars ahead so far
         signal_queues: List[Tuple[float, int]] = []  # confident lights: distance, standing cars before them
@@ -189,7 +194,7 @@ class Advisor:
                     tail = start + min(standing)
             if slow is None:
                 for p, u in ahead:
-                    if u < slow_below:
+                    if u < STOPPED or (u < slow_below and start + p >= self.slow_min_gap):
                         slow = (start + p, u, seen)
                         break
                     seen += 1
