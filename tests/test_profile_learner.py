@@ -57,3 +57,18 @@ def test_acceleration_is_not_used_by_default():
         p.observe(k, 5.0 + 2.0 * k, "accel")
     assert len(p.accel) >= p.min_samples
     assert p.profile(DriverProfile()).accel == DriverProfile().accel
+
+
+def test_lifting_off_is_not_braking_for_any_car():
+    from drivenow.simulation import Vehicle, record_motion
+
+    ev = Vehicle("ev", ["e"], True, 0.0, coast_true=1.3)
+    usual = Vehicle("car", ["e"], True, 0.0)
+    for _ in range(10):
+        record_motion(ev, 10.0, 10.0 - 1.3 * 0.2, 0.2)       # regeneration: free
+        record_motion(usual, 10.0, 10.0 - 1.3 * 0.2, 0.2)    # 1.3 m/s^2 in a usual car: the brakes
+    assert ev.brake_events == 0 and ev.brake_energy == 0
+    assert usual.brake_events == 1 and usual.brake_energy > 0
+    sailing = Vehicle("sail", ["e"], True, 0.0, coast_true=0.35)
+    record_motion(sailing, 10.0, 10.0 - 0.6 * 0.2, 0.2)      # more than it loses by itself: brakes
+    assert sailing.brake_energy > 0

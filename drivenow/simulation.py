@@ -86,11 +86,17 @@ def refresh_display(veh: Vehicle, t: float) -> None:
 
 
 def record_motion(veh: Vehicle, v_old: float, v_new: float, dt: float) -> None:
-    """Count stops, braking events and the energy lost in the brakes."""
+    """Count stops, braking events and the energy lost in the brakes.
+
+    What a car loses by lifting off is free (engine braking, or regeneration for an
+    electric car), so only slowing beyond that counts: beyond the car's own figure
+    when it has one (``coast_true``), else beyond NATURAL_DECEL.
+    """
     decel = (v_old - v_new) / dt
-    if decel > NATURAL_DECEL:
-        veh.brake_energy += MASS * (decel - NATURAL_DECEL) * (v_old + v_new) / 2 * dt
-    is_braking = decel > BRAKE_THRESHOLD
+    natural = NATURAL_DECEL if veh.coast_true is None else veh.coast_true
+    if decel > natural:
+        veh.brake_energy += MASS * (decel - natural) * (v_old + v_new) / 2 * dt
+    is_braking = decel > natural + (BRAKE_THRESHOLD - NATURAL_DECEL)
     if is_braking and not veh.braking:
         veh.brake_events += 1
     veh.braking = is_braking
