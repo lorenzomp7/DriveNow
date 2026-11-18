@@ -113,6 +113,19 @@ function setFollow(on) {
 $("btn-fit").onclick = () => { setFollow(false); fit(); };
 $("btn-follow").onclick = () => setFollow(!follow);
 $("btn-next").onclick = () => { pickEquipped(true); setFollow(true); };
+// With a vehicle chosen, show its next two lights in full and dim the rest of the map's lights.
+let routeOnly = true;
+$("btn-lights").onclick = () => {
+  routeOnly = !routeOnly;
+  $("btn-lights").setAttribute("aria-pressed", routeOnly ? "true" : "false");
+};
+function lightTiers() {
+  if (!routeOnly || selected === null || !frame) return null;
+  const v = frame.vehicles.find((r) => r[0] === selected);
+  if (!v || !v[16] || !v[16].length) return null;
+  // approach edge -> [tier (1 = next light), signal group of the movement the car takes]
+  return new Map(v[16].map((l, i) => [l[3], [i + 1, l[1]]]));
+}
 
 function pickEquipped(other) {
   if (!frame) return;
@@ -225,20 +238,30 @@ function draw() {
   }
 
   // Signal heads and countdowns; give-way marks.
+  const tiers = lightTiers();
   for (const e of edges.values()) {
     const node = nodes.get(e.to);
     const [x, y] = e.shape[e.shape.length - 1];
     const [sx, sy] = toScreen(x, y);
     if (node.kind === "signal" && frame && frame.signals[node.id]) {
-      const g = node.groups[e.id];
+      const tier = tiers ? tiers.get(e.id) : undefined;
+      const g = tier && frame.signals[node.id][tier[1]] ? tier[1] : node.groups[e.id];
       const st = frame.signals[node.id][g];
       if (!st) continue;
+      const dim = tiers !== null && !tier;  // not on the chosen vehicle's way
       const col = st[0] === "G" ? C.go : st[0] === "y" ? "#facc15" : C.stop;
       const sure = st[3] !== false;  // false: a timing learnt from the cars, still only suspected
-      ctx.beginPath(); ctx.arc(sx, sy, Math.max(2.6 * m, 3.5), 0, 7);
+      const r = Math.max(2.6 * m, 3.5) * (tier && tier[0] === 1 ? 1.5 : 1);
+      ctx.globalAlpha = dim ? 0.3 : 1;
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7);
       if (sure) { ctx.fillStyle = col; ctx.fill(); }
       else { ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.stroke(); }
-      if (m > 0.75 && st[1] !== null) {
+      if (tier && tier[0] === 1) {
+        ctx.strokeStyle = "#e6edf3"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(sx, sy, r + 2.5, 0, 7); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      if (!dim && m > 0.75 && st[1] !== null) {
         ctx.font = "600 10px ui-sans-serif, system-ui, sans-serif";
         ctx.fillStyle = col; ctx.textAlign = "center"; ctx.textBaseline = "middle";
         const [, , h] = pointAt(e, e.len);
@@ -384,6 +407,17 @@ function updateHud() {
     if (unsure) light += " (stima incerta)";
   }
   $("light").textContent = light;
+
+  // The light after the next one on the route.
+  let light2 = "—";
+  const ahead = v[16] || [];
+  const second = nk === "signal" ? ahead[1] : ahead[0];
+  if (second && frame.signals[second[0]] && frame.signals[second[0]][second[1]]) {
+    const [st2, dt2, nx2, sure2] = frame.signals[second[0]][second[1]];
+    light2 = `tra ${second[2]} m: ${COLOR_NAME[st2]}` + (dt2 === null ? "" : `, ${COLOR_NAME[nx2]} tra ${Math.ceil(dt2)} s`);
+    if (sure2 === false) light2 += " (stima incerta)";
+  }
+  $("light2").textContent = light2;
 
   // Gauge
   const max = Math.max(limit + 20, 70);

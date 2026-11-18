@@ -8,7 +8,7 @@ the vehicles on it as ``(position, speed)`` pairs sorted by position.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from .glosa import (
@@ -40,6 +40,8 @@ class NextControl:
     node: str
     distance: float
     group: str = ""
+    # The next lights on the route, nearest first: (node, signal group, distance, approach edge).
+    lights: List[Tuple[str, str, float, str]] = field(default_factory=list)
 
 
 class Advisor:
@@ -80,6 +82,7 @@ class Advisor:
         # "straight" assumes it goes straight on, "common" uses at the next light only the green
         # that every way out shares. Within ``commit_distance`` of the line the lane the car is in
         # gives the turn away (0: never).
+        self.lights_shown = 2   # lights ahead on the route the driver is shown (the map dims the others)
         self.turns = "known"
         self.commit_distance = 50.0
         self.follower_gap = 30.0  # m
@@ -206,6 +209,7 @@ class Advisor:
         """Controls along ``route``. With ``turn_options``, the first light ahead is taken as green
         only when it is green for every one of those ways out of it."""
         first_light = True
+        lights: List[Tuple[str, str, float, str]] = []
         controls: List[Control] = []
         first: Optional[NextControl] = None
         dist = 0.0
@@ -263,6 +267,8 @@ class Advisor:
                 if certain:
                     signal_queues.append((dist, stopped))
                 first = first or NextControl("signal", node.id, dist, group)
+                if len(lights) < self.lights_shown:
+                    lights.append((node.id, group, dist, edge.id))
             elif node.kind == ROUNDABOUT:
                 controls.append(Control("yield", dist, node.id, entry_speed=node.entry_speed))
                 first = first or NextControl("roundabout", node.id, dist)
@@ -310,6 +316,8 @@ class Advisor:
         if q is not None:
             d = q.shown_distance if q.shown_distance is not None else q.distance
             controls.insert(next((i for i, c in enumerate(controls) if c.distance > d), len(controls)), q)
+        if first is not None:
+            first.lights = lights
         return controls, first
 
     def advise(
@@ -341,7 +349,8 @@ class Advisor:
             # The traffic ahead is what sets the speed now: tell the driver about it.
             q = next(c for c in controls if c.node == "queue")
             d = q.shown_distance if q.shown_distance is not None else q.distance
-            first = NextControl("queue", "queue", d, str(round(q.entry_speed * 3.6)))
+            first = NextControl("queue", "queue", d, str(round(q.entry_speed * 3.6)),
+                                first.lights if first is not None else [])
         return adv, first
 
     # -- the map layer --------------------------------------------------------

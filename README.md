@@ -29,10 +29,13 @@ Poi apri <http://localhost:8000>. La mappa si aggiorna 5 volte al secondo:
   verde vuol dire che al limite arrivi col verde, arancione che devi
   rallentare (l'etichetta, per esempio `18–35`, dice di quanto), rosso che il
   rosso è inevitabile, viola che c'è una rotonda o una precedenza;
-- **i semafori** mostrano il colore e i secondi al prossimo cambio;
+- **i semafori** mostrano il colore e i secondi al prossimo cambio. Quando
+  segui un'auto restano in evidenza solo i prossimi due sul suo percorso (il
+  primo con un anello bianco); gli altri si attenuano e perdono i secondi. Il
+  pulsante "Solo il suo percorso" li mostra di nuovo tutti;
 - **il pannello "Il tuo veicolo"** segue un'auto e le dà il consiglio come lo
   vedrebbe un guidatore: velocità consigliata, fascia, prossimo incrocio,
-  conto alla rovescia del semaforo;
+  conto alla rovescia del semaforo e, alla voce "Poi", il semaforo dopo;
 - **il confronto** misura, sui viaggi completati, fermate, frenate, energia
   buttata nei freni e tempo di viaggio delle auto che seguono il consiglio
   rispetto a quelle che non lo seguono.

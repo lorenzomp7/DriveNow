@@ -358,6 +358,8 @@ def vehicle_row(net: Network, vid, edge: str, pos: float, v: float, equipped: bo
     else:
         row += [nxt.kind, nxt.node, round(nxt.distance), nxt.group]
     row.append(announcements)  # grows by one at each announcement (a chime or a voice could follow it)
+    # The next lights on the route: [node, group, distance, approach edge], nearest first.
+    row.append([] if nxt is None else [[n, g, round(d), e] for n, g, d, e in nxt.lights])
     return row
 
 
