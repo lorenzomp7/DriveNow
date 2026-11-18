@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 from .advisor import Advisor, NextControl, Occupancy
+from .display import AdviceDisplay
 from .glosa import Advice
 from .network import BORDER, PRIORITY, ROUNDABOUT, SIGNAL, Network
 
@@ -53,10 +54,30 @@ class Vehicle:
     braking: bool = False
     advice: Optional[Advice] = None
     next_control: Optional[NextControl] = None
+    display: AdviceDisplay = field(default_factory=AdviceDisplay)
+    shown: Optional[Advice] = None   # what the driver sees (see display.py)
+    raw_changes: int = 0             # times the computed speed or kind changed
+    _raw_key: Optional[tuple] = None
 
     @property
     def edge(self) -> str:
         return self.route[self.idx]
+
+    def followed(self, shown: bool) -> Optional[Advice]:
+        """The advice the driver acts on: what is shown, or the raw computed one."""
+        return self.shown if shown else self.advice
+
+
+def refresh_display(veh: Vehicle, t: float) -> None:
+    """After a new advice: update what the driver sees, and count how often each changes."""
+    if veh.advice is None:
+        return
+    key = (veh.advice.kind, _kmh(veh.advice.target))
+    if key != veh._raw_key:
+        veh.raw_changes += 1
+        veh._raw_key = key
+    nc = veh.next_control
+    veh.shown = veh.display.update(t, veh.advice, None if nc is None else nc.kind + ":" + nc.node)
 
 
 def record_motion(veh: Vehicle, v_old: float, v_new: float, dt: float) -> None:
@@ -82,6 +103,9 @@ class GroupStats:
     stops: int = 0
     brake_events: int = 0
     brake_energy: float = 0.0
+    raw_changes: int = 0
+    shown_changes: int = 0
+    announcements: int = 0
 
     def add(self, v: Vehicle, t: float) -> None:
         self.trips += 1
@@ -89,6 +113,9 @@ class GroupStats:
         self.stops += v.stops
         self.brake_events += v.brake_events
         self.brake_energy += v.brake_energy
+        self.raw_changes += v.raw_changes
+        self.shown_changes += v.display.changes
+        self.announcements += v.display.announcements
 
     def summary(self) -> Dict[str, float]:
         n = max(self.trips, 1)
@@ -98,6 +125,9 @@ class GroupStats:
             "stops": round(self.stops / n, 2),
             "brake_events": round(self.brake_events / n, 2),
             "brake_energy_kj": round(self.brake_energy / n / 1000, 1),
+            "advice_changes": round(self.raw_changes / n, 1),
+            "shown_changes": round(self.shown_changes / n, 1),
+            "announcements": round(self.announcements / n, 1),
         }
 
 
@@ -120,6 +150,7 @@ class Simulation:
         self.vehicles: List[Vehicle] = []
         self._next_id = 0
         self._advice_clock = 0.0
+        self.follow_shown = False  # equipped drivers act on the shown advice instead of the raw one
         self.node_busy: Dict[str, float] = {}
         self.stats = {True: GroupStats(), False: GroupStats()}
         self._entries = net.entry_edges()
@@ -175,6 +206,7 @@ class Simulation:
             occ = self.occupancy()
             for veh in self.vehicles:
                 veh.advice, veh.next_control = self.advisor.advise(veh.route, veh.idx, veh.pos, veh.v, self.t, occ)
+                refresh_display(veh, self.t)
 
         for veh in self.vehicles:
             veh.a = self._acceleration(veh, by_edge)
@@ -229,7 +261,8 @@ class Simulation:
                 must_stop = True
             elif st == "y":
                 must_stop = veh.v * veh.v / (2 * YELLOW_DECEL) < to_line - 1.0
-            if must_stop and veh.equipped and veh.advice is not None and veh.advice.kind in ("go", "slow"):
+            adv = veh.followed(self.follow_shown)
+            if must_stop and veh.equipped and adv is not None and adv.kind in ("go", "slow"):
                 # A DriveNow driver knows the light turns green before they get there,
                 # so they do not brake for it, unless it is still red at stopping distance.
                 safe = veh.v * veh.v / (2 * YELLOW_DECEL) + 3.0
@@ -249,12 +282,13 @@ class Simulation:
             gap, dv = to_line - 1.0, veh.v
 
         a_idm = self._idm(veh.v, limit, gap, dv)
-        if not veh.equipped or veh.advice is None or veh.advice.target is None:
+        adv = veh.followed(self.follow_shown)
+        if not veh.equipped or adv is None or adv.target is None:
             return max(a_idm, -9.0)
 
         # DriveNow driver: track the advised speed, but only by lifting off.
-        target = veh.advice.target
-        if veh.advice.kind == "stop" and veh.next_control is not None and veh.next_control.node == node.id:
+        target = adv.target
+        if adv.kind == "stop" and veh.next_control is not None and veh.next_control.node == node.id:
             # Red is unavoidable: roll towards the line so the car arrives slowly.
             d = max(to_line - 2.0, 0.0)
             target = min(target, math.sqrt(2 * self.advisor.profile.coast_decel * d))
@@ -301,7 +335,7 @@ def _kmh(x: Optional[float]) -> Optional[int]:
 
 def vehicle_row(net: Network, vid, edge: str, pos: float, v: float, equipped: bool,
                 advice: Optional[Advice], nxt: Optional[NextControl],
-                xy: Optional[Tuple[float, float, float]] = None) -> List:
+                xy: Optional[Tuple[float, float, float]] = None, announcements: int = 0) -> List:
     x, y, h = xy if xy is not None else net.point_at(edge, pos)
     row = [vid, round(x, 1), round(y, 1), round(h, 2), _kmh(v), 1 if equipped else 0, round(net.edges[edge].speed * 3.6)]
     if advice is None:
@@ -312,6 +346,7 @@ def vehicle_row(net: Network, vid, edge: str, pos: float, v: float, equipped: bo
         row += [None, None, None, None]
     else:
         row += [nxt.kind, nxt.node, round(nxt.distance), nxt.group]
+    row.append(announcements)  # grows by one at each announcement (a chime or a voice could follow it)
     return row
 
 
@@ -331,7 +366,8 @@ def signal_states(net: Network, t: float) -> Dict[str, Dict[str, List]]:
 def snapshot(net: Network, t: float, vehicles: List[Vehicle], stats: Dict[bool, GroupStats]) -> Dict:
     return {
         "t": round(t, 1),
-        "vehicles": [vehicle_row(net, v.id, v.edge, v.pos, v.v, v.equipped, v.advice, v.next_control) for v in vehicles],
+        "vehicles": [vehicle_row(net, v.id, v.edge, v.pos, v.v, v.equipped, v.shown or v.advice, v.next_control,
+                                 announcements=v.display.announcements) for v in vehicles],
         "signals": signal_states(net, t),
         "stats": {"drivenow": stats[True].summary(), "normal": stats[False].summary(), "live": len(vehicles)},
     }

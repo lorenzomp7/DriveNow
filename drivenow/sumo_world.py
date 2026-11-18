@@ -27,7 +27,7 @@ from typing import Dict, List, Optional
 from .advisor import Advisor, NextControl, Occupancy
 from .glosa import Advice
 from .network import SIGNAL, load_sumo_net, sumo_link_states
-from .simulation import GroupStats, Vehicle, record_motion, signal_states, vehicle_row
+from .simulation import GroupStats, Vehicle, record_motion, refresh_display, signal_states, vehicle_row
 
 
 def read_routes(path: str) -> Dict[str, List[str]]:
@@ -87,6 +87,7 @@ class SumoWorld:
         self.vehicles: Dict[str, Vehicle] = {}
         self.stats = {True: GroupStats(), False: GroupStats()}
         self._advice_clock = 0.0
+        self.follow_shown = False  # equipped drivers act on the shown advice instead of the raw one
         self._xy: Dict[str, tuple] = {}
         self._internal: set = set()  # vehicles crossing a junction right now
 
@@ -202,12 +203,14 @@ class SumoWorld:
             for veh in self.vehicles.values():
                 if veh.route:
                     veh.advice, veh.next_control = self.advisor.advise(veh.route, veh.idx, veh.pos, veh.v, self.t, occ)
+                    refresh_display(veh, self.t)
         self._drive_equipped()
 
     def _drive_equipped(self) -> None:
         coast = self.advisor.profile.coast_decel
         for vid, veh in self.vehicles.items():
-            if not veh.equipped or veh.advice is None or veh.advice.target is None:
+            adv = veh.followed(self.follow_shown)
+            if not veh.equipped or adv is None or adv.target is None:
                 continue
             to_line = self.net.edges[veh.edge].length - veh.pos
             if vid in self._internal or to_line < 10.0:
@@ -215,10 +218,10 @@ class SumoWorld:
                 # never hold a car still on a junction with an old target.
                 self.conn.vehicle.setSpeed(vid, -1)
                 continue
-            target = veh.advice.target
-            if veh.advice.kind == "stop" and veh.next_control is not None:
+            target = adv.target
+            if adv.kind == "stop" and veh.next_control is not None:
                 target = min(target, math.sqrt(2 * coast * max(to_line - 2.0, 0.0)))
-            if veh.advice.kind == "free":
+            if adv.kind == "free":
                 self.conn.vehicle.setSpeed(vid, -1)
             elif target < veh.v:
                 self.conn.vehicle.setSpeed(vid, max(target, veh.v - coast * self.dt))
@@ -235,7 +238,8 @@ class SumoWorld:
         return occ
 
     def snapshot(self) -> Dict:
-        rows = [vehicle_row(self.net, v.id, v.edge, v.pos, v.v, v.equipped, v.advice, v.next_control, self._xy.get(v.id))
+        rows = [vehicle_row(self.net, v.id, v.edge, v.pos, v.v, v.equipped, v.shown or v.advice, v.next_control,
+                             self._xy.get(v.id), v.display.announcements)
                 for v in self.vehicles.values() if v.route and v.id in self._xy]
         return {
             "t": round(self.t, 1),

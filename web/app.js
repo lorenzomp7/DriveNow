@@ -322,12 +322,18 @@ function gaugePoint(v, max) {
 const NEXT_NAME = { signal: "Semaforo", roundabout: "Rotonda", yield: "Precedenza", queue: "Coda" };
 const COLOR_NAME = { G: "verde", y: "giallo", r: "rosso" };
 
+let lastAnnounce = { id: null, n: 0 };
 function updateHud() {
   if (!frame) return;
   let v = frame.vehicles.find((r) => r[0] === selected);
   if (!v) { pickEquipped(false); v = frame.vehicles.find((r) => r[0] === selected); }
   if (!v) return;
-  const [, , , , speed, eq, limit, kc, lo, hi, target, nk, nn, nd, ng] = v;
+  const [, , , , speed, eq, limit, kc, lo, hi, target, nk, nn, nd, ng, ann] = v;
+  // A new announcement for the same car: flash the advice once (a voice or a chime would go here).
+  if (ann !== undefined && v[0] === lastAnnounce.id && ann > lastAnnounce.n) {
+    const hud = $("hud"); hud.classList.remove("flash"); void hud.offsetWidth; hud.classList.add("flash");
+  }
+  lastAnnounce = { id: v[0], n: ann };
   const kind = KIND[kc] || "free";
   const tag = $("veh-tag");
   tag.textContent = eq ? "Segue DriveNow" : "Non segue il consiglio";

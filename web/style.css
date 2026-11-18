@@ -81,6 +81,9 @@ h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
 .g-hub { fill: var(--text); }
 .readout .big { font-size: 46px; font-weight: 750; line-height: 1; font-variant-numeric: tabular-nums; }
 .readout .big small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 4px; }
+@keyframes flash { from { box-shadow: 0 0 0 2px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
+.card.flash { animation: flash 1.2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .card.flash { animation: none; } }
 .kind { margin-top: 6px; font-weight: 650; font-size: 14px; }
 .kind.go { color: var(--go); } .kind.slow { color: var(--slow); } .kind.stop { color: var(--stop); } .kind.cap { color: var(--cap); }
 .advice { margin: 10px 0 8px; font-size: 13.5px; line-height: 1.4; color: #c9d4df; min-height: 38px; }
