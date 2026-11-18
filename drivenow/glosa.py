@@ -258,6 +258,7 @@ class Control:
     earliest: float = 0.0
     entry_speed: float = 0.0
     certain: bool = True   # a signal whose timing is only suspected: see ``advise``
+    shown_distance: Optional[float] = None  # where it really is, when ``distance`` is an equivalent
 
 
 def recommend(

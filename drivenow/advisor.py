@@ -7,6 +7,7 @@ the vehicles on it as ``(position, speed)`` pairs sorted by position.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
@@ -34,7 +35,7 @@ STOPPED = 2.0  # m/s; slower than this counts as queued
 
 @dataclass
 class NextControl:
-    kind: str          # 'signal' | 'roundabout' | 'yield'
+    kind: str          # 'signal' | 'roundabout' | 'yield' | 'queue'
     node: str
     distance: float
     group: str = ""
@@ -62,6 +63,13 @@ class Advisor:
         self.gap_after = 1.5     # s: and at least this long after the previous one has passed
         self.observe = 150.0     # m of main road watched on each side
         self.queue_aware = True   # count queues over the whole route; coast up to a standing queue
+        # Slow traffic ahead (not only a standing queue): lift off early enough to reach it at
+        # its speed. Not for the queue of a light with a confident forecast: the green advice
+        # already counts that queue.
+        self.slow_traffic = True
+        self.slow_diff = 15 / 3.6   # m/s: traffic this much slower than us counts as slow
+        self.light_buffer = 50.0    # m: slow traffic this close to a known light (beyond its queue) is its queue
+        self.car_space = 7.5        # m of road per queued car (length plus gap)
         self.considerate = True  # no early slowing for a gap with a car close behind
         self.follower_gap = 30.0  # m
         self.uncertain_drop = 10 / 3.6  # m/s: most a suspected light may slow a car (see glosa.advise)
@@ -158,22 +166,33 @@ class Advisor:
     # -- controls along a route -----------------------------------------------
 
     def controls_ahead(
-        self, route: Sequence[str], idx: int, pos: float, t: float, occupancy: Occupancy
+        self, route: Sequence[str], idx: int, pos: float, t: float, occupancy: Occupancy, v: float = 0.0
     ) -> Tuple[List[Control], Optional[NextControl]]:
         controls: List[Control] = []
         first: Optional[NextControl] = None
         dist = 0.0
         stopped = 0                       # cars standing between us and the current point of the route
         tail: Optional[float] = None      # distance to the nearest standing car ahead
+        slow_below = max(STOPPED, v - self.slow_diff)
+        slow: Optional[Tuple[float, float, int]] = None  # nearest slow car: distance, speed, cars before it
+        seen = 0                          # cars ahead so far
+        signal_queues: List[Tuple[float, int]] = []  # confident lights: distance, standing cars before them
         for k in range(idx, len(route)):
             edge = self.net.edges[route[k]]
             start = dist - (pos if k == idx else 0.0)  # distance to where this edge begins
             dist += edge.length - (pos if k == idx else 0.0)
-            standing = [p for p, v in occupancy.get(edge.id, []) if v < STOPPED and (k != idx or p > pos + 0.5)]
+            ahead = [(p, u) for p, u in occupancy.get(edge.id, []) if k != idx or p > pos + 0.5]
+            standing = [p for p, u in ahead if u < STOPPED]
             if standing:
                 stopped += len(standing)
                 if tail is None:
                     tail = start + min(standing)
+            if slow is None:
+                for p, u in ahead:
+                    if u < slow_below:
+                        slow = (start + p, u, seen)
+                        break
+                    seen += 1
             node = self.net.nodes[edge.to_node]
             if node.kind == BORDER:
                 break
@@ -193,6 +212,8 @@ class Advisor:
                         # Green now, but the queue in front is still pulling away.
                         earliest = max(earliest, self.margins.startup_lost_time + queue * self.margins.queue_headway)
                 controls.append(Control("signal", dist, node.id, windows, queue, earliest, certain=certain))
+                if certain:
+                    signal_queues.append((dist, stopped))
                 first = first or NextControl("signal", node.id, dist, group)
             elif node.kind == ROUNDABOUT:
                 controls.append(Control("yield", dist, node.id, entry_speed=node.entry_speed))
@@ -221,19 +242,40 @@ class Advisor:
                 first = first or NextControl("yield", node.id, dist)
             if dist > self.lookahead:
                 break
-        if self.queue_aware and tail is not None and not any(c.kind == "signal" and c.certain for c in controls):
+        q = None
+        if self.queue_aware and self.slow_traffic:
+            if slow is not None and slow[0] <= self.lookahead and not any(
+                    d >= slow[0] and d - slow[0] <= n * self.car_space + self.light_buffer for d, n in signal_queues):
+                # Slow or standing traffic ahead that no known light explains: reach it at its speed by
+                # lifting off. The cars before it will have to slow down too, so aim behind them.
+                d_slow, v_slow, before = slow
+                gap = max(d_slow - before * self.car_space - 2.0, 0.0)
+                # Coasting from v to v_slow behind a car that keeps moving needs only
+                # (v - v_slow)^2 / (2 b) of gap: as a fixed point, that is this much further on.
+                b = self.profile.coast_decel
+                q = Control("yield", gap + v_slow * math.sqrt(2 * gap / b), "queue", entry_speed=v_slow,
+                            shown_distance=gap)
+        elif self.queue_aware and tail is not None and not any(c.kind == "signal" and c.certain for c in controls):
             # A queue ahead with no known light behind it (a light without data or with only a
             # suspected timing, a busy junction): coast up to its end instead of braking there.
             q = Control("yield", max(tail - 2.0, 0.0), "queue", entry_speed=0.0)
-            controls.insert(next((i for i, c in enumerate(controls) if c.distance > q.distance), len(controls)), q)
+        if q is not None:
+            d = q.shown_distance if q.shown_distance is not None else q.distance
+            controls.insert(next((i for i, c in enumerate(controls) if c.distance > d), len(controls)), q)
         return controls, first
 
     def advise(
         self, route: Sequence[str], idx: int, pos: float, v: float, t: float, occupancy: Occupancy
     ) -> Tuple[Advice, Optional[NextControl]]:
-        controls, first = self.controls_ahead(route, idx, pos, t, occupancy)
+        controls, first = self.controls_ahead(route, idx, pos, t, occupancy, v)
         limit = self.net.edges[route[idx]].speed
-        return advise(controls, v, limit, self.profile, self.margins, self.max_signals, self.uncertain_drop), first
+        adv = advise(controls, v, limit, self.profile, self.margins, self.max_signals, self.uncertain_drop)
+        if "yield:queue" in adv.notes:
+            # The traffic ahead is what sets the speed now: tell the driver about it.
+            q = next(c for c in controls if c.node == "queue")
+            d = q.shown_distance if q.shown_distance is not None else q.distance
+            first = NextControl("queue", "queue", d, str(round(q.entry_speed * 3.6)))
+        return adv, first
 
     # -- the map layer --------------------------------------------------------
 

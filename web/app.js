@@ -319,7 +319,7 @@ function gaugePoint(v, max) {
   const th = Math.PI * (1 - Math.min(Math.max(v / max, 0), 1));
   return [110 + 90 * Math.cos(th), 115 - 90 * Math.sin(th)];
 }
-const NEXT_NAME = { signal: "Semaforo", roundabout: "Rotonda", yield: "Precedenza" };
+const NEXT_NAME = { signal: "Semaforo", roundabout: "Rotonda", yield: "Precedenza", queue: "Coda" };
 const COLOR_NAME = { G: "verde", y: "giallo", r: "rosso" };
 
 function updateHud() {
@@ -337,6 +337,7 @@ function updateHud() {
   const labels = { free: "Strada libera", go: "Verde in arrivo", slow: "Rallenta senza frenare", stop: "Rosso inevitabile", cap: "Alza il piede" };
   const giveWay = nk === "yield";
   if (giveWay) labels.stop = "Dai precedenza";
+  if (nk === "queue") labels.cap = Number(ng) < 8 ? "Coda ferma più avanti" : "Traffico lento più avanti";
   const k = $("kind"); k.textContent = labels[kind]; k.className = "kind " + kind;
 
   const node = nn ? nodes.get(nn) : null;
@@ -360,6 +361,10 @@ function updateHud() {
     texts[kind] = kind === "free"
       ? "L'orario di questo semaforo è ancora incerto: guida normalmente entro il limite."
       : `L'orario del semaforo è ancora incerto. Più avanti c'è una coda o un incrocio: non superare ${hi} km/h e rallenterai solo rilasciando l'acceleratore.`;
+  if (nk === "queue" && kind === "cap")
+    texts.cap = Number(ng) < 8
+      ? `Coda ferma tra ${nd} m: alza il piede, non superare ${hi} km/h e arriverai in fondo alla coda senza frenare.`
+      : `Traffico a circa ${ng} km/h tra ${nd} m: alza il piede, non superare ${hi} km/h e lo raggiungerai alla sua velocità senza frenare.`;
   $("advice").textContent = texts[kind];
   $("band").textContent = lo !== null && hi !== null ? `${lo}–${hi} km/h` : hi !== null ? `fino a ${hi} km/h` : "nessuna";
   $("speed").textContent = `${speed} km/h · limite ${limit}`;

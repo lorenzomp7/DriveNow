@@ -302,3 +302,63 @@ def test_suspected_light_keeps_a_cap_from_a_roundabout_beyond():
     near[0].distance, near[1].distance = 60.0, 90.0
     a = advise(near, 50 * KMH, 50 * KMH)
     assert a.kind == "cap" and a.target == pytest.approx(coast_cap(90.0, 25 * KMH, P))
+
+
+def test_lift_off_early_for_slow_traffic_ahead():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    route = ["N0>J02"]  # main road, no light ahead
+    occ = {"N0>J02": [(60.0, 4.0)]}  # a car 60 m ahead at 14 km/h
+    a, nc = adv.advise(route, 0, 0.0, 50 * KMH, 0.0, occ)
+    gap = 60.0 - 2.0
+    # Coasting from 50 to 14 km/h behind a moving car: v <= v_slow + sqrt(2 b gap).
+    assert a.kind == "cap" and a.high == pytest.approx(4.0 + math.sqrt(2 * P.coast_decel * gap))
+    assert nc.kind == "queue" and nc.distance == pytest.approx(gap) and nc.group == "14"
+    # Before, only a standing queue counted.
+    adv.slow_traffic = False
+    a, nc = adv.advise(route, 0, 0.0, 50 * KMH, 0.0, occ)
+    assert a.kind == "free" and nc is None  # the main road has nothing else ahead
+
+
+def test_traffic_only_a_little_slower_is_not_slow_traffic():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    adv = Advisor(demo_city())
+    a, _ = adv.advise(["N0>J02"], 0, 0.0, 50 * KMH, 0.0, {"N0>J02": [(60.0, 10.0)]})
+    assert a.kind == "free"
+
+
+def test_cars_before_the_slow_ones_count_too():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    adv = Advisor(demo_city())
+    occ = {"N0>J02": [(40.0, 12.0), (100.0, 0.0)]}  # a moving car, then a standing one
+    a, nc = adv.advise(["N0>J02"], 0, 0.0, 50 * KMH, 0.0, occ)
+    assert nc.kind == "queue" and nc.distance == pytest.approx(100.0 - adv.car_space - 2.0)
+
+
+def test_the_queue_of_a_known_light_is_left_to_the_green_advice():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    route = ["N0>J02", "J02>J12"]  # then a light with a known plan
+    L = net.edges["J02>J12"].length
+    at_light = {"J02>J12": [(L - 5.0 - 7.5 * k, 0.0) for k in range(3)]}
+    controls, _ = adv.controls_ahead(route, 0, 0.0, 0.0, at_light, 50 * KMH)
+    assert not any(c.node == "queue" for c in controls)
+    # A car standing far before the light is not its queue: coast up to it.
+    far = {"J02>J12": [(50.0, 0.0)]}
+    controls, _ = adv.controls_ahead(route, 0, 0.0, 0.0, far, 50 * KMH)
+    q = [c for c in controls if c.node == "queue"]
+    assert q and q[0].shown_distance == pytest.approx(net.edges["N0>J02"].length + 50.0 - 2.0)
+    # Before, any known light ahead switched the queue rule off.
+    adv.slow_traffic = False
+    controls, _ = adv.controls_ahead(route, 0, 0.0, 0.0, far, 50 * KMH)
+    assert not any(c.node == "queue" for c in controls)
