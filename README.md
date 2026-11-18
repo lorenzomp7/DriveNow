@@ -503,6 +503,53 @@ sul pannello, perché nessun guidatore vero segue un numero che cambia ogni
 4 secondi, ma le simulazioni continuano a usare il consiglio calcolato
 (`follow_shown`, `--follow-shown` nell'esperimento, per provare l'altro).
 
+### Auto che rallentano in modo diverso
+
+Il consiglio assume che, alzando il piede, ogni auto perda 0,7 m/s². Le auto
+vere sono diverse: un'elettrica che recupera energia rallenta molto di più,
+un'auto che va in folle molto di meno. `drivenow/profile_learner.py` fa
+imparare a ogni auto il proprio valore: una volta al secondo, nei secondi in
+cui il guidatore sta alzando il piede per seguire il consiglio, confronta la
+velocità con quella del secondo prima (con l'errore di ±0,2 m/s di un
+telefono) e tiene la mediana, dopo almeno 8 secondi buoni.
+
+Per provarlo, `--vehicle-mix` dà alle auto DriveNow tre comportamenti
+plausibili (non misurati): il 25% veleggia (0,35 m/s² a piede alzato, 1,2 in
+accelerazione), il 50% è un'auto termica normale (0,7 e 1,4), il 25% è
+un'elettrica con recupero (1,3 e 2,0). Frenate ed energia nei freni si
+contano oltre la decelerazione a piede alzato di ciascuna auto: il recupero
+di un'elettrica non è una frenata.
+
+| Media di 2 semi | Fermate | Frenate | Energia nei freni | Tempo | Viaggi finiti |
+|---|---|---|---|---|---|
+| Willy-Brandt-Straße, auto tutte uguali | 3,03 | 9,52 | 222 kJ | 334 s | 2.856 |
+| Auto diverse, il consiglio usa 0,7 per tutte | 3,01 | 9,69 | 227 kJ | 352 s | 2.700 |
+| Auto diverse, valore imparato | 2,94 | 9,52 | 227 kJ | 347 s | 2.623 |
+| Auto diverse, valore vero | 3,07 | 9,59 | 226 kJ | 359 s | 2.680 |
+| Gärtnerstraße (metà traffico), auto tutte uguali | 0,99 | 2,86 | 102 kJ | 187 s | 606 |
+| Auto diverse, 0,7 per tutte | 1,00 | 2,88 | 102 kJ | 185 s | 606 |
+| Auto diverse, valore imparato | 1,00 | 2,87 | 103 kJ | 184 s | 606 |
+| Auto diverse, valore vero | 1,00 | 2,92 | 103 kJ | 187 s | 608 |
+
+L'apprendimento funziona: il valore imparato sbaglia in media di 0,07–0,09
+m/s². Ma serve tempo: a Willy-Brandt-Straße metà delle auto lo impara entro la
+fine del viaggio, a Gärtnerstraße, dove i viaggi sono brevi, poco più di una
+su cinque. Soprattutto, conoscere il valore giusto non cambia i risultati:
+nemmeno quello vero fa meglio di 0,7 per tutte. Il consiglio punta ad
+arrivare 1,5 s dopo l'inizio del verde dentro una fascia larga, e il tratto
+in cui l'auto cambia velocità è breve, quindi sbagliare la decelerazione di
+qualche decimo sposta l'arrivo di poco. A Willy-Brandt-Straße tempo e viaggi
+finiti peggiorano con le auto diverse in tutte e tre le varianti, ma la
+differenza è dentro la variabilità che questo scenario mostra a ogni
+cambiamento.
+
+Anche l'accelerazione si potrebbe imparare allo stesso modo, ma nel traffico
+di città un'auto raramente ha spazio per accelerare quanto può: le
+elettriche, che accelerano a 2,0 m/s², venivano misurate tra 0,3 (mediana) e
+0,9 (80° percentile). Per questo si impara solo il valore a piede alzato. Il
+default resta 0,7 per tutte (`--profiles fixed`); `--profiles learned` e
+`--profiles true` provano le altre due.
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
@@ -574,6 +621,7 @@ drivenow/
   sumo_world.py   ponte TraCI con SUMO
   probe.py        orari dei semafori senza dati, imparati dalle auto e ricontrollati
   display.py      quello che vede il guidatore: numero stabile, annunci distanziati
+  profile_learner.py  quanto rallenta ogni auto a piede alzato, imparato dalla sua guida
   hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
