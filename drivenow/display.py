@@ -30,8 +30,12 @@ KMH = 1 / 3.6
 
 class AdviceDisplay:
     def __init__(self, deadband: float = 3 * KMH, hold: float = 2.0, announce_gap: float = 8.0,
-                 slack: float = 2 * KMH) -> None:
+                 slack: float = 2 * KMH, deadband_up: Optional[float] = None, quick_up: bool = False) -> None:
         self.deadband = deadband          # m/s: smaller changes of the speed are not shown
+        # Rises of the speed can be shown sooner (deadband_up), and a change to a faster kind
+        # of advice ("go", "free") at once (quick_up): showing too low a speed costs time.
+        self.deadband_up = deadband if deadband_up is None else deadband_up
+        self.quick_up = quick_up
         self.hold = hold                  # s a new kind of advice must last before it is shown
         self.announce_gap = announce_gap  # s between two announcements, unless urgent
         self.slack = slack                # m/s: how far out of the new band the shown speed may be
@@ -71,7 +75,8 @@ class AdviceDisplay:
         urgent = self._urgent(adv)
         s = self.shown
         if adv.kind != s.kind:
-            if urgent:
+            faster = adv.kind in ("go", "free") and (adv.target or 0) >= (s.target or 0)
+            if urgent or (self.quick_up and faster):
                 self._show(t, adv, announce=True, urgent=True)
             elif self._pending != adv.kind:
                 self._pending, self._pending_since = adv.kind, t
@@ -84,7 +89,8 @@ class AdviceDisplay:
                 self._show(t, adv, announce=False, urgent=False)
             return self.shown
         too_slow = adv.low is not None and s.target < adv.low - self.slack
-        if urgent or too_slow or abs(adv.target - s.target) >= self.deadband:
+        step = adv.target - s.target
+        if urgent or too_slow or -step >= self.deadband or step >= self.deadband_up:
             self._show(t, adv, announce=False, urgent=urgent)
         return self.shown
 

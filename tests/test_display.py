@@ -56,3 +56,12 @@ def test_announcements_keep_a_minimum_gap_unless_urgent():
     d.update(12.0, slow(25), "L3")
     assert d.announce
     assert d.announcements == 3
+
+
+def test_rises_can_be_shown_sooner_than_drops():
+    d = AdviceDisplay(deadband_up=1 * KMH, quick_up=True)
+    d.update(0.0, slow(31), "L")
+    assert d.update(0.6, slow(32.5), "L").target == pytest.approx(32.5 * KMH)   # up 1.5: shown
+    assert d.update(1.2, slow(30.5), "L").target == pytest.approx(32.5 * KMH)   # down 2: not yet
+    # A faster kind of advice shows at once.
+    assert d.update(1.8, Advice("go", None, 50 * KMH, 50 * KMH), "L").kind == "go"

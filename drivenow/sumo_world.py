@@ -25,6 +25,7 @@ import tempfile
 from typing import Dict, List, Optional
 
 from .advisor import Advisor, NextControl, Occupancy
+from .display import AdviceDisplay
 from .glosa import Advice
 from .network import SIGNAL, load_sumo_net, sumo_link_states
 from .simulation import GroupStats, Vehicle, record_motion, refresh_display, signal_states, vehicle_row
@@ -88,6 +89,7 @@ class SumoWorld:
         self.stats = {True: GroupStats(), False: GroupStats()}
         self._advice_clock = 0.0
         self.follow_shown = False  # equipped drivers act on the shown advice instead of the raw one
+        self.display_options: Dict = {}  # AdviceDisplay settings for each new car
         self._xy: Dict[str, tuple] = {}
         self._internal: set = set()  # vehicles crossing a junction right now
 
@@ -166,7 +168,8 @@ class SumoWorld:
         for vid in c.simulation.getDepartedIDList():
             c.vehicle.subscribe(vid, [tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION, tc.VAR_SPEED,
                                       tc.VAR_POSITION, tc.VAR_ANGLE, tc.VAR_ROUTE_INDEX])
-            self.vehicles[vid] = Vehicle(vid, self.routes.get(vid, []), self.rng.random() < self.penetration, self.t)
+            self.vehicles[vid] = Vehicle(vid, self.routes.get(vid, []), self.rng.random() < self.penetration, self.t,
+                                         display=AdviceDisplay(**self.display_options))
         for vid in c.simulation.getArrivedIDList():
             veh = self.vehicles.pop(vid, None)
             self._xy.pop(vid, None)
