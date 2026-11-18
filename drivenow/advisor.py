@@ -26,6 +26,7 @@ Occupancy = Dict[str, List[Tuple[float, float]]]  # edge -> [(pos, speed), ...] 
 
 # Optional signal source: (approach edge, next edge or None, time) -> (green windows, group label),
 # or None when that movement has no known signal. Used instead of the nodes' fixed plans.
+# It may add a third item, false when the windows are only a suspected timing.
 WindowsFn = Callable[[str, Optional[str], float], Optional[Tuple[List[Tuple[float, float]], str]]]
 
 STOPPED = 2.0  # m/s; slower than this counts as queued
@@ -63,6 +64,7 @@ class Advisor:
         self.queue_aware = True   # count queues over the whole route; coast up to a standing queue
         self.considerate = True  # no early slowing for a gap with a car close behind
         self.follower_gap = 30.0  # m
+        self.uncertain_drop = 10 / 3.6  # m/s: most a suspected light may slow a car (see glosa.advise)
         self.windows_fn = windows_fn
         self.profile = profile
         self.margins = margins
@@ -179,7 +181,8 @@ class Advisor:
             if node.kind == SIGNAL:
                 sig = self._signal(edge.id, route[k + 1] if k + 1 < len(route) else None, t)
             if sig is not None:
-                windows, group = sig
+                windows, group = sig[0], sig[1]
+                certain = sig[2] if len(sig) > 2 else True
                 queue, earliest = (0, 0.0)
                 if k == idx:
                     queue, earliest = self._traffic_ahead(edge.id, pos, occupancy)
@@ -189,7 +192,7 @@ class Advisor:
                 if queue and windows and windows[0][0] <= 0:
                         # Green now, but the queue in front is still pulling away.
                         earliest = max(earliest, self.margins.startup_lost_time + queue * self.margins.queue_headway)
-                controls.append(Control("signal", dist, node.id, windows, queue, earliest))
+                controls.append(Control("signal", dist, node.id, windows, queue, earliest, certain=certain))
                 first = first or NextControl("signal", node.id, dist, group)
             elif node.kind == ROUNDABOUT:
                 controls.append(Control("yield", dist, node.id, entry_speed=node.entry_speed))
@@ -218,9 +221,9 @@ class Advisor:
                 first = first or NextControl("yield", node.id, dist)
             if dist > self.lookahead:
                 break
-        if self.queue_aware and tail is not None and not any(c.kind == "signal" for c in controls):
-            # A queue ahead with no known light behind it (a light without data, a busy junction):
-            # coast up to its end instead of braking there.
+        if self.queue_aware and tail is not None and not any(c.kind == "signal" and c.certain for c in controls):
+            # A queue ahead with no known light behind it (a light without data or with only a
+            # suspected timing, a busy junction): coast up to its end instead of braking there.
             q = Control("yield", max(tail - 2.0, 0.0), "queue", entry_speed=0.0)
             controls.insert(next((i for i, c in enumerate(controls) if c.distance > q.distance), len(controls)), q)
         return controls, first
@@ -230,7 +233,7 @@ class Advisor:
     ) -> Tuple[Advice, Optional[NextControl]]:
         controls, first = self.controls_ahead(route, idx, pos, t, occupancy)
         limit = self.net.edges[route[idx]].speed
-        return advise(controls, v, limit, self.profile, self.margins, self.max_signals), first
+        return advise(controls, v, limit, self.profile, self.margins, self.max_signals, self.uncertain_drop), first
 
     # -- the map layer --------------------------------------------------------
 

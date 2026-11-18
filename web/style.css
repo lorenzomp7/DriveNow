@@ -59,6 +59,7 @@ h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
 .sw { display: inline-block; width: 22px; height: 5px; border-radius: 3px; margin-right: 7px; vertical-align: middle; }
 .sw.go { background: var(--go); } .sw.slow { background: var(--slow); }
 .sw.stop { background: var(--stop); } .sw.cap { background: var(--cap); }
+.ring { display: inline-block; width: 8px; height: 8px; border: 1.6px solid var(--go); border-radius: 50%; margin: 0 14px 0 7px; vertical-align: middle; }
 .car { display: inline-block; width: 12px; height: 6px; border-radius: 2px; margin: 0 6px 0 2px; vertical-align: middle; }
 .car.dn { background: var(--accent); } .car.nn { background: #9aa5b4; margin-left: 12px; }
 

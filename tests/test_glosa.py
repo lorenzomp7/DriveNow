@@ -267,3 +267,38 @@ def test_queue_behind_a_light_counts_over_several_edges():
     controls, _ = adv.controls_ahead(route, 0, 0.0, 0.0, occ)
     sig = [c for c in controls if c.kind == "signal"][0]
     assert sig.queue_len == 4
+
+
+def _light(windows, certain):
+    return [Control("signal", 300.0, "L", windows=windows, certain=certain)]
+
+
+def test_suspected_light_still_gives_a_small_slowdown():
+    sure = advise(_light([(23, 60)], True), 50 * KMH, 50 * KMH)
+    unsure = advise(_light([(23, 60)], False), 50 * KMH, 50 * KMH)
+    assert sure.kind == "slow" and sure.target > 40 * KMH
+    assert unsure.kind == "slow" and unsure.target == pytest.approx(sure.target)
+    assert "uncertain:L" in unsure.notes
+
+
+def test_suspected_light_never_asks_for_a_big_slowdown():
+    sure = advise(_light([(40, 80)], True), 50 * KMH, 50 * KMH)
+    unsure = advise(_light([(40, 80)], False), 50 * KMH, 50 * KMH)
+    assert sure.kind == "slow" and sure.target < 30 * KMH
+    assert unsure.kind == "free" and unsure.target == pytest.approx(50 * KMH)
+    assert "uncertain-skipped:L" in unsure.notes
+
+
+def test_suspected_light_never_makes_a_car_coast_to_its_line():
+    assert advise(_light([(100, 120)], True), 50 * KMH, 50 * KMH).kind == "stop"
+    assert advise(_light([(100, 120)], False), 50 * KMH, 50 * KMH).kind == "free"
+
+
+def test_suspected_light_keeps_a_cap_from_a_roundabout_beyond():
+    controls = _light([(100, 120)], False) + [Control("yield", 320.0, "R", entry_speed=25 * KMH)]
+    a = advise(controls, 50 * KMH, 50 * KMH)
+    assert a.kind == "free"  # the roundabout is 320 m away: nothing to cap yet
+    near = _light([(100, 120)], False) + [Control("yield", 330.0, "R", entry_speed=25 * KMH)]
+    near[0].distance, near[1].distance = 60.0, 90.0
+    a = advise(near, 50 * KMH, 50 * KMH)
+    assert a.kind == "cap" and a.target == pytest.approx(coast_cap(90.0, 25 * KMH, P))

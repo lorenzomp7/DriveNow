@@ -257,6 +257,7 @@ class Control:
     queue_len: int = 0
     earliest: float = 0.0
     entry_speed: float = 0.0
+    certain: bool = True   # a signal whose timing is only suspected: see ``advise``
 
 
 def recommend(
@@ -293,8 +294,44 @@ def advise(
     profile: DriverProfile = DriverProfile(),
     margins: Margins = Margins(),
     max_signals: int = 1,
+    uncertain_drop: float = 10 / 3.6,
 ) -> Advice:
     """Speed band for the controls ahead.
+
+    A light whose timing is only suspected (``certain`` false) is used for
+    small changes only: if catching its green would mean slowing more than
+    ``uncertain_drop`` below the advice without it, or coasting to its line,
+    the light is left out. A wrong forecast then costs little time, and a right
+    one still spares some braking.
+    """
+    res = _advise(controls, v0, speed_limit, profile, margins, max_signals)
+    first = None
+    for c in controls:
+        if c.kind in ("yield", "gap"):
+            break
+        if c.kind == "signal":
+            first = c
+            break
+    if first is None or first.certain or res.kind not in ("slow", "stop"):
+        return res
+    alt = advise([c for c in controls if c is not first], v0, speed_limit, profile, margins, max_signals,
+                 uncertain_drop)
+    if res.kind == "stop" or res.target is None or alt.target is None or res.target < alt.target - uncertain_drop:
+        alt.notes.append(f"uncertain-skipped:{first.node}")
+        return alt
+    res.notes.append(f"uncertain:{first.node}")
+    return res
+
+
+def _advise(
+    controls: Sequence[Control],
+    v0: float,
+    speed_limit: float,
+    profile: DriverProfile,
+    margins: Margins,
+    max_signals: int,
+) -> Advice:
+    """Speed band for the controls ahead, every light taken at its word.
 
     With ``max_signals > 1``, that many consecutive traffic lights are
     chained: the band is narrowed so that the same cruise speed catches the

@@ -234,14 +234,16 @@ function draw() {
       const st = frame.signals[node.id][g];
       if (!st) continue;
       const col = st[0] === "G" ? C.go : st[0] === "y" ? "#facc15" : C.stop;
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.arc(sx, sy, Math.max(2.6 * m, 3.5), 0, 7); ctx.fill();
+      const sure = st[3] !== false;  // false: a timing learnt from the cars, still only suspected
+      ctx.beginPath(); ctx.arc(sx, sy, Math.max(2.6 * m, 3.5), 0, 7);
+      if (sure) { ctx.fillStyle = col; ctx.fill(); }
+      else { ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.stroke(); }
       if (m > 0.75 && st[1] !== null) {
         ctx.font = "600 10px ui-sans-serif, system-ui, sans-serif";
         ctx.fillStyle = col; ctx.textAlign = "center"; ctx.textBaseline = "middle";
         const [, , h] = pointAt(e, e.len);
         const ox = Math.cos(h + Math.PI / 2) * -9, oy = -Math.sin(h + Math.PI / 2) * -9;
-        ctx.fillText(Math.ceil(st[1]) + "s", sx + ox, sy + oy);
+        ctx.fillText((sure ? "" : "~") + Math.ceil(st[1]) + "s", sx + ox, sy + oy);
       }
     } else if ((node.kind === "priority" && !node.major.includes(e.id)) || node.kind === "roundabout") {
       ctx.strokeStyle = "#e6edf3"; ctx.lineWidth = 1.5;
@@ -352,6 +354,12 @@ function updateHud() {
     stop: "Nessuna velocità ragionevole prende il verde: lascia scorrere l'auto e arriverai piano alla linea, senza frenate brusche.",
     cap: `${NEXT_NAME[nk] || "Incrocio"} tra ${nd} m: non superare ${hi} km/h e rallenterai solo rilasciando l'acceleratore.`,
   };
+  const sig = nk === "signal" && frame.signals[nn] ? frame.signals[nn][ng] : null;
+  const unsure = sig && sig[3] === false;
+  if (unsure && (kind === "free" || kind === "cap"))
+    texts[kind] = kind === "free"
+      ? "L'orario di questo semaforo è ancora incerto: guida normalmente entro il limite."
+      : `L'orario del semaforo è ancora incerto. Più avanti c'è una coda o un incrocio: non superare ${hi} km/h e rallenterai solo rilasciando l'acceleratore.`;
   $("advice").textContent = texts[kind];
   $("band").textContent = lo !== null && hi !== null ? `${lo}–${hi} km/h` : hi !== null ? `fino a ${hi} km/h` : "nessuna";
   $("speed").textContent = `${speed} km/h · limite ${limit}`;
@@ -362,6 +370,7 @@ function updateHud() {
   if (nk === "signal" && frame.signals[nn] && frame.signals[nn][ng]) {
     const [st, dt, nx] = frame.signals[nn][ng];
     light = dt === null ? COLOR_NAME[st] : `${COLOR_NAME[st]}, ${COLOR_NAME[nx]} tra ${Math.ceil(dt)} s`;
+    if (unsure) light += " (stima incerta)";
   }
   $("light").textContent = light;
 

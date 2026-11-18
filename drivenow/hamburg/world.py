@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import random
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
@@ -101,7 +102,9 @@ class HamburgWorld(SumoWorld):
         if ds is None:
             if self.learn_lights and edge in self._probe_edges:
                 w = self.probe.green_windows(edge, t, 120)
-                return None if w is None else (w, "probe:" + edge)
+                if w is None:
+                    return None
+                return w, "probe:" + edge, self.probe.timing(edge, t).level == "confirmed"
             return None
         key = (ds, int(t * 2))
         if key in self._wcache:
@@ -160,6 +163,7 @@ class HamburgWorld(SumoWorld):
     def _install_plans(self) -> None:
         # Keep SUMO's own (guessed) programme for links without Hamburg data.
         self._fallback: Dict[str, Tuple[List[Tuple[float, str]], float]] = {}
+        self._fallback_offset: Dict[str, float] = {}
         for tls in self._tls_links:
             logic = self.conn.trafficlight.getAllProgramLogics(tls)[0]
             phases = [(p.duration, p.state) for p in logic.phases]
@@ -167,9 +171,34 @@ class HamburgWorld(SumoWorld):
         self._covered = {tls for tls, links in self._tls_links.items() if any(r.get("ds") for _, r in links)}
         self._before_step()
 
+    def replan(self, seed: int = 0) -> None:
+        """Switch every light without Hamburg data to another fixed-time plan.
+
+        Cities change their plans at set times of day (peak, off-peak, night). For a
+        test of how quickly the timings learnt from the cars notice it: each light's
+        greens get 20% shorter to 25% longer (in whole seconds, as real plans), so the
+        cycle changes too, and the cycle starts at a random new point.
+        """
+        import traci
+
+        rng = random.Random(seed)
+        for tls in sorted(self._fallback):
+            phases, _ = self._fallback[tls]
+            f = rng.uniform(0.8, 1.25)
+            new = [(float(max(1, round(d * f))) if ("G" in s or "g" in s) else d, s) for d, s in phases]
+            cycle = sum(d for d, _ in new)
+            self._fallback[tls] = (new, cycle)
+            self._fallback_offset[tls] = rng.uniform(0, cycle)
+            if tls not in self._covered:
+                # SUMO runs this light by itself: hand it the new plan.
+                logic = traci.trafficlight.Logic("replan", 0, 0, [traci.trafficlight.Phase(d, s) for d, s in new])
+                self.conn.trafficlight.setProgramLogic(tls, logic)
+                self.conn.trafficlight.setProgram(tls, "replan")
+                self.conn.trafficlight.setPhase(tls, rng.randrange(len(new)))
+
     def _fallback_char(self, tls: str, idx: int, t: float) -> str:
         phases, cycle = self._fallback[tls]
-        tc = t % cycle
+        tc = (t + self._fallback_offset.get(tls, 0.0)) % cycle
         for d, st in phases:
             if tc < d:
                 return st[idx]
@@ -215,10 +244,13 @@ class HamburgWorld(SumoWorld):
                 continue
             groups = {}
             for ds_s in groups_wanted:
+                certain = True
                 if ds_s.startswith("probe:"):
                     # Learnt from the cars: show the forecast, the only thing DriveNow knows.
                     w = self.probe.green_windows(ds_s[6:], self.t, 120)
                     st = "G" if w and w[0][0] <= 0 else "r"
+                    tm = self.probe.timing(ds_s[6:], self.t)
+                    certain = tm is not None and tm.level == "confirmed"
                 else:
                     ds = int(ds_s)
                     st = UI_CHAR.get(self.history.code_at(ds, real), "r")
@@ -231,7 +263,7 @@ class HamburgWorld(SumoWorld):
                         first = next((a for a, b in w if a > 0), None)
                         if first is not None:
                             change, nxt = first, "G"
-                groups[ds_s] = [st, None if change is None else round(change, 1), nxt]
+                groups[ds_s] = [st, None if change is None else round(change, 1), nxt, certain]
             signals[node_id] = groups
         snap["signals"] = signals
         snap["clock"] = real

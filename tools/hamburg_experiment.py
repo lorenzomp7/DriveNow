@@ -17,24 +17,33 @@ ap.add_argument("--no-left-gaps", action="store_true", help="gap advice only on 
 ap.add_argument("--inconsiderate", action="store_true", help="aim for gaps even with a car close behind")
 ap.add_argument("--no-learn", action="store_true", help="do not learn lights without data from the cars")
 ap.add_argument("--no-queue", action="store_true", help="old queue handling: only the queue on the car's own edge")
+ap.add_argument("--replan", type=float, default=None, help="minute at which the lights without data switch to another plan")
+ap.add_argument("--learner", choices=["old", "check", "levels"], default="levels",
+                help="lights learnt from the cars: as before, + check of recent reports, + suspected level")
 ap.add_argument("--seed", type=int, default=1)
 ap.add_argument("--scale", type=float, default=1.0, help="share of the hour's traffic to run (1 = all)")
 a = ap.parse_args()
 w = HamburgWorld(scenario=a.scenario, penetration=0.0 if a.mode == "none" else 1.0, forecast="oracle" if a.mode == "oracle" else "predict",
-                 seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}", scale=a.scale,
+                 seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}", scale=a.scale,
                  threshold=a.threshold)
 w.advisor.gap_aware = not a.no_gaps
 w.advisor.gap_left_turns = not a.no_left_gaps
 w.advisor.considerate = not a.inconsiderate
 w.learn_lights = not a.no_learn
 w.advisor.queue_aware = not a.no_queue
+if a.learner != "levels":   # only confirmed timings, as before the suspected level
+    w.probe.levels, w.probe.confirm_cycles, w.probe.confirm_clean = False, 0.0, False
+if a.learner == "old":      # and never dropped
+    w.probe.check = False
 t0 = time.time()
 for i in range(int(a.minutes * 60 / w.dt)):
+    if a.replan is not None and i == int(a.replan * 60 / w.dt):
+        w.replan(seed=a.seed)
     w.step()
     if i % 3000 == 0:
         print(a.mode, round(w.t), "s, vehicles", len(w.vehicles), "wall", round(time.time() - t0), flush=True)
 grp = w.stats[a.mode != "none"]
-res = {"scenario": a.scenario, "mode": a.mode, "seed": a.seed, "gaps": not a.no_gaps, "left_gaps": not a.no_left_gaps, "considerate": not a.inconsiderate, "learn": not a.no_learn, "queue": not a.no_queue, "threshold": a.threshold, "minutes": a.minutes, "scale": a.scale, **grp.summary(),
+res = {"scenario": a.scenario, "mode": a.mode, "seed": a.seed, "gaps": not a.no_gaps, "left_gaps": not a.no_left_gaps, "considerate": not a.inconsiderate, "learn": not a.no_learn, "queue": not a.no_queue, "replan": a.replan, "learner": a.learner, "timings_dropped": len(w.probe.drops), "threshold": a.threshold, "minutes": a.minutes, "scale": a.scale, **grp.summary(),
        "still_in_network": len(w.vehicles), "along_corridor": w.corridor_stats[a.mode != "none"].summary()}
 print(json.dumps(res))
 if a.out:
