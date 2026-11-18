@@ -20,6 +20,7 @@ from .glosa import (
     coast_cap,
     constant_speed_band,
     effective_windows,
+    intersect_windows,
 )
 from .network import BORDER, PRIORITY, ROUNDABOUT, SIGNAL, Network
 
@@ -75,6 +76,12 @@ class Advisor:
         self.light_buffer = 50.0    # m: slow traffic this close to a known light (beyond its queue) is its queue
         self.car_space = 7.5        # m of road per queued car (length plus gap)
         self.considerate = True  # no early slowing for a gap with a car close behind
+        # Which way the car turns at the junctions ahead: "known" (a route is set), or not known:
+        # "straight" assumes it goes straight on, "common" uses at the next light only the green
+        # that every way out shares. Within ``commit_distance`` of the line the lane the car is in
+        # gives the turn away (0: never).
+        self.turns = "known"
+        self.commit_distance = 50.0
         self.follower_gap = 30.0  # m
         self.uncertain_drop = 10 / 3.6  # m/s: most a suspected light may slow a car (see glosa.advise)
         self.windows_fn = windows_fn
@@ -169,9 +176,35 @@ class Advisor:
 
     # -- controls along a route -----------------------------------------------
 
+    def guessed_route(self, route: Sequence[str], idx: int, pos: float) -> Tuple[List[str], bool]:
+        """The route as known without a destination, and whether the next turn is known.
+
+        The car is where it is; beyond, it is assumed to go straight on. Close to the line
+        the lane it is in tells which way it turns at the junction ahead.
+        """
+        known = idx + 1
+        if (idx + 1 < len(route) and self.commit_distance > 0
+                and self.net.edges[route[idx]].length - pos <= self.commit_distance):
+            known = idx + 2
+        guess = list(route[:known])
+        cur, dist = guess[-1], 0.0
+        while dist < self.lookahead:
+            ways = [n for n in self.net.edges[cur].next_edges if self.net.turn(cur, n) != "t"]
+            if not ways:
+                break
+            cur = next((n for n in ways if self.net.turn(cur, n) == "s"), ways[0])
+            if cur in guess:
+                break
+            guess.append(cur)
+            dist += self.net.edges[cur].length
+        return guess, known > idx + 1
+
     def controls_ahead(
-        self, route: Sequence[str], idx: int, pos: float, t: float, occupancy: Occupancy, v: float = 0.0
+        self, route: Sequence[str], idx: int, pos: float, t: float, occupancy: Occupancy, v: float = 0.0,
+        turn_options: Optional[Sequence[str]] = None,
     ) -> Tuple[List[Control], Optional[NextControl]]:
+        """Controls along ``route``. With ``turn_options``, the light at the end of the current
+        edge is taken as green only when it is green for every one of those ways out."""
         controls: List[Control] = []
         first: Optional[NextControl] = None
         dist = 0.0
@@ -205,6 +238,12 @@ class Advisor:
             sig = None
             if node.kind == SIGNAL:
                 sig = self._signal(edge.id, route[k + 1] if k + 1 < len(route) else None, t)
+                if k == idx and turn_options and sig is not None:
+                    for way in turn_options:
+                        other = self._signal(edge.id, way, t)
+                        if other is not None:
+                            sig = (intersect_windows(sig[0], other[0]), sig[1],
+                                   (sig[2] if len(sig) > 2 else True) and (other[2] if len(other) > 2 else True))
             if sig is not None:
                 windows, group = sig[0], sig[1]
                 certain = sig[2] if len(sig) > 2 else True
@@ -275,7 +314,12 @@ class Advisor:
         profile: Optional[DriverProfile] = None,
     ) -> Tuple[Advice, Optional[NextControl]]:
         """Advice for one car; ``profile`` is how that car changes speed, if known (else the default)."""
-        controls, first = self.controls_ahead(route, idx, pos, t, occupancy, v)
+        options = None
+        if self.turns != "known":
+            route, committed = self.guessed_route(route, idx, pos)
+            if self.turns == "common" and not committed:
+                options = [n for n in self.net.edges[route[idx]].next_edges if self.net.turn(route[idx], n) != "t"]
+        controls, first = self.controls_ahead(route, idx, pos, t, occupancy, v, options)
         limit = self.net.edges[route[idx]].speed
         adv = advise(controls, v, limit, profile or self.profile, self.margins, self.max_signals,
                      self.uncertain_drop)

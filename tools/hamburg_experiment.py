@@ -31,11 +31,14 @@ ap.add_argument("--display-up", type=float, default=None, help="km/h: rises of t
 ap.add_argument("--vehicle-mix", action="store_true", help="DriveNow cars differ in how fast they slow down and speed up")
 ap.add_argument("--profiles", choices=["fixed", "learned", "true"], default="fixed",
                 help="what the advice knows of each car: the default, learnt from its driving, or the truth")
+ap.add_argument("--turns", choices=["known", "straight", "common"], default="known",
+                help="which way cars turn: known (a route is set), or guessed straight on, or the green all ways share")
+ap.add_argument("--commit", type=float, default=50.0, help="m before the line where the lane gives the turn away (0: never)")
 ap.add_argument("--seed", type=int, default=1)
 ap.add_argument("--scale", type=float, default=1.0, help="share of the hour's traffic to run (1 = all)")
 a = ap.parse_args()
 w = HamburgWorld(scenario=a.scenario, penetration=0.0 if a.mode == "none" else 1.0, forecast="oracle" if a.mode == "oracle" else "predict",
-                 seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}_{a.confirm_cycles}_{a.no_confirm_clean}_{a.slow_traffic}_{a.slow_standing_only}_{a.slow_min_gap}_{a.slow_min_kmh}_{a.follow_shown}_{a.display_up}_{a.vehicle_mix}_{a.profiles}", scale=a.scale,
+                 seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}_{a.confirm_cycles}_{a.no_confirm_clean}_{a.slow_traffic}_{a.slow_standing_only}_{a.slow_min_gap}_{a.slow_min_kmh}_{a.follow_shown}_{a.display_up}_{a.vehicle_mix}_{a.profiles}_{a.turns}_{a.commit}", scale=a.scale,
                  threshold=a.threshold)
 w.advisor.gap_aware = not a.no_gaps
 w.advisor.gap_left_turns = not a.no_left_gaps
@@ -45,6 +48,8 @@ w.advisor.queue_aware = not a.no_queue
 w.advisor.slow_traffic = a.slow_traffic
 w.follow_shown = a.follow_shown
 w.vehicle_mix = a.vehicle_mix
+w.advisor.turns = a.turns
+w.advisor.commit_distance = a.commit
 w.profiles = a.profiles
 if a.display_up is not None:
     w.display_options = {"deadband_up": a.display_up / 3.6, "quick_up": True}
@@ -65,7 +70,7 @@ for i in range(int(a.minutes * 60 / w.dt)):
     if i % 3000 == 0:
         print(a.mode, round(w.t), "s, vehicles", len(w.vehicles), "wall", round(time.time() - t0), flush=True)
 grp = w.stats[a.mode != "none"]
-res = {"scenario": a.scenario, "mode": a.mode, "seed": a.seed, "gaps": not a.no_gaps, "left_gaps": not a.no_left_gaps, "considerate": not a.inconsiderate, "learn": not a.no_learn, "queue": not a.no_queue, "slow_traffic": a.slow_traffic, "follow_shown": a.follow_shown, "vehicle_mix": a.vehicle_mix, "profiles": a.profiles, "display_up": a.display_up, "slow_moving": w.advisor.slow_moving, "slow_min_gap": w.advisor.slow_min_gap, "slow_min_speed": w.advisor.slow_min_speed, "replan": a.replan, "learner": a.learner, "confirm_cycles": w.probe.confirm_cycles, "confirm_clean": w.probe.confirm_clean, "timings_dropped": len(w.probe.drops), "threshold": a.threshold, "minutes": a.minutes, "scale": a.scale, **grp.summary(),
+res = {"scenario": a.scenario, "mode": a.mode, "seed": a.seed, "gaps": not a.no_gaps, "left_gaps": not a.no_left_gaps, "considerate": not a.inconsiderate, "learn": not a.no_learn, "queue": not a.no_queue, "slow_traffic": a.slow_traffic, "follow_shown": a.follow_shown, "vehicle_mix": a.vehicle_mix, "profiles": a.profiles, "turns": a.turns, "commit": a.commit, "display_up": a.display_up, "slow_moving": w.advisor.slow_moving, "slow_min_gap": w.advisor.slow_min_gap, "slow_min_speed": w.advisor.slow_min_speed, "replan": a.replan, "learner": a.learner, "confirm_cycles": w.probe.confirm_cycles, "confirm_clean": w.probe.confirm_clean, "timings_dropped": len(w.probe.drops), "threshold": a.threshold, "minutes": a.minutes, "scale": a.scale, **grp.summary(),
        "still_in_network": len(w.vehicles), "along_corridor": w.corridor_stats[a.mode != "none"].summary()}
 if w.learnt:
     def err(i, j):

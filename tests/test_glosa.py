@@ -375,3 +375,64 @@ def test_the_panel_hears_about_a_standing_queue_with_the_default_rule():
     adv = Advisor(demo_city())
     a, nc = adv.advise(["N0>J02"], 0, 0.0, 50 * KMH, 0.0, {"N0>J02": [(90.0, 0.0)]})
     assert a.kind == "cap" and nc.kind == "queue" and nc.distance == pytest.approx(88.0) and nc.group == "0"
+
+
+def test_intersect_windows():
+    from drivenow.glosa import intersect_windows
+
+    assert intersect_windows([(0, 10), (30, 40)], [(5, 35)]) == [(5, 10), (30, 35)]
+    assert intersect_windows([(0, 10)], [(20, 30)]) == []
+
+
+def _turn_advisor():
+    """Demo city, with a light at J00 that is green at different times for each way out."""
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    ways = [n for n in net.edges["W0>J00"].next_edges if net.turn("W0>J00", n) != "t"]
+    straight = next(n for n in ways if net.turn("W0>J00", n) == "s")
+    turn = next(n for n in ways if n != straight)
+    greens = {straight: [(0.0, 30.0)], turn: [(40.0, 70.0)]}
+
+    def windows(edge, nxt, t):
+        if edge != "W0>J00":
+            return None
+        return greens.get(nxt, [(0.0, 100.0)]), "g"
+
+    return net, Advisor(net, windows_fn=windows), straight, turn
+
+
+def test_without_a_route_the_car_is_assumed_to_go_straight_until_its_lane_tells():
+    net, adv, straight, turn = _turn_advisor()
+    route = ["W0>J00", turn]
+    L = net.edges["W0>J00"].length
+    adv.turns = "straight"
+    guess, known = adv.guessed_route(route, 0, 0.0)
+    assert guess[1] == straight and not known
+    guess, known = adv.guessed_route(route, 0, L - 30.0)   # in the turning lane now
+    assert guess[1] == turn and known
+    # Far from the line the advice follows the straight-on green, close to it the real one.
+    c, _ = adv.controls_ahead(*_args(adv, route, 0.0))
+    assert c[0].windows == [(0.0, 30.0)]
+
+
+def _args(adv, route, pos):
+    guess, _ = adv.guessed_route(route, 0, pos)
+    return guess, 0, pos, 0.0, {}, 50 / 3.6
+
+
+def test_common_green_is_the_green_every_way_out_shares():
+    net, adv, straight, turn = _turn_advisor()
+    adv.turns = "common"
+    ways = [n for n in net.edges["W0>J00"].next_edges if net.turn("W0>J00", n) != "t"]
+    c, _ = adv.controls_ahead(["W0>J00", straight], 0, 0.0, 0.0, {}, 0.0, ways)
+    assert c[0].windows == []          # straight and turn are never green together here
+    a, _ = adv.advise(["W0>J00", turn], 0, 0.0, 50 / 3.6, 0.0, {})
+    assert a.kind == "stop"            # so far away, no speed is sure to get a green
+    # In its lane the turn is known: only its own green counts, and no other way out.
+    L = net.edges["W0>J00"].length
+    guess, known = adv.guessed_route(["W0>J00", turn], 0, L - 30.0)
+    assert known
+    c, _ = adv.controls_ahead(guess, 0, L - 30.0, 0.0, {}, 0.0, None)
+    assert c[0].windows == [(40.0, 70.0)]

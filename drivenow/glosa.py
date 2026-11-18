@@ -232,6 +232,17 @@ def effective_windows(
     return out
 
 
+def intersect_windows(a: Sequence[Window], b: Sequence[Window]) -> List[Window]:
+    """The times that are inside a window of ``a`` and inside a window of ``b``."""
+    out: List[Window] = []
+    for s1, e1 in a:
+        for s2, e2 in b:
+            s, e = max(s1, s2), min(e1, e2)
+            if e > s:
+                out.append((s, e))
+    return sorted(out)
+
+
 # --------------------------------------------------------------------------
 # Advice along a route
 # --------------------------------------------------------------------------
