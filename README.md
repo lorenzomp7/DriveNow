@@ -337,6 +337,97 @@ Riassunto, Willy-Brandt-Straße all'ora di punta, 0% contro 100% di auto
 DriveNow: fermate 3,44 → 3,04 (−12%), energia nei freni 387 → 221 kJ (−43%),
 tempo di viaggio 329 → 337 s (+2%).
 
+### Quando un semaforo cambia orario
+
+Le città cambiano il piano dei semafori a orari fissi (punta, morbida,
+notte), e un semaforo può guastarsi. Un orario imparato dalle auto resta
+però valido per mezz'ora di osservazioni, e un cambio sposta poco
+l'adattamento complessivo. Per questo, a ogni ricalcolo, DriveNow confronta
+l'orario anche con i soli ultimi 5 minuti (`drivenow/probe.py`):
+
+- **auto ferme alla linea quando l'orario dice verde**: è l'errore che conta,
+  un verde promesso che non c'è (si escludono i primi secondi del verde,
+  quando la prima auto sta ancora partendo);
+- **auto che ripartono lontano dall'inizio del verde previsto**: un inizio del
+  verde fuori posto di più di 5 s.
+
+Se almeno il 30% delle auto ferme sta nel verde previsto, o se due terzi
+degli inizi del verde sono fuori posto, l'orario è sbagliato: il semaforo
+perde la previsione e le osservazioni più vecchie di 5 minuti si buttano,
+così lo si reimpara solo dal comportamento nuovo.
+
+La prima idea era più semplice: controllare la quota di osservazioni che
+l'orario spiega negli ultimi minuti, come per l'adattamento complessivo. Non
+funziona: un orario superato ne spiegava ancora, in mediana, il 91%. Dove il
+verde occupa gran parte del ciclo, un orario che dice quasi sempre "verde"
+indovina per caso.
+
+Per provarlo, `HamburgWorld.replan` cambia il piano di tutti i semafori
+senza dati di Amburgo: il verde dura dal 20% in meno al 25% in più e il ciclo
+riparte da un punto a caso. `tools/probe_accuracy.py` confronta le previsioni
+imparate con lo stato vero di SUMO, per il movimento che ogni auto sta per
+fare. Willy-Brandt-Straße, un'ora, 100% di auto DriveNow:
+
+| Previsioni imparate dalle auto | Giuste a 5 s | Verde promesso, era rosso (5 s) | (60 s) |
+|---|---|---|---|
+| Orari fissi, prima | 94,0% | 3,8% | 5,4% |
+| Orari fissi, con il controllo | 94,2% | 3,8% | 5,3% |
+| 15 minuti dopo il cambio, prima | 63,0% | 26,2% | 18,5% |
+| 15 minuti dopo il cambio, con il controllo | 68,1% | 22,0% | 16,2% |
+
+Con orari fissi il controllo non fa danni: in un'ora toglie la previsione a
+circa 10 accessi, senza effetti sull'accuratezza. Dopo un cambio la migliora,
+ma resta lontana da quella normale, perché servono qualche minuto di
+osservazioni per accorgersene e qualche ciclo per reimparare.
+
+Sulla guida l'effetto non si vede (media di 2 semi, 100% di auto DriveNow):
+
+| Willy-Brandt-Straße | Fermate | Frenate | Energia nei freni | Tempo |
+|---|---|---|---|---|
+| Orari fissi, prima | 3,04 | 9,54 | 221 kJ | 337 s |
+| Orari fissi, con il controllo | 3,03 | 9,52 | 222 kJ | 334 s |
+| Cambio al minuto 30, prima | 3,04 | 9,63 | 228 kJ | 344 s |
+| Cambio al minuto 30, con il controllo | 3,02 | 9,59 | 228 kJ | 341 s |
+
+Il cambio di piano costa poco (+3% di energia nei freni) e le differenze
+sono dentro il rumore tra un seme e l'altro. Il controllo resta come rete di
+sicurezza: non costa niente e su strada evita che un orario superato venga
+usato per mezz'ora.
+
+**Orari "incerti": provati e lasciati spenti.** Si può anche dare una
+previsione con meno osservazioni (3 inizi del verde invece di 5, adattamento
+del 75% invece dell'85%), o declassare un orario con qualche errore recente,
+marcandola come incerta: il consiglio la usa solo per rallentare al massimo
+di 10 km/h, mai per lasciar scorrere l'auto fino alla linea, e la mappa
+disegna quel semaforo come un cerchio vuoto con il conto alla rovescia
+preceduto da "~". Le previsioni incerte sono giuste solo l'82% delle volte
+(verde promesso che non arriva nel 13–15% dei casi), mentre quelle confermate
+promettono un verde falso un po' meno spesso (2,6% invece di 3,8%). Sulla
+guida però non conviene:
+
+| Willy-Brandt-Straße, media di 2 semi | Fermate | Energia nei freni | Tempo | Viaggi finiti |
+|---|---|---|---|---|
+| Solo orari confermati (default) | 3,03 | 222 kJ | 334 s | 2.856 |
+| Incerti, e confermati solo dopo 8 cicli | 3,04 | 233 kJ | 337 s | 2.844 |
+| Incerti, confermati come prima | 2,98 | 226 kJ | 347 s | 2.778 |
+| Solo previsioni nuove con meno osservazioni | 2,98 | 226 kJ | 343 s | 2.760 |
+
+Chiedere 8 cicli per confermare toglie per i primi 10–12 minuti il consiglio
+di lasciar scorrere l'auto verso il rosso, che è quello che risparmia energia.
+Senza quella regola le fermate calano del 2%, ma l'energia nei freni sale del
+2%, il tempo del 2–3% e i viaggi finiti nell'ora sono il 3–4% in meno: si
+rallenta per verdi che non ci sono. Il livello incerto resta nel codice
+(`ProbeLearner(levels=True, confirm_cycles=8, confirm_clean=True)`, oppure
+`--learner levels` negli strumenti), ma è spento.
+
+```bash
+python tools/probe_accuracy.py --scenario willy-brandt --replan 30 --learner old    # o check, levels
+```
+
+```bash
+python tools/hamburg_experiment.py predict --scenario willy-brandt --replan 30 --learner check --seed 1
+```
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
@@ -406,12 +497,14 @@ drivenow/
   advisor.py      unisce rete, traffico e calcolo: consiglio per veicolo e campo per la mappa
   simulation.py   simulatore interno (IDM, semafori, rotonda, precedenza)
   sumo_world.py   ponte TraCI con SUMO
+  probe.py        orari dei semafori senza dati, imparati dalle auto e ricontrollati
   hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
 data/sumo/        reti a griglia 1×1–4×4 (dalla vecchia Traffc_light_control)
 data/hamburg/     scenario reale di Amburgo (rete, semafori registrati, traffico)
-tools/            costruzione dello scenario di Amburgo, esperimenti, registrazione delle pagine
+tools/            costruzione dello scenario di Amburgo, esperimenti, accuratezza delle
+                  previsioni imparate dalle auto, registrazione delle pagine
 tests/            pytest (i test SUMO si saltano se SUMO non è installato)
 ```
 

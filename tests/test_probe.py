@@ -57,14 +57,18 @@ def test_no_forecast_without_enough_reports():
     assert p.green_windows("unknown", end, 120) is None
 
 
+def levels_learner():
+    return ProbeLearner(levels=True, confirm_cycles=8.0, confirm_clean=True)
+
+
 def test_a_few_cycles_give_a_suspected_timing():
-    p = ProbeLearner()
+    p = levels_learner()
     end = drive(p, minutes=6)
     tm = p.timing("A", end)
     assert tm is not None and tm.level == "suspected"
     assert p.green_windows("A", end, 120) is not None
-    # Without levels only confirmed timings are given.
-    q = ProbeLearner(levels=False)
+    # Without levels (the default) a few cycles give nothing yet.
+    q = ProbeLearner()
     end = drive(q, minutes=6)
     assert q.timing("A", end) is None
     # Many cycles later the timing is confirmed.
@@ -119,7 +123,7 @@ def _stand_in_green(p, tm, t, count):
 
 
 def test_some_cars_standing_in_the_forecast_green_make_it_suspected():
-    p = ProbeLearner()
+    p = levels_learner()
     end = drive(p, minutes=30)
     tm = p.timing("A", end)
     assert tm.level == "confirmed"

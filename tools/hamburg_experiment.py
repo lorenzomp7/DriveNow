@@ -18,7 +18,7 @@ ap.add_argument("--inconsiderate", action="store_true", help="aim for gaps even 
 ap.add_argument("--no-learn", action="store_true", help="do not learn lights without data from the cars")
 ap.add_argument("--no-queue", action="store_true", help="old queue handling: only the queue on the car's own edge")
 ap.add_argument("--replan", type=float, default=None, help="minute at which the lights without data switch to another plan")
-ap.add_argument("--learner", choices=["old", "check", "levels"], default="levels",
+ap.add_argument("--learner", choices=["old", "check", "levels"], default="check",
                 help="lights learnt from the cars: as before, + check of recent reports, + suspected level")
 ap.add_argument("--confirm-cycles", type=float, default=None, help="cycles a confirmed timing must span (learner default if unset)")
 ap.add_argument("--no-confirm-clean", action="store_true", help="recent doubt does not demote a timing to suspected")
@@ -33,13 +33,9 @@ w.advisor.gap_left_turns = not a.no_left_gaps
 w.advisor.considerate = not a.inconsiderate
 w.learn_lights = not a.no_learn
 w.advisor.queue_aware = not a.no_queue
-if a.learner != "levels":   # only confirmed timings, as before the suspected level
-    w.probe.levels, w.probe.confirm_cycles, w.probe.confirm_clean = False, 0.0, False
-if a.confirm_cycles is not None:
-    w.probe.confirm_cycles = a.confirm_cycles
-if a.no_confirm_clean:
-    w.probe.confirm_clean = False
-if a.learner == "old":      # and never dropped
+if a.learner == "levels":   # also suspected timings, used for small changes only
+    w.probe.levels, w.probe.confirm_cycles, w.probe.confirm_clean = True, 8.0, True
+if a.learner == "old":      # timings never dropped, as before the check of recent reports
     w.probe.check = False
 t0 = time.time()
 for i in range(int(a.minutes * 60 / w.dt)):

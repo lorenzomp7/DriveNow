@@ -25,7 +25,7 @@ ap.add_argument("--minutes", type=float, default=60)
 ap.add_argument("--replan", type=float, default=None, help="minute at which the lights without data change plan")
 ap.add_argument("--seed", type=int, default=1)
 ap.add_argument("--scale", type=float, default=1.0)
-ap.add_argument("--learner", choices=["old", "check", "levels"], default="levels",
+ap.add_argument("--learner", choices=["old", "check", "levels"], default="check",
                 help="lights learnt from the cars: as before, + check of recent reports, + suspected level")
 ap.add_argument("--out", default=None)
 a = ap.parse_args()
@@ -33,9 +33,9 @@ a = ap.parse_args()
 w = HamburgWorld(scenario=a.scenario, penetration=1.0, seed=a.seed, scale=a.scale,
                  label=f"acc_{a.scenario}_{a.seed}_{a.replan}_{a.learner}")
 conn = w.conn
-if a.learner != "levels":   # only confirmed timings, as before the suspected level
-    w.probe.levels, w.probe.confirm_cycles, w.probe.confirm_clean = False, 0.0, False
-if a.learner == "old":      # and never dropped
+if a.learner == "levels":   # also suspected timings, used for small changes only
+    w.probe.levels, w.probe.confirm_cycles, w.probe.confirm_clean = True, 8.0, True
+if a.learner == "old":      # timings never dropped, as before the check of recent reports
     w.probe.check = False
 
 # (from edge, to edge) -> (light id, link index), from the network's connections

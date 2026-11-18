@@ -18,10 +18,14 @@ cars driving off where it puts no green start. If there are too many, the
 light loses its forecast and the reports from before are dropped, so that it
 is learnt again from the new behaviour only.
 
-A timing comes at one of two levels. ``confirmed``: plenty of reports over
-many cycles, and nothing doubtful in the last minutes. ``suspected``: a few
-cycles only, a looser fit, or some doubt in the last minutes; the advice uses
-it only for small speed changes. Below that there is no forecast at all.
+With ``levels`` on, a timing comes at one of two levels. ``confirmed``:
+plenty of reports (with ``confirm_cycles`` and ``confirm_clean``: over many
+cycles, and nothing doubtful in the last minutes). ``suspected``: a few cycles
+only, a looser fit, or some doubt in the last minutes; the advice uses it only
+for small speed changes. It is off by default: in the Hamburg simulation the
+suspected timings were right only about 82% of the time, and acting on them,
+even gently, cost more braking energy or more travel time than it saved (see
+the README). Without levels every timing given is a confirmed one.
 """
 
 from __future__ import annotations
@@ -55,8 +59,8 @@ class ProbeLearner:
     def __init__(self, window: float = 1800.0, min_onsets: int = 5, min_fit: float = 0.85,
                  recent: float = 300.0, recent_reports: int = 10, check: bool = True,
                  wrong_share: float = 0.3, doubt_share: float = 0.15, onset_tolerance: float = 5.0,
-                 levels: bool = True, suspect_onsets: int = 3, suspect_fit: float = 0.75,
-                 confirm_cycles: float = 8.0, confirm_clean: bool = True) -> None:
+                 levels: bool = False, suspect_onsets: int = 3, suspect_fit: float = 0.75,
+                 confirm_cycles: float = 0.0, confirm_clean: bool = False) -> None:
         self.window = window            # s of reports kept
         self.min_onsets = min_onsets    # a confirmed timing needs this many green starts,
         self.min_fit = min_fit          # this overall fit,
