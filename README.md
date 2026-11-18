@@ -461,6 +461,48 @@ traffico, il tempo di viaggio scende del 3,5% e il resto non cambia. Nel
 complesso non conviene: la regola resta nel codice (`Advisor.slow_traffic`,
 `--slow-traffic` nell'esperimento) ma è spenta.
 
+### Un numero che non balla
+
+Il consiglio si ricalcola più volte al secondo, e il numero può cambiare di
+1–2 km/h da un aggiornamento all'altro: a Willy-Brandt-Straße cambia in media
+86 volte per viaggio, una ogni 4 secondi. Il pannello del guidatore mostra
+quindi una versione filtrata (`drivenow/display.py`):
+
+- il numero cambia solo se si sposta di almeno 3 km/h, o se esce dalla fascia
+  (troppo veloce vorrebbe dire arrivare col rosso);
+- un tipo di consiglio nuovo (per esempio "rallenta" dopo "verde in arrivo")
+  deve durare 2 s prima di sostituire il vecchio, tranne quando è urgente:
+  rosso inevitabile, o velocità mostrata troppo alta per la nuova fascia;
+- il prossimo semaforo, rotonda o precedenza si mostra subito;
+- gli annunci (per una futura voce; oggi il riquadro lampeggia) solo per un
+  tipo di consiglio nuovo o un nuovo incrocio, al massimo uno ogni 8 s salvo
+  urgenze.
+
+| Per viaggio | Willy-Brandt-Straße | Gärtnerstraße |
+|---|---|---|
+| Cambi del consiglio calcolato | 86 | 32 |
+| Cambi del consiglio mostrato | 45 | 15 |
+| Annunci | 12 | 4 |
+
+Nelle simulazioni le auto DriveNow seguono il consiglio calcolato, come un
+guidatore perfetto. Se seguono quello mostrato:
+
+| Media | Fermate | Frenate | Energia nei freni | Tempo | Viaggi finiti |
+|---|---|---|---|---|---|
+| Willy-Brandt-Straße (2 semi), consiglio calcolato | 3,03 | 9,52 | 222 kJ | 334 s | 2.856 |
+| Consiglio mostrato | 2,95 | 9,37 | 227 kJ | 337 s | 2.720 |
+| Mostrato, ma le salite di velocità subito | 3,03 | 9,58 | 231 kJ | 350 s | 2.760 |
+| Gärtnerstraße (1 seme, metà traffico), calcolato | 0,98 | 2,79 | 102 kJ | 183 s | 606 |
+| Consiglio mostrato | 0,99 | 2,79 | 103 kJ | 185 s | 606 |
+
+Seguire il numero filtrato non porta vantaggi misurabili: a Gärtnerstraße
+non cambia nulla, a Willy-Brandt-Straße le fermate calano del 3% ma l'energia
+nei freni sale del 2% e i viaggi finiti nell'ora sono il 5% in meno. La
+variante che mostra subito ogni aumento di velocità va peggio. Il filtro resta
+sul pannello, perché nessun guidatore vero segue un numero che cambia ogni
+4 secondi, ma le simulazioni continuano a usare il consiglio calcolato
+(`follow_shown`, `--follow-shown` nell'esperimento, per provare l'altro).
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
@@ -531,6 +573,7 @@ drivenow/
   simulation.py   simulatore interno (IDM, semafori, rotonda, precedenza)
   sumo_world.py   ponte TraCI con SUMO
   probe.py        orari dei semafori senza dati, imparati dalle auto e ricontrollati
+  display.py      quello che vede il guidatore: numero stabile, annunci distanziati
   hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
