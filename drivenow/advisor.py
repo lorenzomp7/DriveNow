@@ -176,8 +176,8 @@ class Advisor:
 
     # -- controls along a route -----------------------------------------------
 
-    def guessed_route(self, route: Sequence[str], idx: int, pos: float) -> Tuple[List[str], bool]:
-        """The route as known without a destination, and whether the next turn is known.
+    def guessed_route(self, route: Sequence[str], idx: int, pos: float) -> Tuple[List[str], int]:
+        """The route as known without a destination, and how many of its edges are the real ones.
 
         The car is where it is; beyond, it is assumed to go straight on. Close to the line
         the lane it is in tells which way it turns at the junction ahead.
@@ -197,14 +197,15 @@ class Advisor:
                 break
             guess.append(cur)
             dist += self.net.edges[cur].length
-        return guess, known > idx + 1
+        return guess, known
 
     def controls_ahead(
         self, route: Sequence[str], idx: int, pos: float, t: float, occupancy: Occupancy, v: float = 0.0,
         turn_options: Optional[Sequence[str]] = None,
     ) -> Tuple[List[Control], Optional[NextControl]]:
-        """Controls along ``route``. With ``turn_options``, the light at the end of the current
-        edge is taken as green only when it is green for every one of those ways out."""
+        """Controls along ``route``. With ``turn_options``, the first light ahead is taken as green
+        only when it is green for every one of those ways out of it."""
+        first_light = True
         controls: List[Control] = []
         first: Optional[NextControl] = None
         dist = 0.0
@@ -238,12 +239,14 @@ class Advisor:
             sig = None
             if node.kind == SIGNAL:
                 sig = self._signal(edge.id, route[k + 1] if k + 1 < len(route) else None, t)
-                if k == idx and turn_options and sig is not None:
+                if first_light and turn_options and sig is not None:
                     for way in turn_options:
                         other = self._signal(edge.id, way, t)
                         if other is not None:
                             sig = (intersect_windows(sig[0], other[0]), sig[1],
                                    (sig[2] if len(sig) > 2 else True) and (other[2] if len(other) > 2 else True))
+            if node.kind == SIGNAL:
+                first_light = False
             if sig is not None:
                 windows, group = sig[0], sig[1]
                 certain = sig[2] if len(sig) > 2 else True
@@ -316,9 +319,20 @@ class Advisor:
         """Advice for one car; ``profile`` is how that car changes speed, if known (else the default)."""
         options = None
         if self.turns != "known":
-            route, committed = self.guessed_route(route, idx, pos)
-            if self.turns == "common" and not committed:
-                options = [n for n in self.net.edges[route[idx]].next_edges if self.net.turn(route[idx], n) != "t"]
+            route, known = self.guessed_route(route, idx, pos)
+            if self.turns == "common":
+                # The first light ahead: unless the car has already taken its way out of it,
+                # use only the green that all of its ways out share.
+                dist = -pos
+                for k in range(idx, len(route)):
+                    dist += self.net.edges[route[k]].length
+                    if dist > self.lookahead:
+                        break
+                    if self.net.nodes[self.net.edges[route[k]].to_node].kind == SIGNAL:
+                        if k + 1 >= known:
+                            options = [n for n in self.net.edges[route[k]].next_edges
+                                       if self.net.turn(route[k], n) != "t"]
+                        break
         controls, first = self.controls_ahead(route, idx, pos, t, occupancy, v, options)
         limit = self.net.edges[route[idx]].speed
         adv = advise(controls, v, limit, profile or self.profile, self.margins, self.max_signals,

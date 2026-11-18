@@ -550,6 +550,41 @@ elettriche, che accelerano a 2,0 m/s², venivano misurate tra 0,3 (mediana) e
 default resta 0,7 per tutte (`--profiles fixed`); `--profiles learned` e
 `--profiles true` provano le altre due.
 
+### Senza sapere dove gira l'auto
+
+In simulazione ogni auto DriveNow conosce il suo percorso, quindi sa se al
+prossimo semaforo andrà dritta o girerà. Conta: a Willy-Brandt-Straße 19
+accessi su 48 con dati hanno semafori diversi a seconda della direzione, a
+Gärtnerstraße 15 su 27. Su strada, senza una destinazione impostata, la svolta
+non si sa. `Advisor.turns` prova due modi di farne a meno:
+
+- `straight`: oltre il tratto su cui si trova, l'auto va dritta;
+- `common`: al primo semaforo davanti vale solo il verde comune a tutte le
+  direzioni, finché l'auto non ha imboccato la sua.
+
+In entrambi, a 50 m dalla linea la corsia in cui si trova l'auto rivela la
+svolta (`commit_distance`, `--commit`).
+
+| Media di 2 semi | Fermate | Frenate | Energia nei freni | Tempo | Viaggi finiti |
+|---|---|---|---|---|---|
+| Willy-Brandt-Straße, svolta nota | 3,03 | 9,52 | 222 kJ | 334 s | 2.856 |
+| Dritto, corsia nota a 50 m | 2,98 | 9,59 | 231 kJ | 356 s | 2.801 |
+| Dritto, svolta mai nota | 2,90 | 9,39 | 229 kJ | 338 s | 2.664 |
+| Gärtnerstraße (metà traffico), svolta nota | 0,99 | 2,86 | 102 kJ | 187 s | 606 |
+| Dritto, corsia nota a 50 m | 0,99 | 2,82 | 101 kJ | 180 s | 606 |
+| Dritto, svolta mai nota | 0,99 | 2,76 | 99 kJ | 177 s | 606 |
+
+Non sapere la svolta costa poco: a Willy-Brandt-Straße il 3–4% di energia nei
+freni in più, a Gärtnerstraße niente (lì tempo ed energia scendono un po',
+probabilmente perché chi gira segue il verde dell'asse principale e rallenta
+meno). Il verde comune non cambia nulla rispetto al dritto: contando su 10
+minuti di entrambi gli scenari non ha mai cambiato la previsione usata. Dove
+le direzioni hanno semafori diversi, la previsione dà quasi sempre lo stesso
+verde a tutte, e dove non lo fa il tratto è corto (la rete di Amburgo spezza
+la strada dove le corsie si dividono, spesso a meno di 50 m dalla linea) e la
+corsia ha già rivelato la svolta. In simulazione resta la svolta nota; su
+strada senza destinazione basta `straight`.
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il

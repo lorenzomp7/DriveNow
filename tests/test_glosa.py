@@ -409,9 +409,9 @@ def test_without_a_route_the_car_is_assumed_to_go_straight_until_its_lane_tells(
     L = net.edges["W0>J00"].length
     adv.turns = "straight"
     guess, known = adv.guessed_route(route, 0, 0.0)
-    assert guess[1] == straight and not known
+    assert guess[1] == straight and known == 1
     guess, known = adv.guessed_route(route, 0, L - 30.0)   # in the turning lane now
-    assert guess[1] == turn and known
+    assert guess[1] == turn and known == 2
     # Far from the line the advice follows the straight-on green, close to it the real one.
     c, _ = adv.controls_ahead(*_args(adv, route, 0.0))
     assert c[0].windows == [(0.0, 30.0)]
@@ -433,6 +433,34 @@ def test_common_green_is_the_green_every_way_out_shares():
     # In its lane the turn is known: only its own green counts, and no other way out.
     L = net.edges["W0>J00"].length
     guess, known = adv.guessed_route(["W0>J00", turn], 0, L - 30.0)
-    assert known
+    assert known == 2
     c, _ = adv.controls_ahead(guess, 0, L - 30.0, 0.0, {}, 0.0, None)
     assert c[0].windows == [(40.0, 70.0)]
+
+
+def test_common_green_reaches_a_light_beyond_the_current_edge():
+    """The lanes split before the light: the light is one edge further on."""
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    before, first = "W2>J02", "J02>J12"   # a give-way junction, straight on, then the light J12 ...
+    assert net.nodes[net.edges[before].to_node].kind != "signal" and net.turn(before, first) == "s"
+    ways = [n for n in net.edges[first].next_edges if net.turn(first, n) != "t"]
+    greens = {ways[0]: [(0.0, 30.0)], ways[1]: [(40.0, 70.0)]}
+
+    def windows(edge, nxt, t):
+        return (greens.get(nxt, [(0.0, 100.0)]), "g") if edge == first else None
+
+    adv = Advisor(net, windows_fn=windows)
+    adv.turns = "common"
+    seen = {}
+    orig = adv.controls_ahead
+
+    def spy(*a, **k):
+        seen["options"] = a[6] if len(a) > 6 else k.get("turn_options")
+        return orig(*a, **k)
+
+    adv.controls_ahead = spy
+    adv.advise([before, first, ways[1]], 0, 0.0, 50 / 3.6, 0.0, {})
+    assert sorted(seen["options"]) == sorted(ways)   # ... still two edges away
