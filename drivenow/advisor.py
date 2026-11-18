@@ -271,11 +271,14 @@ class Advisor:
         return controls, first
 
     def advise(
-        self, route: Sequence[str], idx: int, pos: float, v: float, t: float, occupancy: Occupancy
+        self, route: Sequence[str], idx: int, pos: float, v: float, t: float, occupancy: Occupancy,
+        profile: Optional[DriverProfile] = None,
     ) -> Tuple[Advice, Optional[NextControl]]:
+        """Advice for one car; ``profile`` is how that car changes speed, if known (else the default)."""
         controls, first = self.controls_ahead(route, idx, pos, t, occupancy, v)
         limit = self.net.edges[route[idx]].speed
-        adv = advise(controls, v, limit, self.profile, self.margins, self.max_signals, self.uncertain_drop)
+        adv = advise(controls, v, limit, profile or self.profile, self.margins, self.max_signals,
+                     self.uncertain_drop)
         if "yield:queue" in adv.notes:
             # The traffic ahead is what sets the speed now: tell the driver about it.
             q = next(c for c in controls if c.node == "queue")

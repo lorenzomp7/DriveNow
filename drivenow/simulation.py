@@ -20,6 +20,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .advisor import Advisor, NextControl, Occupancy
 from .display import AdviceDisplay
+from .profile_learner import ProfileLearner
 from .glosa import Advice
 from .network import BORDER, PRIORITY, ROUNDABOUT, SIGNAL, Network
 
@@ -58,6 +59,10 @@ class Vehicle:
     shown: Optional[Advice] = None   # what the driver sees (see display.py)
     raw_changes: int = 0             # times the computed speed or kind changed
     _raw_key: Optional[tuple] = None
+    coast_true: Optional[float] = None  # m/s^2 this car really loses when lifting off (None: the model's)
+    accel_true: Optional[float] = None  # m/s^2 it really gains when speeding up gently
+    doing: Optional[str] = None      # what the driver is doing for the advice: "coast", "accel" or None
+    learner: Optional[ProfileLearner] = None
 
     @property
     def edge(self) -> str:

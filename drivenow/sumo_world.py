@@ -22,11 +22,13 @@ import math
 import os
 import random
 import tempfile
+from dataclasses import replace
 from typing import Dict, List, Optional
 
 from .advisor import Advisor, NextControl, Occupancy
 from .display import AdviceDisplay
-from .glosa import Advice
+from .profile_learner import ProfileLearner
+from .glosa import Advice, DriverProfile
 from .network import SIGNAL, load_sumo_net, sumo_link_states
 from .simulation import GroupStats, Vehicle, record_motion, refresh_display, signal_states, vehicle_row
 
@@ -60,6 +62,12 @@ def _sumo_binary(gui: bool) -> str:
     return checkBinary("sumo-gui" if gui else "sumo")
 
 
+# Cars that do not change speed the way the model assumes (0.7 m/s^2 lifting off, 1.3 speeding up):
+# share, m/s^2 lost when lifting off, m/s^2 gained when speeding up gently. Plausible, not measured:
+# a car that sails in neutral, a usual combustion car in gear, an electric car with strong regeneration.
+VEHICLE_MIX = ((0.25, 0.35, 1.2), (0.50, 0.7, 1.4), (0.25, 1.3, 2.0))
+
+
 class SumoWorld:
     def __init__(
         self,
@@ -90,6 +98,14 @@ class SumoWorld:
         self._advice_clock = 0.0
         self.follow_shown = False  # equipped drivers act on the shown advice instead of the raw one
         self.display_options: Dict = {}  # AdviceDisplay settings for each new car
+        # Cars that differ from the model (see VEHICLE_MIX), and what the advice knows about each:
+        # "fixed" (the same default for all), "learned" (ProfileLearner) or "true" (an upper bound).
+        self.vehicle_mix = False
+        self.profiles = "fixed"
+        self.speed_noise = 0.2          # m/s: error of the speed a phone measures
+        self._mix_rng = random.Random(seed * 7919 + 1)
+        self.learnt: List[tuple] = []   # (coast true, coast learnt, accel true, accel learnt) per finished car
+        self._learn_clock = 0.0
         self._xy: Dict[str, tuple] = {}
         self._internal: set = set()  # vehicles crossing a junction right now
 
@@ -168,14 +184,30 @@ class SumoWorld:
         for vid in c.simulation.getDepartedIDList():
             c.vehicle.subscribe(vid, [tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION, tc.VAR_SPEED,
                                       tc.VAR_POSITION, tc.VAR_ANGLE, tc.VAR_ROUTE_INDEX])
-            self.vehicles[vid] = Vehicle(vid, self.routes.get(vid, []), self.rng.random() < self.penetration, self.t,
-                                         display=AdviceDisplay(**self.display_options))
+            veh = Vehicle(vid, self.routes.get(vid, []), self.rng.random() < self.penetration, self.t,
+                          display=AdviceDisplay(**self.display_options))
+            self.vehicles[vid] = veh
+            if veh.equipped and self.vehicle_mix:
+                r = self._mix_rng.random()
+                for share, coast, accel in VEHICLE_MIX:
+                    if r < share:
+                        break
+                    r -= share
+                veh.coast_true, veh.accel_true = coast, accel
+                c.vehicle.setAccel(vid, accel)
+            if veh.equipped and self.profiles == "learned":
+                veh.learner = ProfileLearner()
         for vid in c.simulation.getArrivedIDList():
             veh = self.vehicles.pop(vid, None)
             self._xy.pop(vid, None)
             self._internal.discard(vid)
             if veh is not None:
                 self.stats[veh.equipped].add(veh, self.t)
+                if veh.learner is not None:
+                    lp = veh.learner.profile(self.advisor.profile)
+                    n = veh.learner.min_samples
+                    self.learnt.append((veh.coast_true, lp.coast_decel if len(veh.learner.coast) >= n else None,
+                                        veh.accel_true, lp.accel if veh.learner.learn_accel and len(veh.learner.accel) >= n else None))
                 self._on_arrival(veh)
 
         data = c.vehicle.getAllSubscriptionResults()
@@ -199,22 +231,39 @@ class SumoWorld:
             self._xy[vid] = (x, y, math.radians(90 - d[tc.VAR_ANGLE]))
             record_motion(veh, v_old.get(vid, veh.v), veh.v, self.dt)
 
+        self._learn_clock -= self.dt
+        if self._learn_clock <= 1e-9:
+            self._learn_clock = 1.0  # a phone reports its speed once a second
+            for veh in self.vehicles.values():
+                if veh.learner is not None:
+                    veh.learner.observe(self.t, veh.v + self._mix_rng.gauss(0.0, self.speed_noise), veh.doing)
+
         self._advice_clock -= self.dt
         if self._advice_clock <= 0:
             self._advice_clock = 0.6
             occ = self.occupancy()
             for veh in self.vehicles.values():
                 if veh.route:
-                    veh.advice, veh.next_control = self.advisor.advise(veh.route, veh.idx, veh.pos, veh.v, self.t, occ)
+                    veh.advice, veh.next_control = self.advisor.advise(veh.route, veh.idx, veh.pos, veh.v, self.t, occ,
+                                                                       self._profile_of(veh))
                     refresh_display(veh, self.t)
         self._drive_equipped()
 
+    def _profile_of(self, veh: Vehicle) -> Optional[DriverProfile]:
+        """How the advice thinks this car changes speed."""
+        if self.profiles == "learned" and veh.learner is not None:
+            return veh.learner.profile(self.advisor.profile)
+        if self.profiles == "true" and veh.coast_true is not None:
+            return replace(self.advisor.profile, coast_decel=veh.coast_true)  # what learning could reach
+        return None
+
     def _drive_equipped(self) -> None:
-        coast = self.advisor.profile.coast_decel
         for vid, veh in self.vehicles.items():
+            veh.doing = None
             adv = veh.followed(self.follow_shown)
             if not veh.equipped or adv is None or adv.target is None:
                 continue
+            coast = veh.coast_true if veh.coast_true is not None else self.advisor.profile.coast_decel
             to_line = self.net.edges[veh.edge].length - veh.pos
             if vid in self._internal or to_line < 10.0:
                 # Inside or right before the junction SUMO's own driver decides:
@@ -228,8 +277,10 @@ class SumoWorld:
                 self.conn.vehicle.setSpeed(vid, -1)
             elif target < veh.v:
                 self.conn.vehicle.setSpeed(vid, max(target, veh.v - coast * self.dt))
+                veh.doing = "coast" if target < veh.v - 0.3 else None
             else:
                 self.conn.vehicle.setSpeed(vid, target)
+                veh.doing = "accel" if target > veh.v + 0.5 else None
 
     def occupancy(self) -> Occupancy:
         occ: Occupancy = {}
