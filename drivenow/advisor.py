@@ -65,8 +65,9 @@ class Advisor:
         self.queue_aware = True   # count queues over the whole route; coast up to a standing queue
         # Slow traffic ahead (not only a standing queue): lift off early enough to reach it at
         # its speed. Not for the queue of a light with a confident forecast: the green advice
-        # already counts that queue.
-        self.slow_traffic = True
+        # already counts that queue. Off by default: in Hamburg's evening peak it cost
+        # throughput and travel time (see the README); the standing-queue rule below stays.
+        self.slow_traffic = False
         self.slow_diff = 15 / 3.6   # m/s: traffic this much slower than us counts as slow
         self.slow_moving = True     # moving slow traffic counts, not only standing queues...
         self.slow_min_gap = 0.0     # m: ...when at least this far ahead...

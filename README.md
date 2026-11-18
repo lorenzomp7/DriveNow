@@ -428,6 +428,39 @@ python tools/probe_accuracy.py --scenario willy-brandt --replan 30 --learner old
 python tools/hamburg_experiment.py predict --scenario willy-brandt --replan 30 --learner check --seed 1
 ```
 
+### Traffico lento più avanti: provato e lasciato spento
+
+Quando c'è una coda ferma davanti e nessun semaforo noto dietro, DriveNow
+lascia scorrere l'auto fino alla fine della coda. Il pannello del guidatore
+ora lo dice esplicitamente: "Coda ferma tra 120 m".
+
+Si è provato ad andare oltre, con l'idea degli avvisi di rallentamento delle
+app di navigazione. Si considera anche il traffico che si muove ma è almeno
+15 km/h più lento di noi, e si alza il piede in tempo per raggiungerlo alla
+sua velocità: dietro un'auto che continua a muoversi basta
+`v ≤ v_lento + √(2·0,7·d)`. Si mira dietro alle auto che lo precedono, e non
+si fa nulla se è la coda di un semaforo con previsione sicura, cioè se
+finisce entro la lunghezza della coda più 50 m dalla linea, perché lì il
+consiglio sul verde conta già la coda.
+
+| Media di 2 semi | Fermate | Frenate | Energia nei freni | Tempo | Viaggi finiti |
+|---|---|---|---|---|---|
+| Willy-Brandt-Straße, regola di prima | 3,03 | 9,52 | 222 kJ | 334 s | 2.856 |
+| Traffico lento e code ferme | 2,98 | 9,53 | 229 kJ | 350 s | 2.710 |
+| Solo code ferme, anche con un semaforo noto più avanti | 2,93 | 9,34 | 219 kJ | 340 s | 2.742 |
+| Traffico lento solo oltre 40 m e sopra 30 km/h | 2,97 | 9,57 | 231 kJ | 349 s | 2.687 |
+| Gärtnerstraße (metà traffico), regola di prima | 0,99 | 2,86 | 102 kJ | 187 s | 606 |
+| Traffico lento e code ferme | 0,99 | 2,81 | 102 kJ | 180 s | 606 |
+
+Nel traffico fitto dell'ora di punta di Willy-Brandt-Straße rallentare in
+anticipo dietro ad auto lente allarga i vuoti: passano meno auto, la coda
+cresce, e i viaggi finiti nell'ora calano del 5–6%. Conta solo la regola
+sulle code ferme, che toglie il 3% delle fermate, ma anche lì i viaggi finiti
+sono il 4% in meno e il tempo sale del 2%. A Gärtnerstraße, con meno
+traffico, il tempo di viaggio scende del 3,5% e il resto non cambia. Nel
+complesso non conviene: la regola resta nel codice (`Advisor.slow_traffic`,
+`--slow-traffic` nell'esperimento) ma è spenta.
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
