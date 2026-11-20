@@ -588,6 +588,78 @@ la strada dove le corsie si dividono, spesso a meno di 50 m dalla linea) e la
 corsia ha già rivelato la svolta. In simulazione resta la svolta nota; su
 strada senza destinazione basta `straight`.
 
+### Con il GPS di un telefono
+
+In simulazione ogni auto sa esattamente dove si trova. Un telefono no:
+`positioning.Phone` trasforma la posizione vera in quello che riporterebbe
+un telefono qualunque:
+
+- **Errore lungo la strada:** circa ±5 m per la posizione e ±0,5 m/s per la velocità.
+- **Frequenza e ritardo:** una lettura al secondo, che arriva con 1 s di ritardo.
+- **Buchi di segnale:** in media uno ogni 5 minuti, lunghi da 5 a 20 s
+  (sottopassi, palazzi alti).
+
+Si assume che l'auto sia sulla sua strada (map matching), quindi l'incertezza
+riguarda solo quanto è avanti lungo il percorso. Il consiglio può usare questi
+dati in tre modi (`--gps`):
+
+- `raw`: l'ultima lettura così com'è, vecchia di 1–2 s.
+- `filtered`: un filtro di Kalman su posizione e velocità lungo la strada.
+  Media il rumore, porta la stima a "adesso" oltre il ritardo e durante un
+  buco continua a stimare, con un'incertezza che cresce.
+- `filtered` con sospensione: quando l'incertezza supera 15 m
+  (`--gps-max-sigma`) il consiglio si ferma e l'auto guida come senza
+  DriveNow.
+
+| Media di 2 semi | Fermate | Frenate | Energia nei freni | Tempo | Viaggi finiti |
+|---|---|---|---|---|---|
+| Willy-Brandt-Straße, posizione esatta | 3,03 | 9,52 | 222 kJ | 334 s | 2.857 |
+| GPS grezzo | 3,23 | 9,38 | 232 kJ | 372 s | 2.676 |
+| GPS filtrato | 3,20 | 9,58 | 226 kJ | 355 s | 2.858 |
+| Filtrato, sospeso oltre 15 m | 3,17 | 9,51 | 228 kJ | 353 s | 2.777 |
+| Gärtnerstraße (metà traffico), posizione esatta | 0,99 | 2,86 | 102 kJ | 187 s | 606 |
+| GPS grezzo | 1,02 | 2,34 | 77 kJ | 190 s | 604 |
+| GPS filtrato | 1,00 | 2,75 | 94 kJ | 178 s | 607 |
+| Filtrato, sospeso oltre 15 m | 1,00 | 2,77 | 97 kJ | 185 s | 607 |
+
+L'errore della posizione usata dal consiglio, misurato a ogni aggiornamento:
+
+| Modo | Errore mediano | 90° percentile | Errore medio |
+|---|---|---|---|
+| Grezzo | 4,1–4,4 m | 12–14 m | 2,5–3,6 m indietro |
+| Filtrato | 1,9–2,0 m | 4,0 m | 1,5–1,8 m avanti |
+
+- **Grezzo:** usare le letture così come sono costa caro a Willy-Brandt-Straße:
+  - tempo di viaggio +11%;
+  - energia nei freni +5%;
+  - 6% di viaggi finiti in meno.
+
+  A Gärtnerstraße invece l'energia nei freni scende, il motivo non l'ho
+  verificato.
+- **Filtrato:** il filtro rimette a posto quasi tutto:
+  - **Willy-Brandt-Straße:** energia +2% e stessi viaggi finiti, ma restano
+    circa +6% sia di tempo sia di fermate. È il costo che resta da capire,
+    probabilmente il piccolo anticipo della stima quando l'auto rallenta.
+  - **Gärtnerstraße:** il filtrato fa perfino un po' meglio della posizione
+    esatta. È una differenza dentro la variabilità che il consiglio ha già,
+    quindi non un vantaggio.
+- **Sospensione:** non aggiunge niente. Si ferma nel 3% degli aggiornamenti,
+  cioè durante i buchi, e lì la stima del filtro bastava già. Resta come rete
+  di sicurezza per buchi più lunghi di quelli simulati.
+
+Su strada va quindi usata la posizione filtrata, mai l'ultima lettura grezza.
+
+Un dettaglio della simulazione: la rete SUMO non conta la lunghezza degli
+incroci, quindi al telefono passo la distanza davvero percorsa, incroci
+compresi. Prima che lo correggessi, mentre un'auto attraversava un incrocio
+il telefono vedeva una posizione ferma e una velocità non nulla, e il filtro
+sembrava sbagliare molto di più: 90° percentile di 16 m invece di 4.
+
+Restano esatti, in questa prova, la posizione delle altre auto (code, veicolo
+davanti) e i passaggi da cui si imparano i semafori senza dati: qui il
+telefono simulato riguarda solo la posizione dell'auto che riceve il
+consiglio.
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
@@ -642,7 +714,8 @@ fonti:
   repository base) servono la previsione della centrale o un modello
   predittivo.
 - **Posizione e traffico.** GPS dello smartphone o dell'auto per la propria
-  posizione, dati di traffico (o i veicoli connessi) per code e veicolo
+  posizione, sempre filtrato lungo la strada (vedi "Con il GPS di un
+  telefono"); dati di traffico (o i veicoli connessi) per code e veicolo
   davanti.
 - **Mappa.** La geometria va presa da OpenStreetMap o dai MAPEM, al posto
   della rete SUMO.
@@ -660,6 +733,7 @@ drivenow/
   probe.py        orari dei semafori senza dati, imparati dalle auto e ricontrollati
   display.py      quello che vede il guidatore: numero stabile, annunci distanziati
   profile_learner.py  quanto rallenta ogni auto a piede alzato, imparato dalla sua guida
+  positioning.py  il GPS di un telefono (rumore, ritardo, buchi) e il filtro di Kalman lungo la strada
   hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
