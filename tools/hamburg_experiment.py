@@ -34,11 +34,16 @@ ap.add_argument("--profiles", choices=["fixed", "learned", "true"], default="fix
 ap.add_argument("--turns", choices=["known", "straight", "common"], default="known",
                 help="which way cars turn: known (a route is set), or guessed straight on, or the green all ways share")
 ap.add_argument("--commit", type=float, default=50.0, help="m before the line where the lane gives the turn away (0: never)")
+ap.add_argument("--gps", choices=["perfect", "raw", "filtered"], default="perfect",
+                help="where the advice thinks the car is: the truth, or a phone's fixes as they are or filtered")
+ap.add_argument("--gps-max-sigma", type=float, default=15.0, help="m: more uncertain than this, the advice is suspended")
+ap.add_argument("--gps-sigma", type=float, default=None, help="m: error of a phone fix (default 5)")
+ap.add_argument("--gps-delay", type=float, default=None, help="s: how late a fix arrives (default 1)")
 ap.add_argument("--seed", type=int, default=1)
 ap.add_argument("--scale", type=float, default=1.0, help="share of the hour's traffic to run (1 = all)")
 a = ap.parse_args()
 w = HamburgWorld(scenario=a.scenario, penetration=0.0 if a.mode == "none" else 1.0, forecast="oracle" if a.mode == "oracle" else "predict",
-                 seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}_{a.confirm_cycles}_{a.no_confirm_clean}_{a.slow_traffic}_{a.slow_standing_only}_{a.slow_min_gap}_{a.slow_min_kmh}_{a.follow_shown}_{a.display_up}_{a.vehicle_mix}_{a.profiles}_{a.turns}_{a.commit}", scale=a.scale,
+                 seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}_{a.confirm_cycles}_{a.no_confirm_clean}_{a.slow_traffic}_{a.slow_standing_only}_{a.slow_min_gap}_{a.slow_min_kmh}_{a.follow_shown}_{a.display_up}_{a.vehicle_mix}_{a.profiles}_{a.turns}_{a.commit}_{a.gps}_{a.gps_max_sigma}_{a.gps_sigma}_{a.gps_delay}", scale=a.scale,
                  threshold=a.threshold)
 w.advisor.gap_aware = not a.no_gaps
 w.advisor.gap_left_turns = not a.no_left_gaps
@@ -51,6 +56,11 @@ w.vehicle_mix = a.vehicle_mix
 w.advisor.turns = a.turns
 w.advisor.commit_distance = a.commit
 w.profiles = a.profiles
+w.gps, w.gps_max_sigma = a.gps, a.gps_max_sigma
+if a.gps_sigma is not None:
+    w.gps_options["sigma_pos"] = a.gps_sigma
+if a.gps_delay is not None:
+    w.gps_options["delay"] = a.gps_delay
 if a.display_up is not None:
     w.display_options = {"deadband_up": a.display_up / 3.6, "quick_up": True}
 w.advisor.slow_moving = not a.slow_standing_only
@@ -78,6 +88,11 @@ if w.learnt:
         return {"cars": len(w.learnt), "learnt": len(e), "mean_abs_error": round(sum(e) / len(e), 3) if e else None}
     res["learnt_coast"] = err(0, 1)
     res["learnt_accel"] = err(2, 3)
+if w.gps_errors:
+    e = sorted(abs(x) for x in w.gps_errors)
+    res["gps"] = a.gps
+    res["gps_error_m"] = {"median": round(e[len(e) // 2], 1), "p90": round(e[int(0.9 * len(e))], 1),
+                          "mean_signed": round(sum(w.gps_errors) / len(w.gps_errors), 1)}
 print(json.dumps(res))
 if a.out:
     json.dump(res, open(a.out, "w"))

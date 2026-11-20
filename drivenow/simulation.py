@@ -63,6 +63,10 @@ class Vehicle:
     accel_true: Optional[float] = None  # m/s^2 it really gains when speeding up gently
     doing: Optional[str] = None      # what the driver is doing for the advice: "coast", "accel" or None
     learner: Optional[ProfileLearner] = None
+    phone: Optional[object] = None   # positioning.Phone: where the car's phone thinks it is
+    cum: Optional[List[float]] = None  # distance along the route at the start of each edge
+    gps_suspended: int = 0           # advice updates suspended because the position was too uncertain
+    gps_updates: int = 0
 
     @property
     def edge(self) -> str:
@@ -117,6 +121,8 @@ class GroupStats:
     raw_changes: int = 0
     shown_changes: int = 0
     announcements: int = 0
+    gps_updates: int = 0
+    gps_suspended: int = 0
 
     def add(self, v: Vehicle, t: float) -> None:
         self.trips += 1
@@ -127,6 +133,8 @@ class GroupStats:
         self.raw_changes += v.raw_changes
         self.shown_changes += v.display.changes
         self.announcements += v.display.announcements
+        self.gps_updates += v.gps_updates
+        self.gps_suspended += v.gps_suspended
 
     def summary(self) -> Dict[str, float]:
         n = max(self.trips, 1)
@@ -139,6 +147,7 @@ class GroupStats:
             "advice_changes": round(self.raw_changes / n, 1),
             "shown_changes": round(self.shown_changes / n, 1),
             "announcements": round(self.announcements / n, 1),
+            "advice_suspended_pct": round(100 * self.gps_suspended / max(self.gps_updates, 1), 1),
         }
 
 

@@ -22,11 +22,13 @@ import math
 import os
 import random
 import tempfile
+from bisect import bisect_right
 from dataclasses import replace
 from typing import Dict, List, Optional
 
 from .advisor import Advisor, NextControl, Occupancy
 from .display import AdviceDisplay
+from .positioning import Phone
 from .profile_learner import ProfileLearner
 from .glosa import Advice, DriverProfile
 from .network import SIGNAL, load_sumo_net, sumo_link_states
@@ -104,6 +106,14 @@ class SumoWorld:
         self.profiles = "fixed"
         self.speed_noise = 0.2          # m/s: error of the speed a phone measures
         self._mix_rng = random.Random(seed * 7919 + 1)
+        # Where the advice thinks each car is: "perfect" (the simulation's truth), or what a phone
+        # reports (see positioning.py), "raw" or "filtered"; with more than gps_max_sigma metres
+        # of uncertainty the advice is suspended (the driver sees no advice and drives as usual).
+        self.gps = "perfect"
+        self.gps_max_sigma = 15.0
+        self.gps_options: Dict = {}
+        self._gps_rng = random.Random(seed * 104729 + 3)
+        self.gps_errors: List[float] = []  # m: estimated minus true position, at each advice update
         self.learnt: List[tuple] = []   # (coast true, coast learnt, accel true, accel learnt) per finished car
         self._learn_clock = 0.0
         self._xy: Dict[str, tuple] = {}
@@ -197,6 +207,11 @@ class SumoWorld:
                 c.vehicle.setAccel(vid, accel)
             if veh.equipped and self.profiles == "learned":
                 veh.learner = ProfileLearner()
+            if veh.equipped and self.gps != "perfect" and veh.route:
+                veh.phone = Phone(self._gps_rng, mode=self.gps, **self.gps_options)
+                veh.cum = [0.0]
+                for e in veh.route[:-1]:
+                    veh.cum.append(veh.cum[-1] + self.net.edges[e].length)
         for vid in c.simulation.getArrivedIDList():
             veh = self.vehicles.pop(vid, None)
             self._xy.pop(vid, None)
@@ -230,6 +245,8 @@ class SumoWorld:
             x, y = d[tc.VAR_POSITION]
             self._xy[vid] = (x, y, math.radians(90 - d[tc.VAR_ANGLE]))
             record_motion(veh, v_old.get(vid, veh.v), veh.v, self.dt)
+            if veh.phone is not None:
+                veh.phone.tick(self.t, veh.cum[veh.idx] + veh.pos, veh.v)
 
         self._learn_clock -= self.dt
         if self._learn_clock <= 1e-9:
@@ -244,10 +261,32 @@ class SumoWorld:
             occ = self.occupancy()
             for veh in self.vehicles.values():
                 if veh.route:
-                    veh.advice, veh.next_control = self.advisor.advise(veh.route, veh.idx, veh.pos, veh.v, self.t, occ,
-                                                                       self._profile_of(veh))
+                    where = self._where(veh)
+                    if where is None:
+                        lim = self.net.edges[veh.edge].speed
+                        veh.advice, veh.next_control = Advice("free", None, lim, lim), None
+                    else:
+                        idx, pos, v = where
+                        veh.advice, veh.next_control = self.advisor.advise(veh.route, idx, pos, v, self.t, occ,
+                                                                           self._profile_of(veh))
                     refresh_display(veh, self.t)
         self._drive_equipped()
+
+    def _where(self, veh: Vehicle) -> Optional[tuple]:
+        """(route index, position on that edge, speed) as the advice knows them, or None: too uncertain."""
+        if veh.phone is None:
+            return veh.idx, veh.pos, veh.v
+        veh.gps_updates += 1
+        est = veh.phone.estimate(self.t)
+        if est is None or est[2] > self.gps_max_sigma:
+            veh.gps_suspended += 1
+            return None
+        s, v, _ = est
+        s = min(max(s, 0.0), veh.cum[-1] + self.net.edges[veh.route[-1]].length)
+        self.gps_errors.append(s - (veh.cum[veh.idx] + veh.pos))
+        idx = max(0, bisect_right(veh.cum, s) - 1)
+        pos = min(s - veh.cum[idx], self.net.edges[veh.route[idx]].length)
+        return idx, pos, v
 
     def _profile_of(self, veh: Vehicle) -> Optional[DriverProfile]:
         """How the advice thinks this car changes speed."""
