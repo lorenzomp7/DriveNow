@@ -1,0 +1,10 @@
+{
+  "name": "drivenow-playwriter-checks",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22"},
+  "dependencies": {
+    "playwriter": "0.12.0",
+    "@modelcontextprotocol/sdk": "1.30.0"
+  }
+}

@@ -1,0 +1,5 @@
+# Optional environment for the real LibSignal SUMO smoke check (Python 3.12).
+# LibSignal source is checked out separately at the revision in docs/libsignal.md.
+eclipse-sumo==1.28.0
+traci==1.28.0
+libsumo==1.28.0

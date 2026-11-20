@@ -1,0 +1,2 @@
+# Optional browser verification; not needed to run DriveNow.
+playwright==1.56.0

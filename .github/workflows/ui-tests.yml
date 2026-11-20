@@ -1,0 +1,22 @@
+name: Browser checks
+on:
+  push:
+    branches: [main, main_chatgpt]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-ui.txt pytest
+      - name: Use installed Chrome
+        run: |
+          chrome=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          echo "DRIVENOW_CHROMIUM=$chrome" >> "$GITHUB_ENV"
+      - run: python -m pytest
+      - run: python tests/browser/check_ui.py

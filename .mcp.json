@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "playwriter": {"command": "python", "args": ["tools/devtools.py", "mcp", "playwriter"]},
+    "container-use": {"command": "python", "args": ["tools/devtools.py", "mcp", "container"]},
+    "vibetest": {"command": "python", "args": ["tools/devtools.py", "mcp", "vibetest"]}
+  }
+}

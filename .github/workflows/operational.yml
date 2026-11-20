@@ -1,0 +1,69 @@
+name: Operational toolchain
+on:
+  push:
+    branches: [main, main_chatgpt]
+    paths:
+      - 'tools/devtools.py'
+      - 'tools/vibetest_mcp*.py'
+      - 'tests/test_devtools.py'
+      - '.mcp.json'
+      - '.github/workflows/operational.yml'
+  pull_request:
+    paths:
+      - 'tools/devtools.py'
+      - 'tools/vibetest_mcp*.py'
+      - 'tests/test_devtools.py'
+      - '.mcp.json'
+      - '.github/workflows/operational.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        tool: [skills, browser, playwriter, container, darts, libsignal, vibetest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        if: matrix.tool == 'playwriter'
+        with:
+          node-version: '24'
+      - name: Locate installed Chrome
+        if: matrix.tool == 'browser' || matrix.tool == 'vibetest' || matrix.tool == 'playwriter'
+        run: |
+          chrome=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          echo "DRIVENOW_CHROMIUM=$chrome" >> "$GITHUB_ENV"
+      - name: Prepare temporary Docker runner
+        if: matrix.tool == 'container'
+        run: |
+          sudo modprobe ip_tables
+          sudo modprobe iptable_nat
+          sudo iptables-legacy -t nat -S
+      - run: python tools/devtools.py setup ${{ matrix.tool }}
+      - name: Execute the installed tool
+        if: matrix.tool != 'vibetest'
+        run: python tools/devtools.py run ${{ matrix.tool }}
+      - name: Verify Vibetest dependencies without model calls
+        if: matrix.tool == 'vibetest'
+        run: python tools/devtools.py run vibetest -- --check
+      - name: Launch and close the real BrowserUse browser without AI
+        if: matrix.tool == 'vibetest'
+        run: python tools/devtools.py run vibetest -- --check-browser
+      - name: Verify real MCP interface and missing-key rejection
+        if: matrix.tool == 'vibetest'
+        run: .tools/envs/vibetest/bin/python tools/vibetest_mcp_check.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: operational-${{ matrix.tool }}
+          path: test-results/
+          if-no-files-found: ignore
