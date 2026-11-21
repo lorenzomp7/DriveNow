@@ -130,3 +130,45 @@ def test_self_driving_town_is_safe_with_double_parking():
     assert s["trips"] > 100
     assert s["collisions"] == 0 and s["red_runs"] == 0
     assert s["gap_rmse_m"] < 1.0 and s["missed_pct"] < 5
+
+
+def test_pedestrians_are_seen_closer_at_night():
+    seen = {}
+    for weather in ("clear", "night"):
+        p = Perception(random.Random(7), "camera", weather)
+        for k in range(10):
+            p.see_pedestrians(k * 0.2, [("c", 60.0, "waiting")])
+        seen[weather] = p.pedestrian("c")
+    assert seen == {"clear": "waiting", "night": None}
+    # A radar alone does not make a pedestrian: a person is a weak, slow radar target.
+    p = Perception(random.Random(7), "radar")
+    for k in range(10):
+        p.see_pedestrians(k * 0.2, [("c", 20.0, "crossing")])
+    assert p.pedestrian("c") is None
+
+
+def test_side_sensors_see_the_main_road():
+    p = Perception(random.Random(8), "camera+radar", "fog")
+    p.see_cross(0.0, [(50.0, 12.0, "x")])   # beyond the camera in fog, within the radar
+    cars = p.cross(0.0)
+    assert len(cars) == 1 and abs(cars[0][0] - 50.0) < 3 and cars[0][2] == 0.5
+    # Carried forward at its speed, more uncertain, then forgotten after a second.
+    later = p.cross(0.5)
+    assert later[0][0] < cars[0][0] and later[0][2] > cars[0][2]
+    p.see_cross(1.5, [])
+    assert p.cross(1.5) == []
+
+
+def test_self_driving_car_stops_for_a_pedestrian_and_goes_on_after():
+    from drivenow.simulation import Vehicle
+    net = one_light(0.1)
+    sim = Simulation(net, SimConfig(demand=0, autopilot=True, sensors="camera+radar", pedestrians=1e-9))
+    cross = next(c for c in sim.crossings if c.edge == "a")
+    cross.state, cross.until = "crossing", 30.0
+    veh = Vehicle(0, ["a", "b"], True, 0.0, v=50 / 3.6)
+    veh.perception = Perception(random.Random(3), "camera+radar")
+    sim.vehicles.append(veh)
+    sim.run(25)
+    assert veh.edge == "a" and veh.pos < cross.pos and veh.v < 0.5
+    sim.run(60)
+    assert not sim.vehicles and veh.pedestrian_hits == 0

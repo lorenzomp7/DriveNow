@@ -184,7 +184,8 @@ def build_world(args):
     net = load_sumo_net(args.net) if args.net else demo_city()
     return Simulation(net, SimConfig(demand=args.demand, penetration=args.penetration, seed=args.seed,
                                      autopilot=args.autopilot, sensors=args.sensors, weather=args.weather,
-                                     light_timing=not args.no_light_timing, double_parking=args.double_parking))
+                                     light_timing=not args.no_light_timing, double_parking=args.double_parking,
+                                     pedestrians=args.pedestrians))
 
 
 def main(argv=None) -> None:
@@ -213,6 +214,8 @@ def main(argv=None) -> None:
                     help="with --autopilot: the lights' timings are not known, only the camera reads them")
     ap.add_argument("--double-parking", type=float, default=0.0, metavar="N",
                     help="built-in simulation: N cars an hour stop in the lane for 15-40 s")
+    ap.add_argument("--pedestrians", type=float, default=0.0, metavar="N",
+                    help="built-in simulation: N people an hour at each zebra crossing (one mid-street)")
     args = ap.parse_args(argv)
 
     runner = Runner(build_world(args), speed=args.speed)

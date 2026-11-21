@@ -113,3 +113,5 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   .meta #net-name, .meta .sep { display: none; }
 }
 .legend i.seen { display: inline-block; width: 14px; height: 8px; border: 2px dashed #fbbf24; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.legend i.ped { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; margin-right: 6px; vertical-align: middle; }
+.legend i.ped.in { background: #f87171; margin-left: 6px; }

@@ -41,6 +41,18 @@ that was already standing still when it came into view.
 
 The light's colour is read by the camera and changes only when two of the
 last three readings agree.
+
+Two more things the car looks at, each with the same sensors:
+
+* **pedestrians at a zebra crossing** ahead (on the kerb or in the lane).
+  The camera finds them up to 80 m in clear weather, much less at night
+  (people are not lit like cars) and in fog; the lidar up to 60 m; the radar
+  sees a person badly (half the time, within 60 m). A person counts as there
+  once the camera or the lidar has seen them twice in the last second, or
+  once each together with the radar;
+* **the cars on the main road** when the car must give way, with side
+  cameras and corner radars (up to 80 m on each side). Each car keeps the
+  best measurement of the last second, carried forward at its speed.
 """
 
 from __future__ import annotations
@@ -74,6 +86,11 @@ LIDAR_RANGE = 120.0
 GHOST_FROM = 120.0   # m: a ghost shows up this far ahead...
 GHOST_UNTIL = 15.0   # ...and drops out of the beam this close (an overhead sign is above it)
 STILL = 1.5          # m/s over the ground: slower than this an object counts as standing still
+PED_RANGE = 80.0     # m: the camera finds a pedestrian this far, in clear weather
+PED_WEATHER = {"clear": 1.0, "night": 0.5, "rain": 0.7, "fog": 0.3}  # camera range factor for pedestrians
+PED_LIDAR = 60.0
+PED_RADAR = 60.0
+SIDE_RANGE = 80.0    # m: side cameras and corner radars, along the crossing road
 
 
 @dataclass
@@ -138,6 +155,8 @@ class Perception:
         self._light_t = -1e9
         self._light_node: Optional[str] = None
         self._truth_leader = None
+        self._peds: Dict[object, Deque[Tuple[float, str, str]]] = {}  # crossing -> (time, sensor, state)
+        self._cross: Dict[object, Tuple[float, float, float, float]] = {}  # car -> (time, dist, speed, sigma)
         self._v = 0.0
         self._rate_true = 0.0
 
@@ -273,6 +292,7 @@ class Perception:
             for det in dets:
                 self._associate(det, t, v)
             self.tracks = [tr for tr in self.tracks if t - max(tr.seen.values()) <= 1.0 and tr.gap > -5]
+            self._merge_tracks()
 
         # The light
         node = None if light is None else light[2]
@@ -290,6 +310,27 @@ class Perception:
         if t - self._light_t > 1.0:
             self._light = None
             self._light_reads.clear()
+
+    def _merge_tracks(self) -> None:
+        """Two tracks of the same object (one started by the camera, one by the radar): keep one."""
+        self.tracks.sort(key=lambda tr: tr.gap)
+        out: List[Track] = []
+        for tr in self.tracks:
+            prev = out[-1] if out else None
+            if prev is not None and \
+                    abs(tr.gap - prev.gap) < max(2.0, 2 * math.sqrt(tr.P[0][0] + prev.P[0][0])) and \
+                    abs(tr.rate - prev.rate) < 2 * math.sqrt(tr.P[1][1] + prev.P[1][1]) + 1.0:
+                keep, drop = (prev, tr) if prev.P[0][0] <= tr.P[0][0] else (tr, prev)
+                keep.hits += drop.hits
+                for sen, ts in drop.seen.items():
+                    keep.seen[sen] = max(ts, keep.seen.get(sen, ts))
+                keep.vision = deque(sorted(list(keep.vision) + list(drop.vision)))
+                keep.truths.update(drop.truths)
+                keep.moved = keep.moved or drop.moved
+                out[-1] = keep
+            else:
+                out.append(tr)
+        self.tracks = out
 
     def _predict(self, tr: Track, dt: float) -> None:
         if dt <= 0:
@@ -388,3 +429,82 @@ class Perception:
     def light(self) -> Optional[str]:
         """Colour of the next light as the camera reads it: 'G', 'y', 'r', or None (not seen)."""
         return self._light
+
+    # -- pedestrians ----------------------------------------------------------------
+
+    def pedestrian_range(self) -> float:
+        """How far ahead the car can trust itself to see a pedestrian (camera or lidar)."""
+        if "perfect" in self.sensors:
+            return PED_RANGE
+        r = 0.0
+        if "camera" in self.sensors:
+            r = max(r, PED_RANGE * PED_WEATHER[self.weather])
+        if "lidar" in self.sensors:
+            r = max(r, PED_LIDAR * self.w["lidar"][0])
+        return r
+
+    def see_pedestrians(self, t: float, crossings: Sequence[Tuple[object, float, Optional[str]]]) -> None:
+        """Crossings ahead: (crossing id, distance, 'waiting' / 'crossing' / None if nobody is there)."""
+        for cid, dist, state in crossings:
+            hits = self._peds.setdefault(cid, deque())
+            if state is not None:
+                if "perfect" in self.sensors and dist < PED_RANGE:
+                    hits.append((t, "perfect", state))
+                if "camera" in self.sensors:
+                    r = PED_RANGE * PED_WEATHER[self.weather]
+                    pd = 0.97 if dist < r / 2 else 0.97 - 0.37 * (dist - r / 2) / (r / 2)
+                    if dist < r and self.rng.random() < pd * self.w["camera"][2]:
+                        hits.append((t, "camera", state))
+                if "lidar" in self.sensors and dist < PED_LIDAR * self.w["lidar"][0] and \
+                        self.rng.random() < 0.95 * self.w["lidar"][2]:
+                    hits.append((t, "lidar", state))
+                if "radar" in self.sensors and dist < PED_RADAR and self.rng.random() < 0.5:
+                    hits.append((t, "radar", state))
+            while hits and hits[0][0] < t - 1.0:
+                hits.popleft()
+
+    def pedestrian(self, cid: object) -> Optional[str]:
+        """'waiting' or 'crossing' if the car believes someone is at that crossing, else None."""
+        hits = [h for h in self._peds.get(cid, ()) if self._t is None or h[0] >= self._t - 1.0]
+        if not hits:
+            return None
+        vision = sum(1 for h in hits if h[1] in ("camera", "lidar"))
+        radar = sum(1 for h in hits if h[1] == "radar")
+        if hits[-1][1] == "perfect" or vision >= 2 or (vision >= 1 and radar >= 1):
+            return hits[-1][2]
+        return None
+
+    # -- traffic on the road it must give way to --------------------------------------
+
+    def see_cross(self, t: float, cars: Sequence[Tuple[float, float, object]]) -> None:
+        """Cars on the main road: (distance to the junction, speed, id)."""
+        for d, v, cid in cars:
+            best = None
+            if "perfect" in self.sensors:
+                best = (d, v, 0.0)
+            if "camera" in self.sensors:
+                rng_f, noise_f, pd_f = self.w["camera"]
+                if d < SIDE_RANGE * rng_f and self.rng.random() < 0.95 * pd_f:
+                    sg = (0.3 + 0.03 * d + 0.0004 * d * d) * noise_f
+                    best = min(best or (0, 0, math.inf), (d + self.rng.gauss(0, sg), v + self.rng.gauss(0, 1.0), sg),
+                               key=lambda x: x[2])
+            if "radar" in self.sensors:
+                rng_f, _, pd_f = self.w["radar"]
+                if d < SIDE_RANGE * rng_f and v > STILL and self.rng.random() < 0.95 * pd_f:
+                    best = min(best or (0, 0, math.inf), (d + self.rng.gauss(0, 0.5), v + self.rng.gauss(0, 0.3), 0.5),
+                               key=lambda x: x[2])
+            if "lidar" in self.sensors:
+                rng_f, noise_f, pd_f = self.w["lidar"]
+                if d < SIDE_RANGE * rng_f and self.rng.random() < 0.98 * pd_f:
+                    best = (d + self.rng.gauss(0, 0.1), v + self.rng.gauss(0, 0.3), 0.1)
+            if best is not None:
+                self._cross[cid] = (t, best[0], max(best[1], 0.0), best[2])
+        for cid in [c for c, m in self._cross.items() if t - m[0] > 1.0]:
+            del self._cross[cid]
+
+    def cross(self, t: float) -> List[Tuple[float, float, float]]:
+        """The main-road cars as the car believes them now: (distance, speed, sigma)."""
+        out = []
+        for t0, d, v, sg in self._cross.values():
+            out.append((d - v * (t - t0), v, sg + 1.0 * (t - t0)))
+        return out

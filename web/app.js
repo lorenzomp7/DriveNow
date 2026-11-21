@@ -297,6 +297,21 @@ function draw() {
     }
   }
 
+  // Zebra crossings and the people at them.
+  for (const [x, y, h, st] of (frame && frame.crossings) || []) {
+    const [sx, sy] = toScreen(x, y);
+    ctx.save();
+    ctx.translate(sx, sy); ctx.rotate(-h);
+    const w = Math.max(3 * m, 4), len = Math.max(4 * m, 5);
+    ctx.fillStyle = "rgba(255,255,255,.55)";
+    for (let k = -1; k <= 1; k++) ctx.fillRect(k * len / 2 - 1, -w / 2, 2, w);
+    if (st) {
+      ctx.fillStyle = st === 2 ? "#f87171" : "#fbbf24";
+      ctx.beginPath(); ctx.arc(0, st === 2 ? 0 : -w / 2 - 4, Math.max(1.2 * m, 3), 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
+
   // What the chosen self-driving car sees: the object ahead where its sensors put it.
   const mine = vs.find((v) => v[0] === selected);
   const seen = mine && mine[17];
@@ -383,7 +398,8 @@ function updateHud() {
     const car = seen[0] === null ? "nessun ostacolo"
       : `auto a ${Math.round(seen[0])} m (${seen[1].split("+").map((x) => SENSOR[x] || x).join(" + ")})`;
     const lamp = seen[2] ? ` · semaforo ${COLOR_NAME[seen[2]]}` : "";
-    $("sees").textContent = car + lamp;
+    const ped = seen[5] === "crossing" ? " · pedone sulle strisce" : seen[5] === "waiting" ? " · pedone che aspetta" : "";
+    $("sees").textContent = car + lamp + ped;
   }
   tag.className = "tag" + (eq ? " dn" : "");
 
@@ -523,6 +539,7 @@ function showFrame(f) {
     if (selected !== null) view.s = Math.max(view.s, 1.4);
   }
   updateHud(); updateStats(); updateMeta();
+  $("legend-peds").hidden = !f.crossings;
 }
 
 // Live: frames from the Python server.

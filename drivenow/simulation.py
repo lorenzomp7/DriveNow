@@ -46,6 +46,23 @@ NATURAL_DECEL = 0.7     # what lifting off gives for free
 YELLOW_DECEL = 3.0      # stop on yellow only if this is enough
 NODE_HOLD = 1.6         # s a vehicle occupies a roundabout or give-way node
 MERGE_ZONE = 40.0       # m: cars this close to a junction take turns into the same street
+PED_DECEL = 3.0         # m/s^2: a driver stops for someone waiting at a crossing if this is enough
+PED_WAIT = 1.5          # s a pedestrian waits on the kerb before stepping in
+PED_CROSS = 4.0         # s in the lane
+HUMAN_PED_SIGHT = 60.0  # m: people see a pedestrian at a crossing from here
+
+
+@dataclass
+class Crossing:
+    """A zebra crossing in the middle of a street."""
+
+    id: int
+    edge: str
+    pos: float
+    state: Optional[str] = None   # None, 'waiting' or 'crossing'
+    until: float = 0.0
+    careless: bool = False
+    no_chance: set = field(default_factory=set)  # cars too close to stop at all when this person stepped in
 MAJOR_GAP = 4.0         # s a minor-road car needs before the next major-road car arrives
 
 
@@ -97,6 +114,9 @@ class Vehicle:
     _hit: set = field(default_factory=set)
     _conflict: bool = False
     _lead_id: Optional[int] = None
+    pedestrian_hits: int = 0         # drove over a crossing while someone was in the lane...
+    pedestrian_no_chance: int = 0    # ...counted apart when they stepped in too close to stop at all
+    yield_fails: int = 0             # entered a give-way junction less than 2 s before a main-road car
     _last_gap: float = 0.0
     _phantom_on: bool = False
 
@@ -165,6 +185,9 @@ class GroupStats:
     gap_n: int = 0
     near_n: int = 0
     missed: int = 0
+    pedestrian_hits: int = 0
+    pedestrian_no_chance: int = 0
+    yield_fails: int = 0
 
     def add(self, v: Vehicle, t: float) -> None:
         self.trips += 1
@@ -178,7 +201,8 @@ class GroupStats:
         self.gps_updates += v.gps_updates
         self.gps_suspended += v.gps_suspended
         self.km += v.dist / 1000
-        for k in ("collisions", "conflicts", "red_runs", "aeb", "phantom", "gap_err2", "gap_n", "near_n", "missed"):
+        for k in ("collisions", "conflicts", "red_runs", "aeb", "phantom", "gap_err2", "gap_n", "near_n", "missed",
+                  "pedestrian_hits", "pedestrian_no_chance", "yield_fails"):
             setattr(self, k, getattr(self, k) + getattr(v, k))
 
     def summary(self) -> Dict[str, float]:
@@ -201,6 +225,9 @@ class GroupStats:
             "phantom": self.phantom,
             "gap_rmse_m": round(math.sqrt(self.gap_err2 / self.gap_n), 2) if self.gap_n else None,
             "missed_pct": round(100 * self.missed / self.near_n, 2) if self.near_n else None,
+            "pedestrian_hits": self.pedestrian_hits,
+            "pedestrian_no_chance": self.pedestrian_no_chance,
+            "yield_fails": self.yield_fails,
         }
 
 
@@ -219,6 +246,8 @@ class SimConfig:
     ghost_per_km: float = 2.0       # radar ghosts along the road
     double_parking: float = 0.0     # cars per hour that stop in the lane somewhere in the network...
     parked_for: Tuple[float, float] = (15.0, 40.0)  # ...for this long (s)
+    pedestrians: float = 0.0        # people per hour at each zebra crossing (one mid-street, streets > 150 m)
+    careless: float = 0.05          # share of them who step in without looking, whatever the traffic
 
 
 class Simulation:
@@ -237,6 +266,15 @@ class Simulation:
         self._entries = net.entry_edges()
         self._perc_rng = random.Random(config.seed * 7919 + 11)
         self.autopilot_cfg = ap.AutopilotConfig()
+        self.crossings: List[Crossing] = []
+        self.pedestrians_crossed = 0
+        if config.pedestrians > 0:
+            for e in net.edges.values():
+                if e.length > 150:
+                    self.crossings.append(Crossing(len(self.crossings), e.id, e.length / 2))
+        self._crossings_on: Dict[str, List[Crossing]] = {}
+        for c in self.crossings:
+            self._crossings_on.setdefault(c.edge, []).append(c)
         if not config.light_timing:
             # No timings: the advice knows nothing about the lights (only roundabouts, give-ways, queues).
             self.advisor.windows_fn = lambda e, n, t: None
@@ -269,15 +307,70 @@ class Simulation:
         gap = max(gap, 0.1)
         return IDM_ACCEL * (free - (s_star / gap) ** 2)
 
-    def _major_car_close(self, node_id: str, by_edge: Dict[str, List[Vehicle]]) -> bool:
+    def _major_cars(self, node_id: str, by_edge: Dict[str, List[Vehicle]]) -> List[Tuple[float, float, int]]:
+        """Cars on the main road coming to a give-way junction: (distance to it, speed, id)."""
         node = self.net.nodes[node_id]
+        out = []
         for e in node.major:
+            edge = self.net.edges[e]
             for other in by_edge.get(e, []):
-                edge = self.net.edges[e]
-                d = edge.length - other.pos
-                if d < 3 or (other.v > 0.5 and d / other.v < MAJOR_GAP):
-                    return True
+                out.append((edge.length - other.pos, other.v, other.id))
+        return out
+
+    @staticmethod
+    def _close(cars, margin: float = 0.0) -> bool:
+        """A main-road car (distance, speed, sigma) arrives too soon to cross in front of it."""
+        for d, v, sg in cars:
+            d -= margin * sg
+            if d < 3 or (v > 0.5 and d / v < MAJOR_GAP):
+                return True
         return False
+
+    def _major_car_close(self, node_id: str, by_edge: Dict[str, List[Vehicle]]) -> bool:
+        return self._close([(d, v, 0.0) for d, v, _ in self._major_cars(node_id, by_edge)])
+
+    def _pedestrians(self, by_edge: Dict[str, List[Vehicle]]) -> None:
+        """People arrive at the crossings, wait on the kerb, and cross when no car is too close to stop."""
+        p = self.cfg.pedestrians / 3600.0 * self.cfg.dt
+        for c in self.crossings:
+            if c.state is None:
+                if self.rng.random() < p:
+                    c.state, c.until = "waiting", self.t + PED_WAIT
+                    c.careless = self.rng.random() < self.cfg.careless
+                    if c.careless:  # straight into the lane, without stopping on the kerb
+                        c.state, c.until = "crossing", self.t + PED_CROSS
+                        self.pedestrians_crossed += 1
+                        # Cars that could not stop even braking as hard as possible (8 m/s^2).
+                        c.no_chance = {v.id for v in by_edge.get(c.edge, [])
+                                       if v.pos < c.pos and c.pos - v.pos < v.v * v.v / 16.0 + 0.5}
+            elif c.state == "waiting" and self.t >= c.until:
+                # Nobody steps in front of a moving car that could not stop for them.
+                close = any(v.v > 0.5 and c.pos - v.pos < v.v * v.v / (2 * PED_DECEL) + 3.0
+                            for v in by_edge.get(c.edge, []) if v.pos < c.pos)
+                if close:
+                    c.until = self.t + 0.5
+                else:
+                    c.state, c.until = "crossing", self.t + PED_CROSS
+                    c.no_chance = set()
+                    self.pedestrians_crossed += 1
+            elif c.state == "crossing" and self.t >= c.until:
+                c.state = None
+
+    def _crossing_stop(self, veh: Vehicle, sees) -> Optional[Tuple[float, str]]:
+        """(distance to stop at, state) before the next crossing if someone is at it, else None.
+
+        ``sees(crossing, distance)`` says what the driver sees there. Someone still on the kerb
+        is let through only if the car can stop comfortably.
+        """
+        for c in self._crossings_on.get(veh.edge, ()):
+            d = c.pos - veh.pos
+            if d <= 0:
+                continue
+            state = sees(c, d)
+            if state == "crossing" or (state == "waiting" and veh.v * veh.v / (2 * PED_DECEL) < d - 2.0):
+                return d - 2.0, state
+            return None
+        return None
 
     # -- one step ---------------------------------------------------------------
 
@@ -294,6 +387,7 @@ class Simulation:
                 veh.advice, veh.next_control = self.advisor.advise(veh.route, veh.idx, veh.pos, veh.v, self.t, occ)
                 refresh_display(veh, self.t)
 
+        self._pedestrians(by_edge)
         if self.cfg.autopilot:
             for veh in self.vehicles:
                 if veh.perception is not None:
@@ -301,6 +395,14 @@ class Simulation:
                     leader = None if lead is None else (lead[0], lead[1].v, lead[1].id)
                     veh.perception.sense(self.t, self._route_s(veh), veh.v, leader, self._light_ahead(veh))
                     self._score_perception(veh, lead)
+                    if self.crossings:
+                        veh.perception.see_pedestrians(
+                            self.t, [(c.id, c.pos - veh.pos, c.state) for c in self._crossings_on.get(veh.edge, [])
+                                     if c.pos > veh.pos])
+                    node = self.net.nodes[self.net.edges[veh.edge].to_node]
+                    if node.kind == PRIORITY and veh.edge not in node.major and \
+                            self.net.edges[veh.edge].length - veh.pos < 60:
+                        veh.perception.see_cross(self.t, self._major_cars(node.id, by_edge))
 
         self._entering = self._entering_index()
         for veh in self.vehicles:
@@ -310,7 +412,14 @@ class Simulation:
         for veh in self.vehicles:
             v_new = max(0.0, veh.v + veh.a * dt)
             record_motion(veh, veh.v, v_new, dt)
+            pos_old = veh.pos
             veh.pos += (veh.v + v_new) / 2 * dt
+            for c in self._crossings_on.get(veh.edge, ()):
+                if pos_old < c.pos <= veh.pos and c.state == "crossing":
+                    if veh.id in c.no_chance:
+                        veh.pedestrian_no_chance += 1
+                    else:
+                        veh.pedestrian_hits += 1
             veh.dist += (veh.v + v_new) / 2 * dt
             veh.v = v_new
             while veh.pos >= self.net.edges[veh.edge].length:
@@ -322,6 +431,9 @@ class Simulation:
                 if veh.idx == len(veh.route) - 1:
                     finished.append(veh)
                     break
+                if node.kind == PRIORITY and edge.id not in node.major and \
+                        any(d < 5 or (v > 0.5 and d / v < 2.0) for d, v, _ in self._major_cars(node.id, by_edge)):
+                    veh.yield_fails += 1
                 if node.kind in (ROUNDABOUT, PRIORITY):
                     self.node_busy[node.id] = self.t + NODE_HOLD
                 veh.pos -= edge.length
@@ -459,7 +571,7 @@ class Simulation:
         eta = to_line / max(veh.v, 0.1)
         best = None
         for d, other in getattr(self, "_entering", {}).get(veh.route[veh.idx + 1], []):
-            if other is veh or other.edge == veh.edge or other.v < 2.0 or not self._may_go(other):
+            if other is veh or other.edge == veh.edge or other.v < 0.5 or not self._may_go(other):
                 continue
             eta_o = d / other.v
             if eta_o < eta or (eta_o == eta and other.id < veh.id):
@@ -513,13 +625,20 @@ class Simulation:
             if to_line < 25:
                 busy = self.node_busy.get(node.id, -1) > self.t
                 if node.kind == PRIORITY:
-                    busy = busy or self._major_car_close(node.id, by_edge)
+                    if veh.perception is not None:
+                        # What its side cameras and radars see, two sigmas on the safe side.
+                        busy = busy or self._close(veh.perception.cross(self.t), margin=2.0)
+                    else:
+                        busy = busy or self._major_car_close(node.id, by_edge)
                 must_stop = busy
             # Everyone slows down for the roundabout; normal drivers do it late, with the brakes.
             limit = min(limit, math.sqrt(node.entry_speed ** 2 + 2 * IDM_DECEL * max(to_line - 3, 0.0)))
         if veh.perception is not None:
             return self._autopilot(veh, node, edge, limit, to_line, junction_stop=must_stop and node.kind != SIGNAL,
-                                   merge=merge)
+                                   merge=merge, by_edge=by_edge)
+        ped = self._crossing_stop(veh, lambda c, d: c.state if d < HUMAN_PED_SIGHT else None)
+        if ped is not None and ped[0] < gap:
+            gap, dv = ped[0], veh.v
         if must_stop and to_line - 1.0 < gap:
             gap, dv = to_line - 1.0, veh.v
 
@@ -540,7 +659,7 @@ class Simulation:
         return max(min(a_track, a_idm), -9.0)
 
     def _autopilot(self, veh: Vehicle, node, edge, limit: float, to_line: float, junction_stop: bool,
-                   merge=None) -> float:
+                   merge=None, by_edge=None) -> float:
         """A self-driving car: the car in front and the light come from its own sensors."""
         perc = veh.perception
         seen = perc.leader()
@@ -576,7 +695,19 @@ class Simulation:
         others = []
         if merge is not None:
             others.append(Seen(merge[0], merge[1].v - veh.v, 0.0, 0.0, ("side",), merge[1].id))
-        a, why = ap.control(veh.v, limit, seen, to_line - 1.0 if must_stop else None, target,
+        stop_at = to_line - 1.0 if must_stop else None
+        # Zebra crossings: stop for someone it sees; slow down for one it cannot see yet.
+        ped_range = perc.pedestrian_range()
+        for c in self._crossings_on.get(veh.edge, ()):
+            d = c.pos - veh.pos
+            if d > ped_range:
+                limit = min(limit, math.sqrt(2 * b * max(d - 2.0, 0.0)))
+        ped = self._crossing_stop(veh, lambda c, d: perc.pedestrian(c.id))
+        if ped is not None:
+            stop_at = ped[0] if stop_at is None else min(stop_at, ped[0])
+            if ped[1] == "crossing":  # someone in the lane: emergency braking if needed
+                others.append(Seen(ped[0] + 1.0, -veh.v, 0.0, 0.0, ("pedestrian",), "pedestrian"))
+        a, why = ap.control(veh.v, limit, seen, stop_at, target,
                             self.advisor.profile.coast_decel, self.advisor.profile.accel,
                             perc.stationary_range(), self.autopilot_cfg, others)
         if why == "aeb" and veh.why != "aeb":
@@ -620,7 +751,13 @@ class Simulation:
     # -- output for the map -------------------------------------------------------
 
     def snapshot(self) -> Dict:
-        return snapshot(self.net, self.t, self.vehicles, self.stats)
+        snap = snapshot(self.net, self.t, self.vehicles, self.stats)
+        if self.crossings:
+            # Zebra crossings: [x, y, heading, 0 nobody / 1 waiting on the kerb / 2 in the lane]
+            code = {None: 0, "waiting": 1, "crossing": 2}
+            snap["crossings"] = [[round(x, 1), round(y, 1), round(h, 2), code[c.state]]
+                                 for c in self.crossings for x, y, h in [self.net.point_at(c.edge, c.pos)]]
+        return snap
 
 
 KIND_CODE = {"free": 0, "go": 1, "slow": 2, "stop": 3, "cap": 4}
@@ -663,12 +800,13 @@ def signal_states(net: Network, t: float) -> Dict[str, Dict[str, List]]:
 
 
 def seen_row(net: Network, veh: Vehicle) -> Optional[List]:
-    """What a self-driving car perceives, for the map: [gap, sensors, light colour, x, y] or None."""
+    """What a self-driving car perceives, for the map: [gap, sensors, light colour, x, y, pedestrian] or None."""
     perc = getattr(veh, "perception", None)
     if perc is None:
         return None
     seen = perc.leader()
-    row: List = [None, "", perc.light(), None, None]
+    peds = [st for st in (perc.pedestrian(cid) for cid in perc._peds) if st is not None]
+    row: List = [None, "", perc.light(), None, None, None]
     if seen is not None:
         row[0], row[1] = round(seen.gap, 1), "+".join(seen.sensors)
         d = veh.pos + seen.gap + VEH_LENGTH / 2
@@ -679,6 +817,8 @@ def seen_row(net: Network, veh: Vehicle) -> Optional[List]:
                 row[3], row[4] = round(x, 1), round(y, 1)
                 break
             d -= length
+    if peds:
+        row[5] = "crossing" if "crossing" in peds else "waiting"
     return row
 
 
