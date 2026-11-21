@@ -1,7 +1,7 @@
 name: Container-use integration
 on:
   push:
-    branches: [main, main_chatgpt]
+    branches: [main_claude]
     paths:
       - '.container-use/**'
       - 'tools/container_use*.py'

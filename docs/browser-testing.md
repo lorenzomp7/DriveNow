@@ -12,7 +12,7 @@ Il controllo avvia e arresta un server demo su una porta libera, apre Chromium
 in formato desktop e telefono e verifica connessione live, avanzamento del tempo,
 consiglio al veicolo, cambio veicolo, inseguimento, zoom e invio/applicazione dei
 parametri della simulazione. Non richiede SUMO. Il workflow `Browser checks`
-esegue anche i test Python su push a `main` e `main_chatgpt` e sulle pull request.
+esegue anche i test Python su push a `main_claude` e sulle pull request.
 Queste verifiche non certificano la correttezza fisica del modello né la resa
 visiva di ogni elemento del canvas; i test Python coprono il motore separatamente.
 

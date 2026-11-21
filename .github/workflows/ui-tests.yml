@@ -1,7 +1,7 @@
 name: Browser checks
 on:
   push:
-    branches: [main, main_chatgpt]
+    branches: [main_claude]
   pull_request:
   workflow_dispatch:
 jobs:

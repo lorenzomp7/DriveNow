@@ -45,14 +45,14 @@ nella sessione ChatGPT già aperta.
 
 Prompt d'esempio per un client collegato:
 
-> Crea un ambiente container-use da `main_chatgpt` della repo DriveNow per
+> Crea un ambiente container-use da `main_claude` della repo DriveNow per
 > questa singola modifica. Usa la configurazione del progetto, implementa il
 > cambiamento e lancia `python -m pytest -q`. Condividi ID, log e diff
 > dell'ambiente. Per avviare la demo usa `python -m drivenow.server --port 8000`
 > in background esponendo la porta 8000. Non unire automaticamente le modifiche.
 
 Ogni ambiente ha il proprio ref `container-use/<id>`. I cambiamenti non sono
-in `main_chatgpt` finché non vengono esaminati e applicati. Per esaminare un
+in `main_claude` finché non vengono esaminati e applicati. Per esaminare un
 ambiente usare il binario in `.tools/` con `list`, `log <id>` e `diff <id>`.
 `merge <id>` e `apply <id>` modificano il branch corrente: usarli nell'ambito
 del lavoro richiesto e dopo aver controllato il diff. Nessun lavoro parallelo

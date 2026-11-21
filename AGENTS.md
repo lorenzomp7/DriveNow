@@ -1,7 +1,7 @@
 # DriveNow
 
 DriveNow is a Python GLOSA speed advisor with a JavaScript/canvas traffic map.
-Work on `main_chatgpt` unless the user explicitly selects another branch.
+Work on `main_claude` unless the user explicitly selects another branch.
 
 ## Development procedures
 
@@ -62,7 +62,7 @@ Container-use is configured in `.container-use/environment.json`. When this
 MCP server is connected and Docker is available, it can provide a separate
 container and Git ref for the requested change. See `docs/container-use.md`.
 This configuration does not authorize extra agents or automatic merges.
-Use `main_chatgpt` as the starting ref, preserve unrelated work, and inspect the
+Use `main_claude` as the starting ref, preserve unrelated work, and inspect the
 environment diff before applying it. Run the same DriveNow checks inside it.
 Do not claim isolation when commands actually ran directly on the host.
 

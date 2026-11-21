@@ -1,7 +1,7 @@
 name: LibSignal integration
 on:
   push:
-    branches: [main, main_chatgpt]
+    branches: [main_claude]
     paths:
       - 'drivenow/**'
       - 'tools/libsignal_smoke.py'

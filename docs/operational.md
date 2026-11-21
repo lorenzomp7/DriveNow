@@ -1,6 +1,6 @@
 # Avviare gli strumenti di DriveNow
 
-Da un checkout del branch `main_chatgpt`, con Python 3.12, Git, Node 22+ e Chrome:
+Da un checkout del branch `main_claude`, con Python 3.12, Git, Node 22+ e Chrome:
 
 ```bash
 python tools/devtools.py setup

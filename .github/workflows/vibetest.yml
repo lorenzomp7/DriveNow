@@ -1,7 +1,7 @@
 name: Vibetest integration
 on:
   push:
-    branches: [main, main_chatgpt]
+    branches: [main_claude]
     paths:
       - 'requirements-vibetest.*'
       - 'tools/vibetest_drive.py'

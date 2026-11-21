@@ -1,7 +1,7 @@
 name: Playwriter integration
 on:
   push:
-    branches: [main, main_chatgpt]
+    branches: [main_claude]
     paths:
       - 'tools/playwriter/**'
       - 'tools/playwriter_check.py'
