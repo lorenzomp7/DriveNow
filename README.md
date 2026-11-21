@@ -867,8 +867,8 @@ nebbia: 9 su circa 3.000 km, perché di lato vede solo 24 m.
 
 **Guida.** La sola telecamera misura le distanze con un errore tre volte
 più grande e l'auto corregge di più: +66% di frenate col sereno, +145% con la
-nebbia, rispetto a sensori perfetti. Con il radar le frenate restano a +14–36%.
-La nebbia costa a tutti l'11–13% di tempo, perché nessun sensore rende sicuro
+nebbia, rispetto a sensori perfetti. Con il radar le frenate restano a +13–36%.
+La nebbia costa a tutti il 9–13% di tempo, perché nessun sensore rende sicuro
 andare più veloce di quanto vede la telecamera o il lidar.
 
 **Lidar.** In città aggiunge poco: il radar dà già la distanza al
@@ -880,7 +880,7 @@ indagato prima di trarne conclusioni sul lidar vero.
 Nella griglia 3×3 il quadro è lo stesso: frenate 0,75 a viaggio con sensori
 perfetti, 1,16 con la sola telecamera, 0,90 con telecamera e radar (sereno);
 2,40 e 1,38 con la nebbia. Pedoni investiti evitabili: 16 con la sola
-telecamera nella nebbia, 0–5 negli altri casi.
+telecamera nella nebbia, 0–6 negli altri casi.
 
 **I tempi dei semafori non si vedono con una telecamera.** Una telecamera
 legge il colore di adesso, non quando cambierà. Togliendo i tempi
