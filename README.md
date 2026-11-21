@@ -13,6 +13,9 @@ fermarsi e ripartire, DriveNow ti dice di scendere, per esempio, a 31 km/h
 In letteratura questa tecnica si chiama GLOSA (*Green Light Optimal Speed
 Advisory*).
 
+Perché conviene, con i conti (accelerare o frenare, frizione o marcia):
+[consumi](docs/consumi.md).
+
 ![Mappa DriveNow](docs/screenshot.png)
 
 ## Come si usa
