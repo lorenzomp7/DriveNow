@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 from .perception import Seen
 
@@ -51,11 +51,12 @@ def idm(v: float, v0: float, gap: float, dv: float, cfg: AutopilotConfig) -> flo
 
 def control(v: float, limit: float, seen: Optional[Seen], stop_at: Optional[float],
             target: Optional[float], coast_decel: float, accel: float, sight: float,
-            cfg: AutopilotConfig = AutopilotConfig()) -> Tuple[float, str]:
+            cfg: AutopilotConfig = AutopilotConfig(), others: Sequence[Seen] = ()) -> Tuple[float, str]:
     """Acceleration and what set it: 'free', 'leader', 'line', 'advice', 'sight' or 'aeb'.
 
     ``stop_at``: distance to where the car must stop, or None; ``target``: the advised
-    speed, or None; ``sight``: how far ahead it can see an obstacle (m).
+    speed, or None; ``sight``: how far ahead it can see an obstacle (m); ``others``: more
+    objects to keep a distance from, such as a car turning into the same street ('merge').
     """
     # Never faster than it can stop within what it can see.
     if sight < math.inf:
@@ -63,11 +64,12 @@ def control(v: float, limit: float, seen: Optional[Seen], stop_at: Optional[floa
     best, why = idm(v, limit, math.inf, 0.0, cfg), "free"
     if limit < v - 0.5 and best < 0:
         why = "sight"
-    if seen is not None:
+    objects = ([(seen, "leader")] if seen is not None else []) + [(o, "merge") for o in others]
+    for seen, kind in objects:
         gap = seen.gap - cfg.k_sigma * seen.sigma
         a = idm(v, limit, gap, -seen.rate, cfg)
         if a < best:
-            best, why = a, "leader"
+            best, why = a, kind
         # Emergency braking only when the closing is certain: the slowest closing speed the
         # measurement allows, on the measured gap.
         closing = -seen.rate - 2 * seen.sigma_rate

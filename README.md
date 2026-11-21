@@ -141,9 +141,15 @@ viaggio:
 
 | Rete | Fermate | Frenate | Energia nei freni | Tempo di viaggio |
 |---|---|---|---|---|
-| Città demo (simulatore interno, 3 semi) | 1,33 → 0,52 | 2,49 → 1,31 | 96 → 23 kJ | 107 → 112 s (+4%) |
+| Città demo (simulatore interno, 3 semi, 30 min) | 1,33 → 0,59 | 2,70 → 1,50 | 99 → 25 kJ | 107 → 112 s (+4%) |
 | Griglia 2×2 della repo base (SUMO, 30 min) | 1,35 → 0,16 | 2,60 → 0,73 | 146 → 20 kJ | 92 → 95 s (+3%) |
 | Griglia 3×3 della repo base (SUMO, 30 min) | 2,23 → 0,23 | 4,59 → 1,11 | 230 → 28 kJ | 133 → 136 s (+2%) |
+
+Città demo: semi 1–3, 220 auto/ora per ingresso, nessun riscaldamento
+(contano i viaggi finiti dall'inizio), circa 1.180 viaggi finiti per seme. Il
+simulatore interno fa entrare a turno le auto che girano nella stessa strada
+(prima le lasciava sovrapporsi): rispetto alla misura precedente le fermate
+DriveNow salgono da 0,52 a 0,59 e l'energia nei freni da 23 a 25 kJ.
 
 Il piccolo aumento del tempo di viaggio ha due cause. Chi segue DriveNow
 rallenta prima delle rotonde invece di frenare all'ultimo. E non sfrutta mai
@@ -262,7 +268,8 @@ Puntare ai varchi toglie il 7–8% dell'energia nei freni. Senza la regola
 sull'auto che segue costa però il 2,6% di tempo, perché chi rallenta per
 girare a sinistra rallenta anche chi gli sta dietro; con la regola il costo
 scende allo 0,7%. Nella città demo, dove la precedenza ha meno traffico, i
-varchi tolgono l'11–13% dell'energia nei freni senza costi di tempo.
+varchi tolgono l'8% dell'energia nei freni (27,0 → 24,8 kJ, semi 1–3,
+30 min) con lo 0,4% di tempo in meno.
 
 Sui 9 impianti con dati reali, con l'oracolo, le fermate calano del 10%. Il collo di
 bottiglia quindi non è la previsione, che è quasi buona quanto l'oracolo, ma

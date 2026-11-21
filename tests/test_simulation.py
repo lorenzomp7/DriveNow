@@ -56,3 +56,31 @@ def test_demo_city_runs_and_drivenow_brakes_less():
     assert totals[1.0]["trips"] > 200 and totals[0.0]["trips"] > 200
     assert totals[1.0]["stops"] < totals[0.0]["stops"] * 0.7
     assert totals[1.0]["brake_energy_kj"] < totals[0.0]["brake_energy_kj"] * 0.6
+
+
+def test_cars_turning_into_the_same_street_take_turns():
+    """W->J and S->J both lead into J->E, green for both: the cars must not end up on top of each other."""
+    nodes = {
+        "W": Node("W", -300, 0, BORDER, radius=0),
+        "S": Node("S", 0, -300, BORDER, radius=0),
+        "J": Node("J", 0, 0, SIGNAL, radius=0),
+        "E": Node("E", 300, 0, BORDER, radius=0),
+    }
+    edges = {
+        "w": Edge("w", "W", "J", 300, 50 / 3.6, [(-300, 0), (0, 0)], next_edges=["e"]),
+        "s": Edge("s", "S", "J", 300, 50 / 3.6, [(0, -300), (0, 0)], next_edges=["e"]),
+        "e": Edge("e", "J", "E", 300, 50 / 3.6, [(0, 0), (300, 0)]),
+    }
+    nodes["J"].plan = SignalPlan([Phase(600, {"A": "G"})])
+    nodes["J"].group_of = {"w": "A", "s": "A"}
+    sim = Simulation(Network(nodes, edges), SimConfig(demand=0))
+    a = Vehicle(0, ["w", "e"], False, 0.0, v=50 / 3.6)
+    b = Vehicle(1, ["s", "e"], False, 0.0, pos=1.0, v=50 / 3.6)
+    sim.vehicles += [a, b]
+    closest = float("inf")
+    for _ in range(400):
+        sim.step()
+        on_e = sorted((v for v in sim.vehicles if v.edge == "e"), key=lambda v: v.pos)
+        if len(on_e) == 2:
+            closest = min(closest, on_e[1].pos - on_e[0].pos - 4.5)
+    assert closest > 1.5

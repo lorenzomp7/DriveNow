@@ -28,7 +28,7 @@ from typing import Dict, List, Optional, Tuple
 
 from . import autopilot as ap
 from .advisor import Advisor, NextControl, Occupancy
-from .perception import Perception
+from .perception import Perception, Seen
 from .display import AdviceDisplay
 from .profile_learner import ProfileLearner
 from .glosa import Advice
@@ -45,6 +45,7 @@ BRAKE_THRESHOLD = 1.2   # m/s^2: slowing faster than this means the brake pedal
 NATURAL_DECEL = 0.7     # what lifting off gives for free
 YELLOW_DECEL = 3.0      # stop on yellow only if this is enough
 NODE_HOLD = 1.6         # s a vehicle occupies a roundabout or give-way node
+MERGE_ZONE = 40.0       # m: cars this close to a junction take turns into the same street
 MAJOR_GAP = 4.0         # s a minor-road car needs before the next major-road car arrives
 
 
@@ -96,9 +97,7 @@ class Vehicle:
     _hit: set = field(default_factory=set)
     _conflict: bool = False
     _lead_id: Optional[int] = None
-    _lead_since: float = 0.0
     _last_gap: float = 0.0
-    _cut_in: bool = False
     _phantom_on: bool = False
 
     @property
@@ -303,6 +302,7 @@ class Simulation:
                     veh.perception.sense(self.t, self._route_s(veh), veh.v, leader, self._light_ahead(veh))
                     self._score_perception(veh, lead)
 
+        self._entering = self._entering_index()
         for veh in self.vehicles:
             veh.a = self._acceleration(veh, by_edge)
 
@@ -393,16 +393,8 @@ class Simulation:
                 continue
             gap, other = lead
             if other.id != veh._lead_id:
-                # A new car ahead. The simulation lets cars merge at a junction without looking
-                # at the gap they leave, for everyone: count only what happens behind a car
-                # that has been in front for a second, and only a gap that closes now. A car
-                # that turns in less than 10 m ahead is such a merge, not this car's doing.
-                veh._lead_id, veh._lead_since, veh._last_gap = other.id, self.t, gap
-                veh._cut_in = gap < 10.0
+                veh._lead_id, veh._last_gap = other.id, gap
             last, veh._last_gap = veh._last_gap, gap
-            if self.t - veh._lead_since < 1.0 or veh._cut_in:
-                veh._conflict = False
-                continue
             if gap < 0.3:
                 if last >= 0.3 and other.id not in veh._hit:
                     veh._hit.add(other.id)
@@ -434,6 +426,48 @@ class Simulation:
         self._next_id += 1
         self.vehicles.append(veh)
 
+    def _entering_index(self) -> Dict[str, List[Tuple[float, "Vehicle"]]]:
+        """For each street, the cars about to turn into it: (distance to their line, car)."""
+        idx: Dict[str, List[Tuple[float, Vehicle]]] = {}
+        for veh in self.vehicles:
+            if veh.idx + 1 < len(veh.route) and (veh.parked_until is None or self.t >= veh.parked_until):
+                to_line = self.net.edges[veh.edge].length - veh.pos
+                if to_line < MERGE_ZONE:
+                    idx.setdefault(veh.route[veh.idx + 1], []).append((to_line, veh))
+        return idx
+
+    def _may_go(self, veh: Vehicle) -> bool:
+        """The car is not held by a red light at its line."""
+        edge = self.net.edges[veh.edge]
+        node = self.net.nodes[edge.to_node]
+        if node.kind == SIGNAL and node.plan is not None:
+            return node.plan.state(self.t, node.group_of.get(edge.id, "")) != "r"
+        return True
+
+    def merge_leader(self, veh: Vehicle) -> Optional[Tuple[float, "Vehicle"]]:
+        """A car from another street that turns into ours just before us: (gap it will leave, car).
+
+        Two cars turning into the same street take turns: the one that reaches the junction
+        first goes first, the other follows it. Cars standing at their line (a red light,
+        a give-way) do not count until they move.
+        """
+        if veh.idx + 1 >= len(veh.route):
+            return None
+        to_line = self.net.edges[veh.edge].length - veh.pos
+        if to_line >= MERGE_ZONE:
+            return None
+        eta = to_line / max(veh.v, 0.1)
+        best = None
+        for d, other in getattr(self, "_entering", {}).get(veh.route[veh.idx + 1], []):
+            if other is veh or other.edge == veh.edge or other.v < 2.0 or not self._may_go(other):
+                continue
+            eta_o = d / other.v
+            if eta_o < eta or (eta_o == eta and other.id < veh.id):
+                gap = to_line - d - VEH_LENGTH
+                if best is None or gap < best[0]:
+                    best = (gap, other)
+        return best
+
     def _acceleration(self, veh: Vehicle, by_edge: Dict[str, List[Vehicle]]) -> float:
         if veh.parked_until is not None and self.t < veh.parked_until:
             return -9.0
@@ -454,6 +488,9 @@ class Simulation:
             if nxt:
                 ld = nxt[0]
                 gap, dv = to_line + ld.pos - VEH_LENGTH, veh.v - ld.v
+        merge = self.merge_leader(veh)
+        if merge is not None and merge[0] < gap:
+            gap, dv = merge[0], veh.v - merge[1].v
 
         # The stop line acts as a stopped car when we may not cross it.
         must_stop = False
@@ -481,7 +518,8 @@ class Simulation:
             # Everyone slows down for the roundabout; normal drivers do it late, with the brakes.
             limit = min(limit, math.sqrt(node.entry_speed ** 2 + 2 * IDM_DECEL * max(to_line - 3, 0.0)))
         if veh.perception is not None:
-            return self._autopilot(veh, node, edge, limit, to_line, junction_stop=must_stop and node.kind != SIGNAL)
+            return self._autopilot(veh, node, edge, limit, to_line, junction_stop=must_stop and node.kind != SIGNAL,
+                                   merge=merge)
         if must_stop and to_line - 1.0 < gap:
             gap, dv = to_line - 1.0, veh.v
 
@@ -501,7 +539,8 @@ class Simulation:
         a_track = min(max(a_track, -self.advisor.profile.coast_decel), self.advisor.profile.accel)
         return max(min(a_track, a_idm), -9.0)
 
-    def _autopilot(self, veh: Vehicle, node, edge, limit: float, to_line: float, junction_stop: bool) -> float:
+    def _autopilot(self, veh: Vehicle, node, edge, limit: float, to_line: float, junction_stop: bool,
+                   merge=None) -> float:
         """A self-driving car: the car in front and the light come from its own sensors."""
         perc = veh.perception
         seen = perc.leader()
@@ -534,9 +573,12 @@ class Simulation:
             target = adv.target
             if adv.kind == "stop" and veh.next_control is not None and veh.next_control.node == node.id:
                 target = min(target, math.sqrt(2 * self.advisor.profile.coast_decel * max(to_line - 2.0, 0.0)))
+        others = []
+        if merge is not None:
+            others.append(Seen(merge[0], merge[1].v - veh.v, 0.0, 0.0, ("side",), merge[1].id))
         a, why = ap.control(veh.v, limit, seen, to_line - 1.0 if must_stop else None, target,
                             self.advisor.profile.coast_decel, self.advisor.profile.accel,
-                            perc.stationary_range(), self.autopilot_cfg)
+                            perc.stationary_range(), self.autopilot_cfg, others)
         if why == "aeb" and veh.why != "aeb":
             veh.aeb += 1
         # Braking for nothing: the object is not a real car, and no real car is near where it is seen.
