@@ -76,6 +76,11 @@ stessa cosa. Un test lo verifica confrontando ogni passo.
 | `--penetration P` | 0.5 | quota di auto che seguono DriveNow (0–1) |
 | `--demand N` | 240 | auto/ora per ogni strada di ingresso |
 | `--port N` | 8000 | porta del server |
+| `--autopilot` | no | le auto DriveNow guidano da sole con i propri sensori (simulatore interno) |
+| `--sensors S` | camera+radar | `perfect`, `radar`, `camera`, `camera+radar`, `camera+radar+lidar` |
+| `--weather W` | clear | `clear`, `night`, `rain`, `fog` |
+| `--no-light-timing` | no | con `--autopilot`: tempi dei semafori sconosciuti, solo la telecamera li legge |
+| `--double-parking N` | 0 | N auto all'ora si fermano nella corsia per 15–40 s |
 
 Velocità, quota DriveNow e traffico si cambiano anche dal pannello.
 
@@ -627,6 +632,161 @@ Sull'insieme dei viaggi il tempo invece cala, perché si formano meno code.
 piccole (le fermate, il tempo) vanno prese come indicazioni, non come
 misure precise.
 
+## Auto che guidano da sole: telecamere, radar, lidar
+
+Fin qui il consiglio era per un guidatore, e l'auto davanti, la coda e il
+colore del semaforo venivano dalla simulazione (su strada: dalle auto
+connesse e dai tempi pubblicati dei semafori). Con `--autopilot` le auto
+DriveNow guidano da sole e vedono la strada con i **propri sensori**, come
+una Tesla. A differenza di Tesla, che usa solo telecamere, DriveNow può
+aggiungere radar, lidar e i tempi dei semafori trasmessi dalla strada (V2I).
+
+```bash
+python -m drivenow.server --autopilot                                  # telecamera + radar, sereno
+python -m drivenow.server --autopilot --sensors camera --weather fog   # solo telecamera, nebbia
+python -m drivenow.server --autopilot --double-parking 30              # auto in doppia fila
+```
+
+Seguendo un'auto che guida da sola, il pannello dice cosa vede ("auto a 22 m
+(telecamera + radar) · semaforo rosso"), e la mappa disegna, tratteggiato,
+l'oggetto dove lo mettono i sensori.
+
+### I sensori (`drivenow/perception.py`)
+
+Le strade del simulatore hanno una corsia, quindi la scena è lungo il
+percorso: la prima auto davanti (i sensori non vedono attraverso di lei), il
+prossimo semaforo, e gli oggetti che un radar scambia per ostacoli. La
+telecamera non è simulata a pixel: è simulato quello che esce da un
+riconoscitore di immagini (una rete neurale che trova le auto e legge i
+semafori), cioè se trova l'oggetto, a che distanza lo mette e quanto spesso
+sbaglia. Un riconoscitore vero si collega allo stesso punto.
+
+| Sensore | Portata (sereno) | Errore sulla distanza | Cosa non sa fare |
+|---|---|---|---|
+| Telecamera | 150 m (auto), 120 m (semafori) | cresce con la distanza: ~2,5 m a 50 m, ~7 m a 100 m | misura male distanza e velocità; notte, pioggia e soprattutto nebbia la accorciano |
+| Radar | 160 m | 0,3 m, velocità 0,15 m/s | non distingue un'auto da un tombino o da un cartello: ogni tanto vede un ostacolo fermo che non c'è ("fantasma", 2 per km); non legge i colori |
+| Lidar | 120 m | pochi centimetri | non legge i colori; pioggia e nebbia lo accorciano molto |
+
+| Meteo | Telecamera (portata) | Semafori | Radar | Lidar |
+|---|---|---|---|---|
+| Notte | 60% | 100% (sono luci) | 100% | 100% |
+| Pioggia | 70% | 80% | 90% | 60% |
+| Nebbia | 30% | 40% | 95% | 35% |
+
+Questi numeri sono plausibili ma non misurati su sensori veri: si cambiano in
+cima a `perception.py`.
+
+**Fusione.** Ogni oggetto ha un filtro di Kalman su distanza e velocità di
+avvicinamento; ogni rilevazione aggiorna l'oggetto più vicino per distanza
+*e* velocità, oppure ne crea uno nuovo, che si usa dopo due rilevazioni. Una
+regola viene dalle auto vere: un oggetto **fermo** che vede solo il radar si
+ignora, a meno che telecamera o lidar non l'abbiano visto due volte
+nell'ultimo secondo o che sia stato visto muoversi (un'auto che si è
+fermata). Così spariscono i fantasmi del radar, ma è anche il motivo per cui
+un radar da solo non trova un'auto già ferma quando entra nel suo campo: con
+il solo radar le auto non partono nemmeno, perché non possono fidarsi di
+nessun ostacolo fermo. Il colore del semaforo cambia solo quando due delle
+ultime tre letture sono d'accordo.
+
+### Come guida (`drivenow/autopilot.py`)
+
+Solo i pedali: con una corsia sola non c'è niente da sterzare. A ogni passo
+l'auto prende la più bassa di queste accelerazioni:
+
+- **l'auto davanti**, come la vedono i sensori, con 1,5 s di distanza
+  (un guidatore del simulatore ne tiene 1,2). Usa la distanza misurata meno
+  due volte la sua incertezza: un'auto vista male si tiene più lontana;
+- **la linea di arresto**, se deve fermarsi: rosso o giallo letti dalla
+  telecamera o dati dai tempi del semaforo (basta uno dei due). Se i tempi
+  dicono che arrivando sarà verde, continua a veleggiare come un guidatore
+  DriveNow;
+- **il consiglio DriveNow**, rallentando solo alzando il piede;
+- **quello che non vede ancora**: mai più veloce di quanto serve per fermarsi
+  comodamente (2 m/s²) entro la distanza a cui vedrebbe un'auto ferma. Con
+  la nebbia sono circa 36 m, quindi 42 km/h. Senza tempi del semaforo,
+  finché non lo vede verde deve poter fermarsi alla linea;
+- **frenata d'emergenza** (6 m/s²) se l'urto arriverebbe entro 1,5 s,
+  contando la velocità di avvicinamento più bassa compatibile con la misura,
+  perché una stima rumorosa non deve inchiodare l'auto.
+
+Precedenze e rotonde usano la stessa regola dei guidatori del simulatore:
+il traffico che incrocia è visto senza errori.
+
+### Risultati
+
+`tools/perception_experiment.py`: 30 minuti per caso, tutte le auto DriveNow
+e a guida autonoma, 30 auto all'ora che si fermano in doppia fila per 15–40 s
+(ostacoli fermi mai visti muoversi). Città demo, circa 1.000 km guidati per
+caso. Valori medi per viaggio; "auto non vista" è la quota di istanti in cui
+c'era davvero un'auto entro 40 m e i sensori non la davano.
+
+| Meteo | Sensori | Frenate | Energia nei freni | Tempo | Errore sulla distanza | Auto non vista | Frenate fantasma |
+|---|---|---|---|---|---|---|---|
+| Sereno | perfetti (riferimento) | 1,46 | 22,2 kJ | 112 s | 0 | 0 | 0 |
+| | telecamera | 2,27 | 23,1 kJ | 111 s | 0,62 m | 1,9% | 0 |
+| | telecamera + radar | 1,59 | 22,0 kJ | 110 s | 0,31 m | 1,2% | 5 |
+| | + lidar | 1,66 | 22,2 kJ | 111 s | 0,31 m | 1,0% | 1 |
+| Notte | telecamera | 2,72 | 25,8 kJ | 112 s | 0,94 m | 1,7% | 1 |
+| | telecamera + radar | 1,73 | 23,0 kJ | 112 s | 0,35 m | 1,8% | 7 |
+| | + lidar | 1,83 | 24,1 kJ | 113 s | 0,37 m | 1,2% | 8 |
+| Pioggia | telecamera | 2,53 | 24,0 kJ | 111 s | 0,81 m | 2,2% | 1 |
+| | telecamera + radar | 1,73 | 22,7 kJ | 112 s | 0,32 m | 1,6% | 3 |
+| | + lidar | 1,77 | 23,6 kJ | 112 s | 0,33 m | 1,5% | 8 |
+| Nebbia | telecamera | 3,70 | 29,3 kJ | 125 s | 1,32 m | 2,2% | 1 |
+| | telecamera + radar | 1,89 | 22,3 kJ | 121 s | 0,35 m | 1,1% | 5 |
+| | + lidar | 1,94 | 22,5 kJ | 121 s | 0,42 m | 1,3% | 8 |
+
+Le frenate fantasma sono il totale dei casi (frenare per un oggetto che non
+c'è, senza un'auto vera vicina), su circa 1.000 km.
+
+In nessun caso, né qui né nella griglia 3×3 (circa 1.340 km per caso), ci
+sono stati tamponamenti o semafori passati col rosso; le situazioni con
+meno di 1,5 s all'urto sono state al massimo una per caso. Cosa si vede:
+
+- **La sola telecamera basta per non urtare, ma guida peggio.** Misura la
+  distanza con un errore doppio o triplo, quindi l'auto corregge di più:
+  +55% di frenate col sereno, +150% con la nebbia, rispetto a sensori
+  perfetti. Con il radar le frenate tornano quasi quelle di riferimento
+  (+9%), anche con la nebbia.
+- **Il lidar in città aggiunge poco.** Il radar dà già la distanza al
+  decimetro e il lidar vede un po' meglio solo vicino. Serve dove questo
+  modello non arriva: pedoni, ciclisti, forme.
+- **La nebbia costa tempo a tutti** (+8–11%): nessun sensore rende sicuro
+  andare più veloci di quanto lascia vedere la telecamera, perché solo lei e
+  il lidar confermano un ostacolo fermo.
+- **Il prezzo del radar sono i fantasmi**: da 1 a 8 frenate inutili ogni
+  1.000 km nonostante il filtro sugli oggetti fermi.
+
+Nella griglia 3×3 il quadro è lo stesso: energia nei freni 4,3 kJ con
+sensori perfetti, 6,1 con la sola telecamera, 4,8 con telecamera e radar
+(sereno); 10,2 e 5,8 con la nebbia.
+
+**I tempi dei semafori non si vedono con una telecamera.** Una telecamera
+legge il colore di adesso, non quando cambierà. Togliendo i tempi
+(`--no-light-timing`) l'auto vede il rosso e si ferma come una persona, e il
+risparmio di DriveNow sparisce:
+
+| Città demo | Fermate | Frenate | Energia nei freni | Tempo |
+|---|---|---|---|---|
+| Nessun DriveNow, guidano persone | 1,28 | 2,41 | 94,0 kJ | 106 s |
+| Telecamera + radar, con i tempi dei semafori | 0,52 | 1,59 | 22,0 kJ | 110 s |
+| Telecamera + radar, senza tempi | 1,35 | 2,79 | 63,9 kJ | 111 s |
+| Sola telecamera, senza tempi | 1,34 | 5,10 | 66,2 kJ | 112 s |
+
+Senza i tempi resta un po' di risparmio (64 kJ contro 94) perché l'auto
+autonoma, vedendo il rosso da lontano, alza il piede prima di una persona.
+Ma i tempi dei semafori valgono più di qualsiasi sensore: è la risorsa che
+DriveNow aggiunge a quello che l'auto vede da sola.
+
+**Limiti.** Una corsia, quindi niente sterzo, sorpassi, cambi di corsia,
+pedoni o ciclisti; il traffico che incrocia alle precedenze è visto senza
+errori; le code e le auto lontane, usate dal consiglio, vengono ancora dalle
+auto connesse e non dai sensori. Il simulatore lascia entrare le auto in un
+incrocio senza guardare lo spazio che lasciano: un'auto che si immette a
+meno di 10 m davanti non è contata come tamponamento di chi segue, per
+nessun gruppo. I parametri dei sensori sono stime, non misure; un solo seme
+per caso.
+
 ## Dal simulatore alla strada vera
 
 Il motore di calcolo non sa da dove arrivano i dati. La simulazione interna e
@@ -643,7 +803,9 @@ fonti:
   predittivo.
 - **Posizione e traffico.** GPS dello smartphone o dell'auto per la propria
   posizione, dati di traffico (o i veicoli connessi) per code e veicolo
-  davanti.
+  davanti. Un'auto con sensori propri vede da sola il veicolo davanti e il
+  colore del semaforo: al posto del modello di `perception.py` vanno le
+  uscite del riconoscitore d'immagini e del radar dell'auto.
 - **Mappa.** La geometria va presa da OpenStreetMap o dai MAPEM, al posto
   della rete SUMO.
 
@@ -660,13 +822,17 @@ drivenow/
   probe.py        orari dei semafori senza dati, imparati dalle auto e ricontrollati
   display.py      quello che vede il guidatore: numero stabile, annunci distanziati
   profile_learner.py  quanto rallenta ogni auto a piede alzato, imparato dalla sua guida
+  positioning.py  la posizione come la sa un telefono (rumore, ritardo, buchi) e il filtro di Kalman
+  perception.py   sensori dell'auto (telecamera, radar, lidar, meteo) e loro fusione
+  autopilot.py    guida autonoma sui pedali, da quello che vedono i sensori
   hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
 data/sumo/        reti a griglia 1×1–4×4 (dalla vecchia Traffc_light_control)
 data/hamburg/     scenario reale di Amburgo (rete, semafori registrati, traffico)
-tools/            costruzione dello scenario di Amburgo, esperimenti, accuratezza delle
-                  previsioni imparate dalle auto, registrazione delle pagine
+tools/            costruzione dello scenario di Amburgo, esperimenti (anche sensori e meteo:
+                  perception_experiment.py), accuratezza delle previsioni imparate dalle
+                  auto, registrazione delle pagine
 tests/            pytest (i test SUMO si saltano se SUMO non è installato)
 ```
 

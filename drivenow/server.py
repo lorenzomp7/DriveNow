@@ -5,6 +5,7 @@
     python -m drivenow.server --sumo --net data/sumo/3_3_intersections.net.xml
     python -m drivenow.server --hamburg               # real map and real traffic lights (Gärtnerstraße)
     python -m drivenow.server --hamburg willy-brandt
+    python -m drivenow.server --autopilot --sensors camera+radar --weather fog   # cars that drive themselves
 
 Then open http://localhost:8000. Only the Python standard library is needed
 (plus SUMO and TraCI for ``--sumo``).
@@ -181,7 +182,9 @@ def build_world(args):
         return SumoWorld(args.net, demand=args.demand, penetration=args.penetration, seed=args.seed,
                          duration=args.duration, gui=args.gui)
     net = load_sumo_net(args.net) if args.net else demo_city()
-    return Simulation(net, SimConfig(demand=args.demand, penetration=args.penetration, seed=args.seed))
+    return Simulation(net, SimConfig(demand=args.demand, penetration=args.penetration, seed=args.seed,
+                                     autopilot=args.autopilot, sensors=args.sensors, weather=args.weather,
+                                     light_timing=not args.no_light_timing, double_parking=args.double_parking))
 
 
 def main(argv=None) -> None:
@@ -200,6 +203,16 @@ def main(argv=None) -> None:
     ap.add_argument("--penetration", type=float, default=0.5, help="share of DriveNow vehicles, 0-1")
     ap.add_argument("--duration", type=float, default=7200.0, help="with --sumo, seconds of traffic to generate")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--autopilot", action="store_true",
+                    help="built-in simulation: DriveNow cars drive themselves from their own sensors")
+    ap.add_argument("--sensors", default="camera+radar",
+                    choices=["perfect", "radar", "camera", "camera+radar", "camera+radar+lidar"],
+                    help="with --autopilot: the sensors each car has")
+    ap.add_argument("--weather", default="clear", choices=["clear", "night", "rain", "fog"])
+    ap.add_argument("--no-light-timing", action="store_true",
+                    help="with --autopilot: the lights' timings are not known, only the camera reads them")
+    ap.add_argument("--double-parking", type=float, default=0.0, metavar="N",
+                    help="built-in simulation: N cars an hour stop in the lane for 15-40 s")
     args = ap.parse_args(argv)
 
     runner = Runner(build_world(args), speed=args.speed)

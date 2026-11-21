@@ -297,6 +297,21 @@ function draw() {
     }
   }
 
+  // What the chosen self-driving car sees: the object ahead where its sensors put it.
+  const mine = vs.find((v) => v[0] === selected);
+  const seen = mine && mine[17];
+  if (seen && seen[3] !== null) {
+    const [ax, ay] = toScreen(mine[1], mine[2]);
+    const [bx, by] = toScreen(seen[3], seen[4]);
+    ctx.save();
+    ctx.strokeStyle = "#fbbf24"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    const L = Math.max(4.5 * m, 12), W = Math.max(2 * m, 7);
+    ctx.translate(bx, by); ctx.rotate(-mine[3]);
+    ctx.strokeRect(-L / 2 - 2, -W / 2 - 2, L + 4, W + 4);
+    ctx.restore();
+  }
+
   // Vehicles.
   for (const v of vs) {
     const [id, x, y, h, , eq] = v;
@@ -359,7 +374,17 @@ function updateHud() {
   lastAnnounce = { id: v[0], n: ann };
   const kind = KIND[kc] || "free";
   const tag = $("veh-tag");
-  tag.textContent = eq ? "Segue DriveNow" : "Non segue il consiglio";
+  const seen = v[17];
+  tag.textContent = seen ? "Guida da sola" : eq ? "Segue DriveNow" : "Non segue il consiglio";
+  $("sees-row").hidden = !seen;
+  $("legend-seen").hidden = !seen;
+  if (seen) {
+    const SENSOR = { camera: "telecamera", radar: "radar", lidar: "lidar", perfect: "verità" };
+    const car = seen[0] === null ? "nessun ostacolo"
+      : `auto a ${Math.round(seen[0])} m (${seen[1].split("+").map((x) => SENSOR[x] || x).join(" + ")})`;
+    const lamp = seen[2] ? ` · semaforo ${COLOR_NAME[seen[2]]}` : "";
+    $("sees").textContent = car + lamp;
+  }
   tag.className = "tag" + (eq ? " dn" : "");
 
   $("target").textContent = target ?? "—";

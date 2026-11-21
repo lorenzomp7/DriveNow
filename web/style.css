@@ -112,3 +112,4 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   .legend { display: none; }
   .meta #net-name, .meta .sep { display: none; }
 }
+.legend i.seen { display: inline-block; width: 14px; height: 8px; border: 2px dashed #fbbf24; border-radius: 2px; margin-right: 6px; vertical-align: middle; }

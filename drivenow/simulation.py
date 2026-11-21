@@ -9,6 +9,14 @@ drivers never press the brake pedal to follow the advice: they lift off and
 coast. They still brake when the car in front forces them to, like anyone
 else. Comparing the two groups shows what the advice is worth: stops,
 braking events and energy thrown away in the brakes.
+
+With ``SimConfig.autopilot`` the equipped cars drive themselves instead
+(``autopilot.py``), from what their own sensors see (``perception.py``):
+the car in front and the light's colour come from the sensors, not from the
+simulation. Safety is counted on the truth: collisions, close calls, red
+lights crossed, emergency and phantom braking. ``double_parking`` makes cars
+stop in the lane for a while, as when someone double-parks: a standing
+obstacle that was never seen moving.
 """
 
 from __future__ import annotations
@@ -18,7 +26,9 @@ import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+from . import autopilot as ap
 from .advisor import Advisor, NextControl, Occupancy
+from .perception import Perception
 from .display import AdviceDisplay
 from .profile_learner import ProfileLearner
 from .glosa import Advice
@@ -67,6 +77,27 @@ class Vehicle:
     cum: Optional[List[float]] = None  # distance along the route at the start of each edge
     gps_suspended: int = 0           # advice updates suspended because the position was too uncertain
     gps_updates: int = 0
+    # Self-driving (SimConfig.autopilot)
+    perception: Optional[Perception] = None
+    why: str = ""                    # what set the autopilot's acceleration in the last step
+    parked_until: Optional[float] = None  # a double-parked car: stands still until then, not counted
+    dist: float = 0.0                # m driven
+    collisions: int = 0
+    conflicts: int = 0               # true time to collision under 1.5 s
+    red_runs: int = 0
+    aeb: int = 0
+    phantom: int = 0                 # braking for an object that is not there
+    gap_err2: float = 0.0            # sum of squared errors of the perceived gap to the real car ahead
+    gap_n: int = 0
+    near_n: int = 0                  # steps with a real car within 40 m ahead...
+    missed: int = 0                  # ...that the car did not perceive
+    _hit: set = field(default_factory=set)
+    _conflict: bool = False
+    _lead_id: Optional[int] = None
+    _lead_since: float = 0.0
+    _last_gap: float = 0.0
+    _cut_in: bool = False
+    _phantom_on: bool = False
 
     @property
     def edge(self) -> str:
@@ -123,6 +154,16 @@ class GroupStats:
     announcements: int = 0
     gps_updates: int = 0
     gps_suspended: int = 0
+    km: float = 0.0
+    collisions: int = 0
+    conflicts: int = 0
+    red_runs: int = 0
+    aeb: int = 0
+    phantom: int = 0
+    gap_err2: float = 0.0
+    gap_n: int = 0
+    near_n: int = 0
+    missed: int = 0
 
     def add(self, v: Vehicle, t: float) -> None:
         self.trips += 1
@@ -135,6 +176,9 @@ class GroupStats:
         self.announcements += v.display.announcements
         self.gps_updates += v.gps_updates
         self.gps_suspended += v.gps_suspended
+        self.km += v.dist / 1000
+        for k in ("collisions", "conflicts", "red_runs", "aeb", "phantom", "gap_err2", "gap_n", "near_n", "missed"):
+            setattr(self, k, getattr(self, k) + getattr(v, k))
 
     def summary(self) -> Dict[str, float]:
         n = max(self.trips, 1)
@@ -148,6 +192,14 @@ class GroupStats:
             "shown_changes": round(self.shown_changes / n, 1),
             "announcements": round(self.announcements / n, 1),
             "advice_suspended_pct": round(100 * self.gps_suspended / max(self.gps_updates, 1), 1),
+            "km": round(self.km, 1),
+            "collisions": self.collisions,
+            "conflicts": self.conflicts,
+            "red_runs": self.red_runs,
+            "aeb": self.aeb,
+            "phantom": self.phantom,
+            "gap_rmse_m": round(math.sqrt(self.gap_err2 / self.gap_n), 2) if self.gap_n else None,
+            "missed_pct": round(100 * self.missed / self.near_n, 2) if self.near_n else None,
         }
 
 
@@ -158,6 +210,14 @@ class SimConfig:
     penetration: float = 0.5    # share of vehicles following DriveNow
     seed: int = 1
     advice_every: float = 0.6   # s between advice updates
+    # Self-driving equipped cars (see autopilot.py and perception.py)
+    autopilot: bool = False
+    sensors: str = "camera+radar"   # perfect | camera | camera+radar | camera+radar+lidar
+    weather: str = "clear"          # clear | night | rain | fog
+    light_timing: bool = True       # the lights' timings are known (SPaT/V2I); else only the camera
+    ghost_per_km: float = 2.0       # radar ghosts along the road
+    double_parking: float = 0.0     # cars per hour that stop in the lane somewhere in the network...
+    parked_for: Tuple[float, float] = (15.0, 40.0)  # ...for this long (s)
 
 
 class Simulation:
@@ -174,6 +234,11 @@ class Simulation:
         self.node_busy: Dict[str, float] = {}
         self.stats = {True: GroupStats(), False: GroupStats()}
         self._entries = net.entry_edges()
+        self._perc_rng = random.Random(config.seed * 7919 + 11)
+        self.autopilot_cfg = ap.AutopilotConfig()
+        if not config.light_timing:
+            # No timings: the advice knows nothing about the lights (only roundabouts, give-ways, queues).
+            self.advisor.windows_fn = lambda e, n, t: None
 
     # -- helpers ----------------------------------------------------------------
 
@@ -228,6 +293,14 @@ class Simulation:
                 veh.advice, veh.next_control = self.advisor.advise(veh.route, veh.idx, veh.pos, veh.v, self.t, occ)
                 refresh_display(veh, self.t)
 
+        if self.cfg.autopilot:
+            for veh in self.vehicles:
+                if veh.perception is not None:
+                    lead = self.ahead(veh, by_edge)
+                    leader = None if lead is None else (lead[0], lead[1].v, lead[1].id)
+                    veh.perception.sense(self.t, self._route_s(veh), veh.v, leader, self._light_ahead(veh))
+                    self._score_perception(veh, lead)
+
         for veh in self.vehicles:
             veh.a = self._acceleration(veh, by_edge)
 
@@ -236,10 +309,14 @@ class Simulation:
             v_new = max(0.0, veh.v + veh.a * dt)
             record_motion(veh, veh.v, v_new, dt)
             veh.pos += (veh.v + v_new) / 2 * dt
+            veh.dist += (veh.v + v_new) / 2 * dt
             veh.v = v_new
             while veh.pos >= self.net.edges[veh.edge].length:
                 edge = self.net.edges[veh.edge]
                 node = self.net.nodes[edge.to_node]
+                if node.kind == SIGNAL and node.plan is not None and \
+                        node.plan.state(self.t, node.group_of.get(edge.id, "")) == "r":
+                    veh.red_runs += 1
                 if veh.idx == len(veh.route) - 1:
                     finished.append(veh)
                     break
@@ -250,11 +327,114 @@ class Simulation:
 
         for veh in finished:
             self.vehicles.remove(veh)
-            self.stats[veh.equipped].add(veh, self.t)
+            if veh.parked_until is None:
+                self.stats[veh.equipped].add(veh, self.t)
 
+        if self.cfg.autopilot or self.cfg.double_parking:
+            self._safety()
         self._spawn(by_edge)
+        self._double_park()
+
+    # -- seeing the road -----------------------------------------------------------
+
+    def ahead(self, veh: Vehicle, by_edge: Dict[str, List[Vehicle]], horizon: float = 200.0):
+        """The first vehicle ahead along the route: (bumper-to-bumper gap, vehicle), or None."""
+        dist = -veh.pos
+        for k in range(veh.idx, len(veh.route)):
+            e = veh.route[k]
+            for other in by_edge.get(e, []):
+                if other is veh or (k == veh.idx and other.pos <= veh.pos):
+                    continue
+                return dist + other.pos - VEH_LENGTH, other
+            dist += self.net.edges[e].length
+            if dist > horizon:
+                return None
+        return None
+
+    def _route_s(self, veh: Vehicle) -> float:
+        return sum(self.net.edges[e].length for e in veh.route[:veh.idx]) + veh.pos
+
+    def _light_ahead(self, veh: Vehicle, horizon: float = 200.0):
+        """The next light on the route: (distance to its line, colour now, node id), or None."""
+        dist = -veh.pos
+        for k in range(veh.idx, len(veh.route)):
+            edge = self.net.edges[veh.route[k]]
+            dist += edge.length
+            if dist > horizon:
+                return None
+            node = self.net.nodes[edge.to_node]
+            if node.kind == SIGNAL and node.plan is not None:
+                return dist, node.plan.state(self.t, node.group_of.get(edge.id, "")), node.id
+        return None
+
+    def _score_perception(self, veh: Vehicle, lead) -> None:
+        """How well the car sees the real car in front (only to evaluate)."""
+        seen = veh.perception.leader()
+        if lead is None or lead[0] > 40:
+            return
+        veh.near_n += 1
+        if seen is None or seen.truth != lead[1].id:
+            veh.missed += 1
+        else:
+            veh.gap_err2 += (seen.gap - lead[0]) ** 2
+            veh.gap_n += 1
+
+    def _safety(self) -> None:
+        """Collisions and close calls, from the truth."""
+        by_edge = self._by_edge()
+        for veh in self.vehicles:
+            if veh.parked_until is not None:
+                continue
+            lead = self.ahead(veh, by_edge, horizon=60.0)
+            if lead is None:
+                veh._conflict = False
+                continue
+            gap, other = lead
+            if other.id != veh._lead_id:
+                # A new car ahead. The simulation lets cars merge at a junction without looking
+                # at the gap they leave, for everyone: count only what happens behind a car
+                # that has been in front for a second, and only a gap that closes now. A car
+                # that turns in less than 10 m ahead is such a merge, not this car's doing.
+                veh._lead_id, veh._lead_since, veh._last_gap = other.id, self.t, gap
+                veh._cut_in = gap < 10.0
+            last, veh._last_gap = veh._last_gap, gap
+            if self.t - veh._lead_since < 1.0 or veh._cut_in:
+                veh._conflict = False
+                continue
+            if gap < 0.3:
+                if last >= 0.3 and other.id not in veh._hit:
+                    veh._hit.add(other.id)
+                    veh.collisions += 1
+                veh.v = min(veh.v, other.v)
+            closing = veh.v - other.v
+            conflict = closing > 0.5 and max(gap, 0.0) / closing < 1.5
+            if conflict and not veh._conflict:
+                veh.conflicts += 1
+            veh._conflict = conflict
+
+    def _double_park(self) -> None:
+        """Now and then a car stops in the lane for a while (double parking, a delivery)."""
+        if self.cfg.double_parking <= 0 or self.rng.random() >= self.cfg.double_parking / 3600.0 * self.cfg.dt:
+            return
+        edges = [e for e in self.net.edges.values() if e.length > 120]
+        if not edges:
+            return
+        edge = self.rng.choice(edges)
+        pos = self.rng.uniform(80.0, edge.length - 30.0)
+        if any(pos - 80 < o.pos < pos + 15 for o in self._by_edge().get(edge.id, [])):
+            return
+        route = self.net.random_route(edge.id, self.rng)
+        if self.net.nodes[self.net.edges[route[-1]].to_node].kind != BORDER:
+            return
+        veh = Vehicle(self._next_id, route, False, self.t, pos=pos, v=0.0,
+                      parked_until=self.t + self.rng.uniform(*self.cfg.parked_for))
+        veh.moving = False
+        self._next_id += 1
+        self.vehicles.append(veh)
 
     def _acceleration(self, veh: Vehicle, by_edge: Dict[str, List[Vehicle]]) -> float:
+        if veh.parked_until is not None and self.t < veh.parked_until:
+            return -9.0
         edge = self.net.edges[veh.edge]
         node = self.net.nodes[edge.to_node]
         limit = edge.speed
@@ -298,6 +478,8 @@ class Simulation:
                 must_stop = busy
             # Everyone slows down for the roundabout; normal drivers do it late, with the brakes.
             limit = min(limit, math.sqrt(node.entry_speed ** 2 + 2 * IDM_DECEL * max(to_line - 3, 0.0)))
+        if veh.perception is not None:
+            return self._autopilot(veh, node, edge, limit, to_line, junction_stop=must_stop and node.kind != SIGNAL)
         if must_stop and to_line - 1.0 < gap:
             gap, dv = to_line - 1.0, veh.v
 
@@ -317,6 +499,55 @@ class Simulation:
         a_track = min(max(a_track, -self.advisor.profile.coast_decel), self.advisor.profile.accel)
         return max(min(a_track, a_idm), -9.0)
 
+    def _autopilot(self, veh: Vehicle, node, edge, limit: float, to_line: float, junction_stop: bool) -> float:
+        """A self-driving car: the car in front and the light come from its own sensors."""
+        perc = veh.perception
+        seen = perc.leader()
+        adv = veh.followed(self.follow_shown)
+        b = self.autopilot_cfg.comfort_decel
+        must_stop = junction_stop
+        if node.kind == SIGNAL and node.plan is not None:
+            group = node.group_of.get(edge.id, "")
+            cam = perc.light()
+            plan = node.plan.state(self.t, group) if self.cfg.light_timing else None
+            seen_colours = {c for c in (cam, plan) if c is not None}
+            if "r" in seen_colours:
+                must_stop = True
+            elif "y" in seen_colours:
+                must_stop = veh.v * veh.v / (2 * YELLOW_DECEL) < to_line - 1.0
+            elif not seen_colours:
+                # Neither timing nor a reading: be able to stop at the line until it is seen green.
+                if to_line <= perc.light_range():
+                    must_stop = True
+                else:
+                    limit = min(limit, math.sqrt(2 * b * max(to_line - 1.0, 0.0)))
+            if must_stop and self.cfg.light_timing and adv is not None and adv.kind in ("go", "slow"):
+                # The timing says it is green by the time the car gets there: keep coasting.
+                safe = veh.v * veh.v / (2 * YELLOW_DECEL) + 3.0
+                t_arrive = to_line / max(veh.v, 0.5)
+                if to_line > safe and node.plan.state(self.t + t_arrive, group) == "G":
+                    must_stop = False
+        target = None
+        if adv is not None and adv.target is not None:
+            target = adv.target
+            if adv.kind == "stop" and veh.next_control is not None and veh.next_control.node == node.id:
+                target = min(target, math.sqrt(2 * self.advisor.profile.coast_decel * max(to_line - 2.0, 0.0)))
+        a, why = ap.control(veh.v, limit, seen, to_line - 1.0 if must_stop else None, target,
+                            self.advisor.profile.coast_decel, self.advisor.profile.accel,
+                            perc.stationary_range(), self.autopilot_cfg)
+        if why == "aeb" and veh.why != "aeb":
+            veh.aeb += 1
+        # Braking for nothing: the object is not a real car, and no real car is near where it is seen.
+        real = perc._truth_leader
+        ghost = seen is not None and (seen.truth is None or seen.truth == "ghost") and \
+            (real is None or real[0] > seen.gap + 10.0)
+        phantom = ghost and why in ("leader", "aeb") and a < -BRAKE_THRESHOLD
+        if phantom and not veh._phantom_on:
+            veh.phantom += 1
+        veh._phantom_on = phantom
+        veh.why = why
+        return a
+
     def _spawn(self, by_edge: Dict[str, List[Vehicle]]) -> None:
         p = self.cfg.demand / 3600.0 * self.cfg.dt
         for e in self._entries:
@@ -333,6 +564,8 @@ class Simulation:
             if on_edge:
                 v0 = min(v0, on_edge[0].v + 1.0)
             veh = Vehicle(self._next_id, route, self.rng.random() < self.cfg.penetration, self.t, v=v0)
+            if veh.equipped and self.cfg.autopilot:
+                veh.perception = Perception(self._perc_rng, self.cfg.sensors, self.cfg.weather, self.cfg.ghost_per_km)
             self._next_id += 1
             self.vehicles.append(veh)
 
@@ -385,11 +618,36 @@ def signal_states(net: Network, t: float) -> Dict[str, Dict[str, List]]:
     return out
 
 
+def seen_row(net: Network, veh: Vehicle) -> Optional[List]:
+    """What a self-driving car perceives, for the map: [gap, sensors, light colour, x, y] or None."""
+    perc = getattr(veh, "perception", None)
+    if perc is None:
+        return None
+    seen = perc.leader()
+    row: List = [None, "", perc.light(), None, None]
+    if seen is not None:
+        row[0], row[1] = round(seen.gap, 1), "+".join(seen.sensors)
+        d = veh.pos + seen.gap + VEH_LENGTH / 2
+        for k in range(veh.idx, len(veh.route)):
+            length = net.edges[veh.route[k]].length
+            if d <= length or k == len(veh.route) - 1:
+                x, y, _ = net.point_at(veh.route[k], min(d, length))
+                row[3], row[4] = round(x, 1), round(y, 1)
+                break
+            d -= length
+    return row
+
+
 def snapshot(net: Network, t: float, vehicles: List[Vehicle], stats: Dict[bool, GroupStats]) -> Dict:
+    rows = []
+    for v in vehicles:
+        row = vehicle_row(net, v.id, v.edge, v.pos, v.v, v.equipped, v.shown or v.advice, v.next_control,
+                          announcements=v.display.announcements)
+        row.append(seen_row(net, v))  # [17]: what a self-driving car sees, or None
+        rows.append(row)
     return {
         "t": round(t, 1),
-        "vehicles": [vehicle_row(net, v.id, v.edge, v.pos, v.v, v.equipped, v.shown or v.advice, v.next_control,
-                                 announcements=v.display.announcements) for v in vehicles],
+        "vehicles": rows,
         "signals": signal_states(net, t),
         "stats": {"drivenow": stats[True].summary(), "normal": stats[False].summary(), "live": len(vehicles)},
     }
