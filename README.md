@@ -769,7 +769,7 @@ regole del progetto. Vedi la [guida](docs/agent-skills.md).
 Il [ponte SUMO per LibSignal](docs/libsignal.md) legge i veicoli dal suo mondo
 simulato e può applicare i consigli DriveNow mentre LibSignal controlla i
 semafori. Include una verifica eseguibile con il sorgente upstream reale;
-le finestre di verde devono essere fornite esplicitamente dal controllore.
+le finestre di verde possono essere fornite dal controllore o stimate dagli stati già osservati con `learn_signals=True`.
 
 ## Confronto previsioni con Darts
 
