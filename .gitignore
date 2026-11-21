@@ -1,3 +1,11 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.venv-vibetest/
+test-results/
+.venv-libsignal/
+.venv-darts/
+.tools/
+.venv-container-use/
+node_modules/
+.venv-playwriter/

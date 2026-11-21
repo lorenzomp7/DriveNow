@@ -1,0 +1,11 @@
+{
+  "workdir": "/workdir",
+  "base_image": "python:3.12.12-slim-bookworm",
+  "setup_commands": [
+    "apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*"
+  ],
+  "install_commands": [
+    "python -m pip install --no-cache-dir pytest==9.2.0"
+  ],
+  "env": ["PYTHONUNBUFFERED=1", "PYTHONDONTWRITEBYTECODE=1"]
+}

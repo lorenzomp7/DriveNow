@@ -1,0 +1,2 @@
+# Optional offline forecasting benchmark. No torch/GPU or API keys required.
+u8darts==0.39.0

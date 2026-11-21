@@ -1,0 +1,45 @@
+name: Playwriter integration
+on:
+  push:
+    branches: [main_claude]
+    paths:
+      - 'tools/playwriter/**'
+      - 'tools/playwriter_check.py'
+      - 'web/**'
+      - 'drivenow/server.py'
+      - '.github/workflows/playwriter.yml'
+  pull_request:
+    paths:
+      - 'tools/playwriter/**'
+      - 'tools/playwriter_check.py'
+      - 'web/**'
+      - 'drivenow/server.py'
+      - '.github/workflows/playwriter.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-mcp-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --prefix tools/playwriter --no-audit --no-fund
+      - name: Use Chrome installed on the runner
+        run: |
+          chrome=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          "$chrome" --version
+          echo "DRIVENOW_CHROMIUM=$chrome" >> "$GITHUB_ENV"
+      - run: python tools/playwriter_check.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwriter-report-and-screenshots
+          path: test-results/playwriter/
+          if-no-files-found: ignore

@@ -246,7 +246,11 @@ class SumoWorld:
             self._xy[vid] = (x, y, math.radians(90 - d[tc.VAR_ANGLE]))
             record_motion(veh, v_old.get(vid, veh.v), veh.v, self.dt)
             if veh.phone is not None:
-                veh.phone.tick(self.t, veh.cum[veh.idx] + veh.pos, veh.v)
+                # The phone sees the distance really driven, junctions included; the map (here the
+                # route's edges, which leave junctions out) is matched with the junctions crossed so far.
+                veh.odo += veh.v * self.dt
+                veh.gps_offset = veh.odo - (veh.cum[veh.idx] + veh.pos)
+                veh.phone.tick(self.t, veh.odo, veh.v)
 
         self._learn_clock -= self.dt
         if self._learn_clock <= 1e-9:
@@ -282,7 +286,7 @@ class SumoWorld:
             veh.gps_suspended += 1
             return None
         s, v, _ = est
-        s = min(max(s, 0.0), veh.cum[-1] + self.net.edges[veh.route[-1]].length)
+        s = min(max(s - veh.gps_offset, 0.0), veh.cum[-1] + self.net.edges[veh.route[-1]].length)
         self.gps_errors.append(s - (veh.cum[veh.idx] + veh.pos))
         idx = max(0, bisect_right(veh.cum, s) - 1)
         pos = min(s - veh.cum[idx], self.net.edges[veh.route[idx]].length)

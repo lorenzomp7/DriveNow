@@ -1,0 +1,2 @@
+# Optional host-side client for the automated MCP/container integration check.
+mcp==1.30.0

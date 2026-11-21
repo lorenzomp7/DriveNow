@@ -75,6 +75,8 @@ class Vehicle:
     learner: Optional[ProfileLearner] = None
     phone: Optional[object] = None   # positioning.Phone: where the car's phone thinks it is
     cum: Optional[List[float]] = None  # distance along the route at the start of each edge
+    odo: float = 0.0                 # m really driven (junctions included, unlike cum + pos)
+    gps_offset: float = 0.0          # odo - (cum[idx] + pos): the junctions crossed so far
     gps_suspended: int = 0           # advice updates suspended because the position was too uncertain
     gps_updates: int = 0
     # Self-driving (SimConfig.autopilot)

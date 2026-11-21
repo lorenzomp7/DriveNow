@@ -1,0 +1,40 @@
+name: Darts benchmark
+on:
+  push:
+    branches: [main_claude]
+    paths:
+      - 'drivenow/darts_benchmark.py'
+      - 'drivenow/hamburg/signals.py'
+      - 'tools/darts_benchmark.py'
+      - 'tests/test_darts_benchmark.py'
+      - 'requirements-darts.*'
+      - 'data/hamburg/**'
+      - '.github/workflows/darts.yml'
+  pull_request:
+    paths:
+      - 'drivenow/darts_benchmark.py'
+      - 'drivenow/hamburg/signals.py'
+      - 'tools/darts_benchmark.py'
+      - 'tests/test_darts_benchmark.py'
+      - 'requirements-darts.*'
+      - 'data/hamburg/**'
+      - '.github/workflows/darts.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-darts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-darts.txt pytest==9.2.0
+      - run: python -m pytest tests/test_darts_benchmark.py -q
+      - run: python tools/darts_benchmark.py --signals 2 --minutes 2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darts-benchmark
+          path: test-results/darts.json
