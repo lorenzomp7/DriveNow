@@ -73,5 +73,42 @@ def main():
         server.server_close()
 
 
+def check_autopilot():
+    """Self-driving cars: the panel says the car drives itself and what its sensors see."""
+    cfg = SimConfig(seed=1, penetration=1.0, demand=600, autopilot=True, sensors='camera+radar', weather='fog')
+    runner = Runner(Simulation(demo_city(), cfg), speed=5)
+    server = ThreadingHTTPServer(('127.0.0.1', 0), make_handler(runner))
+    server.daemon_threads = True
+    runner.start()
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    errors = []
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(executable_path=os.environ.get("DRIVENOW_CHROMIUM"))
+            try:
+                page = browser.new_page(viewport={'width': 1440, 'height': 900})
+                page.on('pageerror', lambda error: errors.append(str(error)))
+                page.goto(f'http://127.0.0.1:{server.server_port}', wait_until='domcontentloaded')
+                expect(page.locator('#veh-tag')).to_have_text('Guida da sola', timeout=15000)
+                expect(page.locator('#sees-row')).to_be_visible()
+                expect(page.locator('#legend-seen')).to_be_visible()
+                # Some car sees another one ahead within a while.
+                page.wait_for_function("""() => {
+                    if (document.querySelector('#sees').textContent.startsWith('auto')) return true;
+                    document.querySelector('#btn-next').click();
+                    return false;
+                }""", polling=700, timeout=60000)
+                expect(page.locator('#sees')).to_contain_text('radar')
+                assert not errors, errors
+                print('PASS: self-driving car, what its sensors see')
+            finally:
+                browser.close()
+    finally:
+        runner._stop = True
+        server.shutdown()
+        server.server_close()
+
+
 if __name__ == '__main__':
     main()
+    check_autopilot()

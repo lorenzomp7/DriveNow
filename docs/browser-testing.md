@@ -11,7 +11,11 @@ python tests/browser/check_ui.py
 Il controllo avvia e arresta un server demo su una porta libera, apre Chromium
 in formato desktop e telefono e verifica connessione live, avanzamento del tempo,
 consiglio al veicolo, cambio veicolo, inseguimento, zoom e invio/applicazione dei
-parametri della simulazione. Non richiede SUMO. Il workflow `Browser checks`
+parametri della simulazione. Una seconda pagina avvia la guida autonoma
+(`--autopilot`, telecamera + radar, nebbia) e verifica che il pannello dica
+"Guida da sola" e mostri cosa vedono i sensori. Non richiede SUMO. Con un
+Chromium già installato altrove, `DRIVENOW_CHROMIUM=/percorso/chrome` lo usa
+al posto di quello scaricato da Playwright. Il workflow `Browser checks`
 esegue anche i test Python su push a `main_claude` e sulle pull request.
 Queste verifiche non certificano la correttezza fisica del modello né la resa
 visiva di ogni elemento del canvas; i test Python coprono il motore separatamente.
