@@ -464,3 +464,37 @@ def test_common_green_reaches_a_light_beyond_the_current_edge():
     adv.controls_ahead = spy
     adv.advise([before, first, ways[1]], 0, 0.0, 50 / 3.6, 0.0, {})
     assert sorted(seen["options"]) == sorted(ways)   # ... still two edges away
+
+
+def test_main_road_gaps_are_not_trusted_when_cars_may_be_unseen():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    route = ["W2>J02", "J02>J12"]
+    pos = net.edges["W2>J02"].length - 120.0
+    occ = {"N0>J02": [(net.edges["N0>J02"].length - 80.0, 10.0)]}
+    a, _ = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
+    assert a.kind == "slow"
+    # Only some cars are seen: no slowing for a gap that may not be one, give way as usual.
+    adv.gap_trust_fn = lambda node, t: False
+    a, nc = adv.advise(route, 0, pos, 50 * KMH, 0.0, occ)
+    assert nc.kind == "yield" and a.kind in ("cap", "free")
+
+
+def test_slow_aggregated_traffic_delays_the_arrival():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+
+    net = demo_city()
+    adv = Advisor(net)
+    edge = next(e for e in net.edges.values() if net.nodes[e.to_node].kind == "signal")
+    assert adv._traffic_ahead(edge.id, 0.0, {}, 0.0) == (0, 0.0)
+    adv.segment_speed_fn = lambda e, t: 2.5 if e == edge.id else None
+    queue, earliest = adv._traffic_ahead(edge.id, 0.0, {}, 0.0)
+    assert queue == 0 and earliest == pytest.approx(edge.length / 2.5)
+    # A seen leader that is slower still bounds it further.
+    occ = {edge.id: [(edge.length - 10.0, 0.1 + 2.0)]}
+    _, e2 = adv._traffic_ahead(edge.id, 0.0, occ, 0.0)
+    assert e2 >= earliest

@@ -1,0 +1,138 @@
+"""Where the other cars are, as DriveNow can know it on the road.
+
+The advice looks at the cars around: the queue ahead, who follows close behind,
+the main-road cars at a give-way line. A simulation knows every car. On the road
+DriveNow knows only two things:
+
+- its own cars, one by one: each phone reports where it is (``report``). These
+  are personal data, so a car is known by a pseudonym and is forgotten ``ttl``
+  seconds after its last report;
+- aggregated traffic per stretch of road from a traffic data provider (TomTom
+  Traffic Flow, Waze for Cities jams, a city's detectors): how fast traffic
+  moves there, a few minutes late, never single cars (``segment``).
+
+``FleetDB.occupancy`` turns the cars it knows into the advisor's ``Occupancy``
+(edge -> [(position, speed)]). One thing it can add about the cars it does not
+see: a DriveNow car standing in a queue at ``p`` means the road between ``p``
+and the stop line is standing too, so that stretch is filled with standing cars
+every ``car_space`` metres (up to the first seen car that moves, if any: there the
+queue is already driving off).
+
+With ``path`` every report is also written to an SQLite file (history for
+analysis and replays); the live view stays in memory.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+
+STOPPED = 2.0  # m/s, as in advisor.py
+
+
+@dataclass
+class Segment:
+    speed: float       # m/s now (as reported)
+    free_speed: float  # m/s with no traffic
+    t: float           # when it was measured
+    source: str
+
+
+class FleetDB:
+    def __init__(self, lengths: Dict[str, float], ttl: float = 3.0, car_space: float = 7.5,
+                 fill_queues: bool = True, path: Optional[str] = None, share: float = 1.0) -> None:
+        self.lengths = lengths            # edge -> m, to fill queues up to the stop line
+        self.ttl = ttl
+        self.car_space = car_space
+        self.fill_queues = fill_queues
+        # Share of the cars on the road that are DriveNow cars (an estimate). Aiming for a gap
+        # in the main-road traffic needs to see nearly all of it: see gap_trust.
+        self.share = share
+        self.gap_min_share = 0.9
+        self.cars: Dict[str, Tuple[float, str, float, float]] = {}   # car -> (t, edge, pos, v)
+        self.segments: Dict[str, Segment] = {}
+        self._db: Optional[sqlite3.Connection] = None
+        if path:
+            self._db = sqlite3.connect(path)
+            self._db.execute("CREATE TABLE IF NOT EXISTS reports (t REAL, car TEXT, edge TEXT, pos REAL, v REAL)")
+            self._db.execute("CREATE TABLE IF NOT EXISTS segments (t REAL, edge TEXT, speed REAL, free_speed REAL, source TEXT)")
+
+    # -- writing -------------------------------------------------------------
+
+    def report(self, car: str, t: float, edge: str, pos: float, v: float) -> None:
+        """A DriveNow car is at ``pos`` on ``edge`` with speed ``v`` at time ``t``."""
+        self.cars[car] = (t, edge, pos, v)
+        if self._db is not None:
+            self._db.execute("INSERT INTO reports VALUES (?, ?, ?, ?, ?)", (t, car, edge, pos, v))
+
+    def leave(self, car: str) -> None:
+        self.cars.pop(car, None)
+
+    def segment(self, edge: str, speed: float, free_speed: float, t: float, source: str = "") -> None:
+        """Aggregated traffic on ``edge``: it moves at ``speed`` (``free_speed`` when empty)."""
+        self.segments[edge] = Segment(speed, free_speed, t, source)
+        if self._db is not None:
+            self._db.execute("INSERT INTO segments VALUES (?, ?, ?, ?, ?)", (t, edge, speed, free_speed, source))
+
+    def commit(self) -> None:
+        if self._db is not None:
+            self._db.commit()
+
+    def close(self) -> None:
+        if self._db is not None:
+            self._db.commit()
+            self._db.close()
+            self._db = None
+
+    # -- reading -------------------------------------------------------------
+
+    def expire(self, t: float) -> None:
+        for car in [c for c, r in self.cars.items() if t - r[0] > self.ttl]:
+            del self.cars[car]
+
+    def occupancy(self, t: float) -> Dict[str, List[Tuple[float, float]]]:
+        """The cars known at ``t`` per edge, ascending position, with the queues they reveal."""
+        self.expire(t)
+        occ: Dict[str, List[Tuple[float, float]]] = {}
+        for _, edge, pos, v in self.cars.values():
+            occ.setdefault(edge, []).append((pos, v))
+        for edge, lst in occ.items():
+            lst.sort()
+            if self.fill_queues and edge in self.lengths:
+                lst[:] = self._fill(lst, self.lengths[edge])
+        return occ
+
+    def _fill(self, cars: List[Tuple[float, float]], length: float) -> List[Tuple[float, float]]:
+        """Standing cars that are not seen, between the last seen standing car and the line."""
+        standing = [p for p, v in cars if v < STOPPED]
+        if not standing:
+            return cars
+        tail = min(standing)
+        # Up to the line, or to a seen car that moves: there the queue is already driving off.
+        end = min([p for p, v in cars if v >= STOPPED and p > tail] + [length])
+        out = list(cars)
+        known = sorted(p for p, _ in cars)
+        p = tail + self.car_space
+        while p <= end - self.car_space / 2:
+            if all(abs(p - q) >= self.car_space / 2 for q in known):
+                out.append((p, 0.0))
+            p += self.car_space
+        out.sort()
+        return out
+
+    def segment_speed(self, edge: str, t: float, max_age: float = 300.0, slow: float = 0.5) -> Optional[float]:
+        """Speed of slow aggregated traffic on ``edge`` (m/s), or None: no data, too old, or not slow."""
+        s = self.segments.get(edge)
+        if s is None or t - s.t > max_age or s.free_speed <= 0 or s.speed >= slow * s.free_speed:
+            return None
+        return max(s.speed, 0.5)
+
+    def gap_trust(self, node: str, t: float) -> bool:
+        """Can the cars seen be trusted to show every gap in the main-road traffic?
+
+        A gap DriveNow does not see a car in may not be a gap at all (a car without
+        DriveNow drives there), just as an unknown light is no green. Without a sensor
+        at the junction, only when nearly every car is a DriveNow car.
+        """
+        return self.share >= self.gap_min_share

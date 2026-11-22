@@ -39,11 +39,14 @@ ap.add_argument("--gps", choices=["perfect", "raw", "filtered"], default="perfec
 ap.add_argument("--gps-max-sigma", type=float, default=15.0, help="m: more uncertain than this, the advice is suspended")
 ap.add_argument("--gps-sigma", type=float, default=None, help="m: error of a phone fix (default 5)")
 ap.add_argument("--gps-delay", type=float, default=None, help="s: how late a fix arrives (default 1)")
+ap.add_argument("--occupancy", choices=["truth", "fleet", "fleet+flow"], default="truth",
+                help="where the advice sees the other cars: all of them, only DriveNow's, or also aggregated speed")
+ap.add_argument("--penetration", type=float, default=1.0, help="share of DriveNow cars (predict/oracle)")
 ap.add_argument("--seed", type=int, default=1)
 ap.add_argument("--scale", type=float, default=1.0, help="share of the hour's traffic to run (1 = all)")
 a = ap.parse_args()
-w = HamburgWorld(scenario=a.scenario, penetration=0.0 if a.mode == "none" else 1.0, forecast="oracle" if a.mode == "oracle" else "predict",
-                 seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}_{a.confirm_cycles}_{a.no_confirm_clean}_{a.slow_traffic}_{a.slow_standing_only}_{a.slow_min_gap}_{a.slow_min_kmh}_{a.follow_shown}_{a.display_up}_{a.vehicle_mix}_{a.profiles}_{a.turns}_{a.commit}_{a.gps}_{a.gps_max_sigma}_{a.gps_sigma}_{a.gps_delay}", scale=a.scale,
+w = HamburgWorld(scenario=a.scenario, penetration=0.0 if a.mode == "none" else a.penetration, forecast="oracle" if a.mode == "oracle" else "predict",
+                 seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}_{a.confirm_cycles}_{a.no_confirm_clean}_{a.slow_traffic}_{a.slow_standing_only}_{a.slow_min_gap}_{a.slow_min_kmh}_{a.follow_shown}_{a.display_up}_{a.vehicle_mix}_{a.profiles}_{a.turns}_{a.commit}_{a.gps}_{a.gps_max_sigma}_{a.gps_sigma}_{a.gps_delay}_{a.occupancy}_{a.penetration}", scale=a.scale,
                  threshold=a.threshold)
 w.advisor.gap_aware = not a.no_gaps
 w.advisor.gap_left_turns = not a.no_left_gaps
@@ -57,6 +60,7 @@ w.advisor.turns = a.turns
 w.advisor.commit_distance = a.commit
 w.profiles = a.profiles
 w.gps, w.gps_max_sigma = a.gps, a.gps_max_sigma
+w.occupancy_source = a.occupancy
 if a.gps_sigma is not None:
     w.gps_options["sigma_pos"] = a.gps_sigma
 if a.gps_delay is not None:
@@ -93,6 +97,8 @@ if w.gps_errors:
     res["gps"] = a.gps
     res["gps_error_m"] = {"median": round(e[len(e) // 2], 1), "p90": round(e[int(0.9 * len(e))], 1),
                           "mean_signed": round(sum(w.gps_errors) / len(w.gps_errors), 1)}
+res["occupancy"], res["penetration"] = a.occupancy, a.penetration
+res["unequipped"] = w.stats[False].summary() if a.mode != "none" else None
 print(json.dumps(res))
 if a.out:
     json.dump(res, open(a.out, "w"))

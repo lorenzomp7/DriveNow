@@ -28,6 +28,7 @@ from typing import Dict, List, Optional
 
 from .advisor import Advisor, NextControl, Occupancy
 from .display import AdviceDisplay
+from .fleet import FleetDB
 from .positioning import Phone
 from .profile_learner import ProfileLearner
 from .glosa import Advice, DriverProfile
@@ -114,6 +115,19 @@ class SumoWorld:
         self.gps_options: Dict = {}
         self._gps_rng = random.Random(seed * 104729 + 3)
         self.gps_errors: List[float] = []  # m: estimated minus true position, at each advice update
+        # Where the advice sees the other cars: "truth" (every car, as the simulation knows them),
+        # "fleet" (only the DriveNow cars, as their phones report them, see fleet.py) or
+        # "fleet+flow" (and aggregated speed per edge, like a traffic data provider's, emulated
+        # from the cars on each edge: a mean over flow_window seconds, delivered flow_delay late).
+        self.occupancy_source = "truth"
+        self.flow_window = 60.0
+        self.flow_delay = (60.0, 120.0)
+        self.fleet: Optional[FleetDB] = None
+        self._fleet_clock = 0.0
+        self._flow_rng = random.Random(seed * 15485863 + 7)
+        self._flow_sum: Dict[str, List[float]] = {}   # edge -> [sum of speeds, samples] this window
+        self._flow_start = 0.0
+        self._flow_pending: List[tuple] = []          # (delivered at, edge, speed, free speed, measured at)
         self.learnt: List[tuple] = []   # (coast true, coast learnt, accel true, accel learnt) per finished car
         self._learn_clock = 0.0
         self._xy: Dict[str, tuple] = {}
@@ -216,6 +230,8 @@ class SumoWorld:
             veh = self.vehicles.pop(vid, None)
             self._xy.pop(vid, None)
             self._internal.discard(vid)
+            if self.fleet is not None:
+                self.fleet.leave(vid)
             if veh is not None:
                 self.stats[veh.equipped].add(veh, self.t)
                 if veh.learner is not None:
@@ -259,6 +275,9 @@ class SumoWorld:
                 if veh.learner is not None:
                     veh.learner.observe(self.t, veh.v + self._mix_rng.gauss(0.0, self.speed_noise), veh.doing)
 
+        if self.occupancy_source != "truth":
+            self._feed_fleet()
+
         self._advice_clock -= self.dt
         if self._advice_clock <= 0:
             self._advice_clock = 0.6
@@ -281,16 +300,64 @@ class SumoWorld:
         if veh.phone is None:
             return veh.idx, veh.pos, veh.v
         veh.gps_updates += 1
+        where = self._estimated(veh)
+        if where is None:
+            veh.gps_suspended += 1
+            return None
+        idx, pos, v = where
+        self.gps_errors.append(veh.cum[idx] + pos - (veh.cum[veh.idx] + veh.pos))
+        return where
+
+    def _estimated(self, veh: Vehicle) -> Optional[tuple]:
+        """Where the car's phone puts it: (route index, position, speed), or None."""
         est = veh.phone.estimate(self.t)
         if est is None or est[2] > self.gps_max_sigma:
-            veh.gps_suspended += 1
             return None
         s, v, _ = est
         s = min(max(s - veh.gps_offset, 0.0), veh.cum[-1] + self.net.edges[veh.route[-1]].length)
-        self.gps_errors.append(s - (veh.cum[veh.idx] + veh.pos))
         idx = max(0, bisect_right(veh.cum, s) - 1)
         pos = min(s - veh.cum[idx], self.net.edges[veh.route[idx]].length)
         return idx, pos, v
+
+    # -- the other cars, as DriveNow knows them on the road ------------------------
+
+    def _feed_fleet(self) -> None:
+        if self.fleet is None:
+            self.fleet = FleetDB({e.id: e.length for e in self.net.edges.values()},
+                                 car_space=self.advisor.car_space, share=self.penetration)
+            self.advisor.gap_trust_fn = self.fleet.gap_trust
+            if self.occupancy_source == "fleet+flow":
+                self.advisor.segment_speed_fn = self.fleet.segment_speed
+        self._fleet_clock -= self.dt
+        if self._fleet_clock > 1e-9:
+            return
+        self._fleet_clock = 1.0  # a phone reports once a second
+        for vid, veh in self.vehicles.items():
+            if not veh.equipped or not veh.route:
+                continue
+            where = (veh.idx, veh.pos, veh.v) if veh.phone is None else self._estimated(veh)
+            if where is not None:
+                self.fleet.report(vid, self.t, veh.route[where[0]], where[1], where[2])
+        if self.occupancy_source == "fleet+flow":
+            self._emulate_flow()
+
+    def _emulate_flow(self) -> None:
+        """Aggregated speed per edge from every car on it, as a provider would publish it."""
+        for veh in self.vehicles.values():
+            if veh.route:
+                acc = self._flow_sum.setdefault(veh.edge, [0.0, 0])
+                acc[0] += veh.v
+                acc[1] += 1
+        if self.t - self._flow_start >= self.flow_window:
+            for edge, (total, n) in self._flow_sum.items():
+                due = self.t + self._flow_rng.uniform(*self.flow_delay)
+                self._flow_pending.append((due, edge, total / n, self.net.edges[edge].speed, self.t))
+            self._flow_sum, self._flow_start = {}, self.t
+        due = [x for x in self._flow_pending if x[0] <= self.t]
+        if due:
+            self._flow_pending = [x for x in self._flow_pending if x[0] > self.t]
+            for _, edge, speed, free, measured in due:
+                self.fleet.segment(edge, speed, free, measured, "emulated")
 
     def _profile_of(self, veh: Vehicle) -> Optional[DriverProfile]:
         """How the advice thinks this car changes speed."""
@@ -326,6 +393,8 @@ class SumoWorld:
                 veh.doing = "accel" if target > veh.v + 0.5 else None
 
     def occupancy(self) -> Occupancy:
+        if self.occupancy_source != "truth" and self.fleet is not None:
+            return self.fleet.occupancy(self.t)
         occ: Occupancy = {}
         for veh in self.vehicles.values():
             if veh.route:

@@ -88,6 +88,11 @@ class Advisor:
         self.follower_gap = 30.0  # m
         self.uncertain_drop = 10 / 3.6  # m/s: most a suspected light may slow a car (see glosa.advise)
         self.windows_fn = windows_fn
+        # Where the other cars come from on the road (see fleet.py): aggregated traffic per edge,
+        # (edge, time) -> speed in m/s of slow traffic there, or None; and whether the cars seen
+        # show every gap in the main-road traffic, (node, time) -> bool. None: not used.
+        self.segment_speed_fn: Optional[Callable[[str, float], Optional[float]]] = None
+        self.gap_trust_fn: Optional[Callable[[str, float], bool]] = None
         self.profile = profile
         self.margins = margins
         self.horizon = horizon
@@ -96,17 +101,26 @@ class Advisor:
 
     # -- traffic on the approach ----------------------------------------------
 
-    def _traffic_ahead(self, edge_id: str, pos: float, occupancy: Occupancy) -> Tuple[int, float]:
-        """Queue length ahead of ``pos`` and the earliest arrival behind a moving leader."""
+    def _traffic_ahead(self, edge_id: str, pos: float, occupancy: Occupancy,
+                       t: Optional[float] = None) -> Tuple[int, float]:
+        """Queue length ahead of ``pos`` and the earliest arrival behind a moving leader.
+
+        With aggregated traffic (``segment_speed_fn``), slow traffic on the edge also
+        bounds the arrival, for the cars ahead that are not seen.
+        """
         edge = self.net.edges[edge_id]
+        earliest = 0.0
+        if self.segment_speed_fn is not None and t is not None:
+            slow = self.segment_speed_fn(edge_id, t)
+            if slow:
+                earliest = (edge.length - pos) / slow
         ahead = [(p, v) for p, v in occupancy.get(edge_id, []) if p > pos + 0.5]
         if not ahead:
-            return 0, 0.0
+            return 0, earliest
         queue = sum(1 for p, v in ahead if v < STOPPED)
-        earliest = 0.0
         leader_pos, leader_v = ahead[0]
         if leader_v >= STOPPED:
-            earliest = (edge.length - leader_pos) / leader_v + self.margins.follow_headway
+            earliest = max(earliest, (edge.length - leader_pos) / leader_v + self.margins.follow_headway)
         return queue, earliest
 
     def _signal(self, edge_id: str, next_edge: Optional[str], t: float):
@@ -126,13 +140,16 @@ class Advisor:
         return any(pos - self.follower_gap < p < pos - 0.5 and v >= STOPPED for p, v in occupancy.get(edge_id, []))
 
     def _gap_control(self, edge_id: str, node_id: str, dist: float, current: bool, pos: float,
-                     occupancy: Occupancy, foes) -> Control:
+                     occupancy: Occupancy, foes, t: Optional[float] = None) -> Control:
         node = self.net.nodes[node_id]
         if current and self.considerate and self._follower_close(edge_id, pos, occupancy):
             return Control("yield", dist, node_id, entry_speed=node.entry_speed)
+        if self.gap_trust_fn is not None and t is not None and not self.gap_trust_fn(node_id, t):
+            # Main-road cars that are not seen may fill any gap: give way as usual.
+            return Control("yield", dist, node_id, entry_speed=node.entry_speed)
         earliest = 0.0
         if current:
-            queue, earliest = self._traffic_ahead(edge_id, pos, occupancy)
+            queue, earliest = self._traffic_ahead(edge_id, pos, occupancy, t)
             earliest = max(earliest, queue * self.margins.queue_headway)
         return Control("gap", dist, node_id, windows=self.main_road_gaps(node_id, occupancy, foes),
                        earliest=earliest, entry_speed=self.net.nodes[node_id].entry_speed)
@@ -256,7 +273,7 @@ class Advisor:
                 certain = sig[2] if len(sig) > 2 else True
                 queue, earliest = (0, 0.0)
                 if k == idx:
-                    queue, earliest = self._traffic_ahead(edge.id, pos, occupancy)
+                    queue, earliest = self._traffic_ahead(edge.id, pos, occupancy, t)
                 # The queue can reach back over several edges (and over junctions before the light).
                 if self.queue_aware:
                     queue = max(queue, stopped)
@@ -276,7 +293,7 @@ class Advisor:
                 if self.gap_aware and node.right_before_left:
                     # No main road: give way to whoever comes from the right.
                     foes = {f for f in self.net.in_edges[node.id] if f != edge.id and self.net.turn(f, edge.id) == "r"}
-                    controls.append(self._gap_control(edge.id, node.id, dist, k == idx, pos, occupancy, foes))
+                    controls.append(self._gap_control(edge.id, node.id, dist, k == idx, pos, occupancy, foes, t))
                 elif self.gap_aware:
                     foes = node.major
                     nxt = route[k + 1] if k + 1 < len(route) else None
@@ -284,7 +301,7 @@ class Advisor:
                         # Turning right only merges with the main-road traffic heading the same way.
                         same_way = {e for e in node.major if nxt in self.net.edges[e].next_edges}
                         foes = same_way or foes
-                    controls.append(self._gap_control(edge.id, node.id, dist, k == idx, pos, occupancy, foes))
+                    controls.append(self._gap_control(edge.id, node.id, dist, k == idx, pos, occupancy, foes, t))
                 else:
                     controls.append(Control("yield", dist, node.id, entry_speed=node.entry_speed))
                 first = first or NextControl("yield", node.id, dist)
@@ -292,7 +309,7 @@ class Advisor:
                   and self.net.turn(edge.id, route[k + 1]) == "l" and len(node.major) > 1):
                 # Turning left off the main road: give way to the oncoming main-road traffic.
                 controls.append(self._gap_control(edge.id, node.id, dist, k == idx, pos, occupancy,
-                                                  node.major - {edge.id}))
+                                                  node.major - {edge.id}, t))
                 first = first or NextControl("yield", node.id, dist)
             if dist > self.lookahead:
                 break
