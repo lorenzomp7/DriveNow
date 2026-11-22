@@ -1,5 +1,13 @@
 {
   "mcpServers": {
+    "playwriter": {
+      "command": "python",
+      "args": [
+        "tools/devtools.py",
+        "mcp",
+        "playwriter"
+      ]
+    },
     "container-use": {
       "command": "python",
       "args": [

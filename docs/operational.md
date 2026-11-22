@@ -32,12 +32,12 @@ della demo ordinaria o esegue il merge dei risultati automaticamente.
 
 ## Claude Code e altri client MCP
 
-La repo contiene `.mcp.json` con Playwriter, caricato in ogni sessione, e
-`.mcp.optional.json` con container-use (richiede Docker) e DriveNow Vibetest
-(richiede la chiave Google). Quelli opzionali si caricano solo quando servono:
-`claude --mcp-config .mcp.optional.json`. Dopo `setup`, un client che legge la
-configurazione MCP di progetto può avviarli quando apre questa repo e accetta i
-server del progetto.
+La repo contiene `.mcp.optional.json` con Playwriter (richiede il tuo Chrome con
+l'estensione), container-use (richiede Docker) e DriveNow Vibetest (richiede la
+chiave Google). Non c'è un `.mcp.json`: le sessioni Claude Code nel cloud non
+avviano server che lì non possono funzionare. In un client locale caricali con
+`claude --mcp-config .mcp.optional.json`, dopo `setup`. I controlli nel browser
+girano comunque in GitHub Actions.
 Non vengono modificati la configurazione globale del client o i suoi permessi.
 
 Per i client che richiedono percorsi assoluti:

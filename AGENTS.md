@@ -79,8 +79,8 @@ personal profile is connected. No AI agent is launched by this check.
 
 Use `python tools/devtools.py setup [tool...]` to install project-local tools,
 `status` to see missing prerequisites, and `run TOOL` to execute them. Project
-MCP entry points are in `.mcp.json` (Playwriter) and `.mcp.optional.json`
-(container-use, Vibetest; load with `claude --mcp-config .mcp.optional.json`);
+MCP entry points are in `.mcp.optional.json` (Playwriter, container-use, Vibetest;
+local clients only: `claude --mcp-config .mcp.optional.json`);
 `mcp-config` emits absolute paths for other
 clients. See `docs/operational.md`. A status report is not an executed test.
 Vibetest model calls require the user's Google credential; never fabricate it
