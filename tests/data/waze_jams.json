@@ -1,0 +1,10 @@
+{"startTime": "2026-11-22 17:00:00:000", "endTime": "2026-11-22 17:02:00:000",
+ "jams": [
+  {"uuid": 1, "street": "Willy-Brandt-Straße", "city": "Hamburg", "level": 3,
+   "speed": 2.5, "speedKMH": 9.0, "length": 300, "delay": 95, "roadType": 2,
+   "pubMillis": 1795370400000,
+   "line": [{"x": 9.9890, "y": 53.55}, {"x": 9.9930, "y": 53.55}]},
+  {"uuid": 2, "level": 1, "length": 50,
+   "line": [{"x": 9.9890, "y": 53.55}, {"x": 9.9930, "y": 53.55}]}
+ ],
+ "alerts": []}

@@ -15,18 +15,22 @@ Endpoints:
   GET  /api/stream    Server-Sent Events: vehicles and lights 5 times a
                       second, the speed map once a second
   POST /api/settings  {"speed": 2, "penetration": 0.5, "demand": 300}
+  POST /api/report    {"car": "pseudonym", "edge": "...", "pos": 12.5, "v": 8.3}: a phone's
+                      position into the fleet database (fleet.py); GET /api/fleet counts it
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
 
+from .fleet import FleetDB
 from .network import demo_city, load_sumo_net
 from .simulation import SimConfig, Simulation, static_network
 
@@ -45,6 +49,8 @@ class Runner:
         self.version = 0
         self._stop = False
         self.static = json.dumps(static_network(world.net))
+        # What phones on the road report (the demo's own cars are simulated, not in here).
+        self.fleet = FleetDB({e.id: e.length for e in world.net.edges.values()}, ttl=10.0)
 
     def start(self) -> None:
         threading.Thread(target=self._loop, daemon=True).start()
@@ -123,6 +129,11 @@ def make_handler(runner: Runner):
                 return self._send(200, runner.static.encode(), "application/json")
             if path == "/api/stream":
                 return self._stream()
+            if path == "/api/fleet":
+                with runner.lock:
+                    occ = runner.fleet.occupancy(time.time())
+                body = {"cars": len(runner.fleet.cars), "edges": len(occ)}
+                return self._send(200, json.dumps(body).encode(), "application/json")
             if path == "/":
                 path = "/index.html"
             file = os.path.normpath(os.path.join(WEB_DIR, path.lstrip("/")))
@@ -135,6 +146,8 @@ def make_handler(runner: Runner):
                 self._send(200, f.read(), ctype)
 
         def do_POST(self) -> None:
+            if self.path == "/api/report":
+                return self._report()
             if self.path != "/api/settings":
                 return self._send(404, b"not found", "text/plain")
             n = int(self.headers.get("Content-Length", "0") or 0)
@@ -142,6 +155,21 @@ def make_handler(runner: Runner):
                 runner.apply(json.loads(self.rfile.read(n) or b"{}"))
             except (ValueError, TypeError):
                 return self._send(400, b"bad settings", "text/plain")
+            self._send(204, b"", "text/plain")
+
+        def _report(self) -> None:
+            n = int(self.headers.get("Content-Length", "0") or 0)
+            try:
+                r = json.loads(self.rfile.read(min(n, 4096)) or b"{}")
+                car, edge = str(r["car"])[:64], str(r["edge"])
+                pos, v = float(r["pos"]), float(r["v"])
+            except (ValueError, TypeError, KeyError):
+                return self._send(400, b"bad report", "text/plain")
+            length = runner.fleet.lengths.get(edge)
+            if length is None or not (math.isfinite(pos) and math.isfinite(v)) or not 0 <= v < 70:
+                return self._send(400, b"bad report", "text/plain")
+            with runner.lock:
+                runner.fleet.report(car, time.time(), edge, min(max(pos, 0.0), length), v)
             self._send(204, b"", "text/plain")
 
         def _stream(self) -> None:

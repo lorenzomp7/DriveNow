@@ -1,6 +1,7 @@
 import json
 import threading
 import time
+import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
 
@@ -52,3 +53,30 @@ def test_speed_field_covers_every_controlled_approach():
         for s, lo, hi in rows:
             if lo is not None:
                 assert lo <= hi
+
+
+def test_phones_report_into_the_fleet_database():
+    sim = Simulation(demo_city(), SimConfig(seed=2))
+    runner = Runner(sim, speed=1)
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(runner))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def post(body):
+        req = urllib.request.Request(base + "/api/report", data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            return urllib.request.urlopen(req).status
+        except urllib.error.HTTPError as e:
+            return e.code
+
+    edge = next(iter(sim.net.edges))
+    try:
+        assert post({"car": "a1", "edge": edge, "pos": 10.0, "v": 8.0}) == 204
+        assert post({"car": "a2", "edge": "no-such-edge", "pos": 1, "v": 1}) == 400
+        assert post({"car": "a3", "edge": edge, "pos": 1}) == 400
+        assert post({"car": "a4", "edge": edge, "pos": 1, "v": float("nan")}) == 400
+        assert json.load(urllib.request.urlopen(base + "/api/fleet")) == {"cars": 1, "edges": 1}
+        assert runner.fleet.cars["a1"][1:] == (edge, 10.0, 8.0)
+    finally:
+        srv.shutdown()
