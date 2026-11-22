@@ -1,0 +1,29 @@
+{
+  "watch": [
+    "*.py",
+    "drivenow/*",
+    "tests/*",
+    "web/*",
+    "data/*",
+    "pytest.ini"
+  ],
+  "steps": [
+    {
+      "name": "pytest",
+      "probe": [
+        "python3",
+        "-c",
+        "import pytest"
+      ],
+      "run": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-x"
+      ],
+      "timeout": 300,
+      "setup": "pip install pytest"
+    }
+  ]
+}

@@ -9,3 +9,7 @@ test-results/
 .venv-container-use/
 node_modules/
 .venv-playwriter/
+
+# Claude Code: impostazioni personali e stato degli hook (non versionati)
+.claude/settings.local.json
+.claude/hooks/.state/

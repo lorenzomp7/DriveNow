@@ -1014,4 +1014,5 @@ python tools/devtools.py status
 
 Un solo comando di avvio per ogni strumento, ad esempio
 `python tools/devtools.py run playwriter`. La configurazione MCP di progetto
-è in `.mcp.json`; [comandi, attivazione e prerequisiti](docs/operational.md).
+è in `.mcp.json` (Playwriter, sempre attivo) e `.mcp.optional.json` (container-use e Vibetest,
+su richiesta); [comandi, attivazione e prerequisiti](docs/operational.md).
