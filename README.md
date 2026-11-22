@@ -676,6 +676,102 @@ davanti) e i passaggi da cui si imparano i semafori senza dati: qui il
 telefono simulato riguarda solo la posizione dell'auto che riceve il
 consiglio.
 
+### Dove sono le altre auto
+
+La consulenza guarda le auto intorno in tre momenti:
+- **la coda davanti:** quante auto sono ferme prima della linea;
+- **chi segue da vicino:** con un'auto a ridosso non si rallenta presto;
+- **i varchi sulla strada principale:** a una precedenza.
+
+Finora la simulazione le conosceva tutte, anche quelle senza DriveNow. Su strada
+non è così.
+
+**Che cosa si può sapere davvero.** Nessun fornitore di dati dà le singole auto
+in movimento: sono dati personali.
+- **TomTom Traffic Flow:** per un punto dà la velocità attuale e quella libera del
+  tratto di strada, con alcuni minuti di ritardo.
+- **Waze for Cities:** dà le code (linea, velocità, lunghezza, livello), ma solo
+  agli enti pubblici.
+- **Le auto DriveNow:** sono le uniche che si possono conoscere una per una, e
+  solo perché il loro telefono lo dice.
+
+Il "database delle auto in movimento" (`drivenow/fleet.py`, `FleetDB`) ha quindi
+due strati:
+- **Le auto DriveNow una per una.** Ogni telefono manda la sua posizione una
+  volta al secondo, con un nome di comodo, e dopo 3 s senza notizie l'auto viene
+  dimenticata. Un'auto DriveNow ferma in coda rivela anche le auto che non si
+  vedono: fino alla linea (o fino alla prima auto vista che riparte) la strada è
+  ferma, quindi quel tratto si riempie di auto ferme ogni 7,5 m. Con un percorso
+  file, ogni posizione finisce anche in un archivio SQLite per analisi e repliche.
+- **Il traffico aggregato per tratto.** Se un tratto scorre sotto metà della sua
+  velocità libera, l'arrivo alla linea non può essere più rapido di quella
+  velocità.
+
+In più c'è una regola di sicurezza. Un varco sulla strada principale in cui non
+si vede nessuno non è un varco libero se le auto senza DriveNow non si vedono,
+come un semaforo sconosciuto non è un verde. Con meno del 90% di auto DriveNow
+la consulenza non rallenta più per prendere un varco: dà la solita precedenza.
+
+Per la strada vera:
+- `TomTomFlow` (`drivenow/traffic_sources.py`) interroga Flow Segment Data per
+  il punto medio di ogni tratto. Distribuisce le richieste in base al budget
+  della quota e una risposta aggiorna tutti i tratti lungo il segmento restituito.
+- `WazeJams` legge le code del feed partner.
+- `POST /api/report` del server riceve la posizione di un telefono.
+- `tools/edge_points.py` calcola lon/lat e direzione di ogni tratto della rete,
+  già salvati in `data/hamburg/*/edge_points.json`.
+
+Gli adattatori sono provati solo su risposte scritte da me secondo i formati
+pubblicati: una prova dal vivo richiede la chiave TomTom e l'accesso a
+`api.tomtom.com`, che dall'ambiente di sviluppo è bloccato.
+
+**Come l'ho misurato.** In simulazione `--occupancy` sceglie che cosa vede la
+consulenza:
+- `truth`: tutte le auto, come finora;
+- `fleet`: solo le auto DriveNow;
+- `fleet+flow`: le auto DriveNow più la velocità media di ogni tratto.
+
+In `fleet+flow` la velocità è calcolata sulle auto presenti, mediata su 60 s e
+consegnata con 60–120 s di ritardo: è un'ipotesi su com'è un dato tipo TomTom,
+non il dato TomTom. Risultati per le sole auto DriveNow, media di 2 semi, 60 min:
+
+| | Fermate | Frenate | Energia nei freni | Tempo | Viaggi finiti |
+|---|---|---|---|---|---|
+| Willy-Brandt-Straße, 25% DriveNow, tutte le auto | 3,16 | 9,77 | 245 kJ | 334 s | 739 |
+| Solo le auto DriveNow | 3,33 | 10,48 | 269 kJ | 343 s | 719 |
+| Più il traffico aggregato | 3,25 | 10,29 | 264 kJ | 340 s | 726 |
+| Willy-Brandt-Straße, 50% DriveNow, tutte le auto | 3,04 | 9,64 | 234 kJ | 349 s | 1.348 |
+| Solo le auto DriveNow | 3,10 | 10,08 | 249 kJ | 336 s | 1.474 |
+| Più il traffico aggregato | 3,09 | 9,75 | 239 kJ | 338 s | 1.422 |
+| Gärtnerstraße (metà traffico), 25% DriveNow, tutte le auto | 1,02 | 2,81 | 110 kJ | 186 s | 148 |
+| Solo le auto DriveNow | 1,01 | 2,87 | 115 kJ | 187 s | 148 |
+| Più il traffico aggregato | 1,07 | 2,82 | 110 kJ | 198 s | 148 |
+| Gärtnerstraße (metà traffico), 50% DriveNow, tutte le auto | 0,95 | 2,73 | 102 kJ | 175 s | 293 |
+| Solo le auto DriveNow | 0,97 | 2,77 | 106 kJ | 176 s | 293 |
+| Più il traffico aggregato | 0,98 | 2,72 | 101 kJ | 183 s | 292 |
+
+- **Vedere solo le auto DriveNow costa.** L'energia nei freni sale del 3–10%: di
+  più con meno auto DriveNow e sulla strada più trafficata (Willy-Brandt-Straße
+  al 25%: +10%, con il 7% di frenate in più). È il prezzo, finora nascosto, del
+  passaggio dalla simulazione alla strada.
+- **Il traffico aggregato ne recupera gran parte.** A Willy-Brandt-Straße al 50%
+  si torna a +2%, a Gärtnerstraße allo stesso livello di quando si vedevano
+  tutte le auto. Al 25% su Willy-Brandt-Straße recupera solo un quinto.
+- **Ma a Gärtnerstraße costa tempo:** +5–6%, in entrambi i semi. La causa più
+  probabile è che la velocità media di un tratto davanti a un semaforo è bassa
+  anche solo per il rosso, e la consulenza la legge come traffico lento,
+  rimandando l'arrivo. Il prossimo passo è usarla solo dove il tratto lento non
+  si spiega con un semaforo noto.
+- **Il tempo a Willy-Brandt-Straße non si confronta bene tra le righe.** Lì il
+  numero di viaggi finiti cambia molto da una prova all'altra (al 50%: 1.348
+  contro 1.474), quindi la congestione non è la stessa.
+- **Le altre auto, senza DriveNow, non cambiano in modo apprezzabile.**
+
+Non ho separato quanto pesa la regola sui varchi rispetto alle code non viste:
+entrambe sono attive in `fleet` e `fleet+flow`. In simulazione il default resta
+`truth`, per confrontare con i risultati precedenti; i numeri da aspettarsi su
+strada sono quelli di `fleet+flow`.
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
@@ -925,8 +1021,9 @@ fonti:
   predittivo.
 - **Posizione e traffico.** GPS dello smartphone o dell'auto per la propria
   posizione, sempre filtrato lungo la strada (vedi "Con il GPS di un
-  telefono"); dati di traffico (o i veicoli connessi) per code e veicolo
-  davanti. Un'auto con sensori propri vede da sola il veicolo davanti e il
+  telefono"); per le altre auto le posizioni dei telefoni DriveNow e il
+  traffico aggregato per tratto (TomTom, Waze for Cities, vedi "Dove sono le
+  altre auto"). Un'auto con sensori propri vede da sola il veicolo davanti e il
   colore del semaforo: al posto del modello di `perception.py` vanno le
   uscite del riconoscitore d'immagini e del radar dell'auto.
 - **Mappa.** La geometria va presa da OpenStreetMap o dai MAPEM, al posto
@@ -946,6 +1043,8 @@ drivenow/
   display.py      quello che vede il guidatore: numero stabile, annunci distanziati
   profile_learner.py  quanto rallenta ogni auto a piede alzato, imparato dalla sua guida
   positioning.py  il GPS di un telefono (rumore, ritardo, buchi) e il filtro di Kalman lungo la strada
+  fleet.py        il database delle auto in movimento: auto DriveNow una per una e traffico per tratto
+  traffic_sources.py  traffico aggregato da TomTom Traffic Flow e dalle code di Waze for Cities
   perception.py   sensori dell'auto (telecamera, radar, lidar, meteo) e loro fusione
   autopilot.py    guida autonoma sui pedali, da quello che vedono i sensori
   hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
