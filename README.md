@@ -772,6 +772,113 @@ entrambe sono attive in `fleet` e `fleet+flow`. In simulazione il default resta
 `truth`, per confrontare con i risultati precedenti; i numeri da aspettarsi su
 strada sono quelli di `fleet+flow`.
 
+### Auto stimate da tre fonti: telefoni, spire, velocità per tratto
+
+Nessuno ha tutte le auto una per una, ma tre fonti insieme danno una buona stima
+di quante sono ferme a ogni semaforo:
+- **i telefoni DriveNow:** le nostre auto una per una (`fleet.py`);
+- **le spire ai semafori di Amburgo:** per alcune corsie la città pubblica in
+  diretta se la spira davanti alla linea è occupata. Ogni passaggio da libera a
+  occupata è un'auto;
+- **la velocità per tratto tipo TomTom:** emulata in simulazione, come nella
+  sezione precedente.
+
+**Lo stimatore delle code** (`drivenow/estimator.py`) per ogni corsia con spira
+fa tre cose:
+- dai passaggi degli ultimi 5 minuti ricava il ritmo degli arrivi;
+- se la spira resta occupata più di 3 s c'è un'auto ferma in testa, e dietro di
+  lei la coda cresce di quel ritmo;
+- quando la spira si libera la coda riparte, e ogni passaggio toglie un'auto.
+
+Non servono i tempi del semaforo. Il ritmo degli arrivi si congela quando
+un'auto si ferma sulla spira: durante un rosso lungo nessuno ci passa, e
+altrimenti il ritmo calerebbe da solo.
+
+La coda stimata si somma a quella che mostrano i telefoni, dalla linea
+all'indietro, anche sui tratti precedenti. La rete di Amburgo spezza gli accessi
+dove le corsie si dividono, e molte spire stanno su tratti di 8 m. Su questi
+accessi la velocità per tratto non si usa più: la coda la contano già le spire,
+e la velocità media bassa per il rosso non viene più scambiata per traffico lento.
+
+**Dove stanno le spire.** `drivenow/hamburg/detectors.py` mette ogni spira sulla
+corsia SUMO che sorveglia: lo ricava da `links.json` e dalle connessioni della
+rete. Abbinate a una corsia SUMO ne restano:
+- 15 corsie su 12 accessi a Willy-Brandt-Straße;
+- 11 corsie su 6 accessi a Gärtnerstraße.
+
+Stanno quasi tutte su strade laterali: l'asse principale di Willy-Brandt-Straße
+non ne ha. La distanza dalla linea non è nei dati: l'ho messa a 2 m
+(`--det-offset`).
+
+Nell'ora simulata le spire emulate contano un totale diverso da quello della
+registrazione:
+
+| Scenario | Spire emulate | Registrazione |
+|---|---|---|
+| Willy-Brandt-Straße | 945–985 auto | 1.118 |
+| Gärtnerstraße (metà traffico) | 200–213 auto | 123 |
+
+A Gärtnerstraße alcune spire vere contano poco o niente.
+
+**Risultati** per le sole auto DriveNow, media di 2 semi, 60 min, `--occupancy fused`, confrontati con la sezione precedente:
+
+| | Tutte le auto | Solo DriveNow | Più velocità per tratto | Tre fonti |
+|---|---|---|---|---|
+| Willy-Brandt-Straße 25%: energia nei freni | 245 kJ | 269 kJ | 264 kJ | 258 kJ |
+| tempo | 334 s | 343 s | 340 s | 335 s |
+| Willy-Brandt-Straße 50%: energia nei freni | 234 kJ | 249 kJ | 239 kJ | 239 kJ |
+| tempo | 349 s | 336 s | 338 s | 347 s |
+| Gärtnerstraße 25%: energia nei freni | 110 kJ | 115 kJ | 110 kJ | 110 kJ |
+| tempo | 186 s | 187 s | 198 s | 181 s |
+| Gärtnerstraße 50%: energia nei freni | 102 kJ | 106 kJ | 101 kJ | 100 kJ |
+| tempo | 175 s | 176 s | 183 s | 178 s |
+
+- **A Gärtnerstraße sparisce il costo in tempo** della velocità per tratto: da
+  +6% a −3% al 25%, da +5% a +2% al 50%. L'energia resta al livello di quando si
+  vedevano tutte le auto.
+- **A Willy-Brandt-Straße al 25%** l'energia nei freni recupera quasi metà della
+  perdita (+6% invece di +10%) e il tempo torna come con tutte le auto.
+- **Al 50%** l'energia è come con la sola velocità per tratto.
+
+**Errore sulle code.** Ogni 5 s, per ogni accesso con spira, confronto le auto
+ferme vere con quelle stimate:
+
+| Accessi con spira, auto ferme | In media | Errore solo DriveNow | Errore tre fonti |
+|---|---|---|---|
+| Willy-Brandt-Straße 25% | 2,4 | 1,13–1,28 (−1,1) | 0,97–1,16 (−0,7) |
+| Willy-Brandt-Straße 50% | 2,9 | 0,75–0,90 (−0,7) | 0,74–0,88 (−0,4) |
+| Gärtnerstraße 25% | 1,2 | 0,76–0,85 (−0,8) | 0,60–0,65 (+0,5) |
+| Gärtnerstraße 50% | 1,3 | 0,60 (−0,6) | 0,59–0,63 (+0,5) |
+
+Errore medio assoluto per i due semi; tra parentesi lo sbilanciamento medio.
+
+- **Solo DriveNow:** sottostima sempre, perché le auto che non vede mancano.
+- **Con le spire:** a Willy-Brandt-Straße la sottostima cala di quasi il 40%. A
+  Gärtnerstraße diventa una sovrastima di mezza auto, e l'errore scende solo al
+  25%.
+- **Sugli accessi senza spira non cambia niente**, e sono la maggior parte: sul
+  totale degli accessi l'errore resta quasi lo stesso. Il limite è la copertura
+  delle spire, non il metodo.
+
+**Il dato vero.** `drivenow/hamburg/live.py` si collega a
+`wss://tld.iot.hamburg.de/mqtt` con la sola libreria standard: MQTT su
+websocket, attraverso il proxy se c'è. Il broker chiude la connessione se
+l'iscrizione arriva prima della sua conferma. `tools/hamburg_live.py` ascolta le
+spire e i semafori di uno scenario e passa le spire allo stimatore. Esito:
+ascolto di 10 minuti il 23 novembre 2026, dalle 5:08 ora di Amburgo (lunedì
+all'alba, poco traffico):
+
+| Scenario | Messaggi dalle spire | Spire che hanno parlato | Ritardo mediano | Messaggi dai semafori |
+|---|---|---|---|---|
+| Willy-Brandt-Straße | 210 | 19 su 38 | 1,1 s | 2.768 |
+| Gärtnerstraße | 478 | 22 su 38 | 1,7 s | 3.023 |
+
+Ogni auto fa due messaggi (occupata e poi libera), quindi sono circa 100 e 240
+auto. Alla fine dell'ascolto lo stimatore dava un'auto ferma a un accesso di
+Gärtnerstraße e nessuna altrove. Il flusso dal vivo quindi c'è, ed è quasi
+immediato. Che le spire mute fossero ferme per il poco traffico o per un guasto
+va visto con un ascolto nelle ore di punta.
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
@@ -1045,9 +1152,11 @@ drivenow/
   positioning.py  il GPS di un telefono (rumore, ritardo, buchi) e il filtro di Kalman lungo la strada
   fleet.py        il database delle auto in movimento: auto DriveNow una per una e traffico per tratto
   traffic_sources.py  traffico aggregato da TomTom Traffic Flow e dalle code di Waze for Cities
+  estimator.py    code ai semafori dalle spire e dai telefoni
   perception.py   sensori dell'auto (telecamera, radar, lidar, meteo) e loro fusione
   autopilot.py    guida autonoma sui pedali, da quello che vedono i sensori
-  hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO
+  hamburg/        dati reali di Amburgo: storico e previsione dei semafori, mondo SUMO,
+                  spire emulate (detectors.py), flusso dal vivo MQTT (live.py)
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
 data/sumo/        reti a griglia 1×1–4×4 (dalla vecchia Traffc_light_control)
