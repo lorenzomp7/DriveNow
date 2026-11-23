@@ -22,5 +22,13 @@
   "Osterstra\u00dfe",
   "G\u00e4rtnerstra\u00dfe",
   "Breitenfelder Stra\u00dfe"
- ]
+ ],
+ "demand_dtv": {
+  "file": "routes_dtv.rou.xml",
+  "source": "Verkehrsmengen auf Hauptverkehrsstra\u00dfen 2019 (DTV), Beh\u00f6rde f\u00fcr Verkehr und Mobilit\u00e4tswende, DL-DE BY 2.0",
+  "peak_share": 0.09,
+  "peak_share_is": "assumed: share of the daily volume in the test hour, split evenly by direction",
+  "main_edges_with_volume": 48,
+  "other_streets": "target: the traffic of routes.rou.xml (assumed: no open counts there)"
+ }
 }

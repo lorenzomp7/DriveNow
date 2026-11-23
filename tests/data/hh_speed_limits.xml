@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<wfs:FeatureCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd https://registry.gdi-de.org/id/de.hh.up https://geodienste.hamburg.de/HH_WFS_Zulaessige_Hoechstgeschwindigkeiten?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=DescribeFeatureType&amp;OUTPUTFORMAT=application%2Fgml%2Bxml%3B+version%3D3.2&amp;TYPENAME=de.hh.up:zulaessige_hoechstgeschwindigkeiten&amp;NAMESPACES=xmlns(de.hh.up,https%3A%2F%2Fregistry.gdi-de.org%2Fid%2Fde.hh.up)" xmlns:wfs="http://www.opengis.net/wfs/2.0" timeStamp="2026-11-23T22:58:42Z" xmlns:gml="http://www.opengis.net/gml/3.2" numberMatched="unknown" numberReturned="0">
+  <!--NOTE: numberReturned attribute should be 'unknown' as well, but this would not validate against the current version of the WFS 2.0 schema (change upcoming). See change request (CR 144): https://portal.opengeospatial.org/files?artifact_id=43925.-->
+  <wfs:member>
+    <de.hh.up:zulaessige_hoechstgeschwindigkeiten xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11767621">
+      <de.hh.up:geschwindigkeit_in>30 km/h</de.hh.up:geschwindigkeit_in>
+      <de.hh.up:geschwindigkeit_gegen>30 km/h</de.hh.up:geschwindigkeit_gegen>
+      <de.hh.up:sonderregelung_in>Werktags 6-22 h, sonst 50km/h</de.hh.up:sonderregelung_in>
+      <de.hh.up:sonderregelung_gegen>Werktags 6-22 h, sonst 50km/h</de.hh.up:sonderregelung_gegen>
+      <de.hh.up:wegeart>Stadtstraße (alle Straßen, die nicht BAB oder Bundesstraßen sind, sowie zu einer anderen Wegeart gehören)</de.hh.up:wegeart>
+      <de.hh.up:zone_bereich></de.hh.up:zone_bereich>
+      <de.hh.up:von_netzknoten>242514596</de.hh.up:von_netzknoten>
+      <de.hh.up:nach_netzknoten>242513438</de.hh.up:nach_netzknoten>
+      <de.hh.up:von_station>0</de.hh.up:von_station>
+      <de.hh.up:bis_station>315</de.hh.up:bis_station>
+      <de.hh.up:klasse>G</de.hh.up:klasse>
+      <de.hh.up:strassenschluessel>B707</de.hh.up:strassenschluessel>
+      <de.hh.up:wegenummer>1203</de.hh.up:wegenummer>
+      <de.hh.up:strassenname>Bundesstraße</de.hh.up:strassenname>
+      <de.hh.up:landesschluessel>2</de.hh.up:landesschluessel>
+      <de.hh.up:kreisschluessel>3</de.hh.up:kreisschluessel>
+      <de.hh.up:gemeindeschluessel>308</de.hh.up:gemeindeschluessel>
+      <de.hh.up:abschnittslaenge>315</de.hh.up:abschnittslaenge>
+      <de.hh.up:ast>0</de.hh.up:ast>
+      <de.hh.up:fahrstreifenanzahl_in_stationierungsrichtung>1</de.hh.up:fahrstreifenanzahl_in_stationierungsrichtung>
+      <de.hh.up:fahrstreifenanzahl_in_beide_richtungen>0</de.hh.up:fahrstreifenanzahl_in_beide_richtungen>
+      <de.hh.up:fahrstreifenanzahl_gegen_stationierungsrichtung>1</de.hh.up:fahrstreifenanzahl_gegen_stationierungsrichtung>
+      <de.hh.up:bahnigkeit>1</de.hh.up:bahnigkeit>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11767621_DE.HH.UP_GEOM'-->
+        <gml:LineString gml:id="DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11767621_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.572375 9.967650 53.572799 9.965960 53.572926 9.965429 53.573000 9.965117 53.573017 9.965039 53.573025 9.964997 53.573034 9.964941 53.573049 9.964829 53.573059 9.964762 53.573077 9.964676 53.573250 9.963951 53.573337 9.963571 53.573364 9.963439 53.573374 9.963387 53.573406 9.963217</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:zulaessige_hoechstgeschwindigkeiten>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:zulaessige_hoechstgeschwindigkeiten xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11780371">
+      <de.hh.up:geschwindigkeit_in>30 km/h</de.hh.up:geschwindigkeit_in>
+      <de.hh.up:geschwindigkeit_gegen>30 km/h</de.hh.up:geschwindigkeit_gegen>
+      <de.hh.up:sonderregelung_in>Mo-Fr 6-19 h, sonst 50km/h</de.hh.up:sonderregelung_in>
+      <de.hh.up:sonderregelung_gegen>Mo-Fr 6-19 h, sonst 50km/h</de.hh.up:sonderregelung_gegen>
+      <de.hh.up:wegeart>Stadtstraße (alle Straßen, die nicht BAB oder Bundesstraßen sind, sowie zu einer anderen Wegeart gehören)</de.hh.up:wegeart>
+      <de.hh.up:zone_bereich></de.hh.up:zone_bereich>
+      <de.hh.up:von_netzknoten>242513435</de.hh.up:von_netzknoten>
+      <de.hh.up:nach_netzknoten>242513410</de.hh.up:nach_netzknoten>
+      <de.hh.up:von_station>12</de.hh.up:von_station>
+      <de.hh.up:bis_station>145</de.hh.up:bis_station>
+      <de.hh.up:klasse>G</de.hh.up:klasse>
+      <de.hh.up:strassenschluessel>E197</de.hh.up:strassenschluessel>
+      <de.hh.up:wegenummer>1818</de.hh.up:wegenummer>
+      <de.hh.up:strassenname>Eppendorfer Weg</de.hh.up:strassenname>
+      <de.hh.up:landesschluessel>2</de.hh.up:landesschluessel>
+      <de.hh.up:kreisschluessel>3</de.hh.up:kreisschluessel>
+      <de.hh.up:gemeindeschluessel>308</de.hh.up:gemeindeschluessel>
+      <de.hh.up:abschnittslaenge>145</de.hh.up:abschnittslaenge>
+      <de.hh.up:ast>0</de.hh.up:ast>
+      <de.hh.up:fahrstreifenanzahl_in_stationierungsrichtung>1</de.hh.up:fahrstreifenanzahl_in_stationierungsrichtung>
+      <de.hh.up:fahrstreifenanzahl_in_beide_richtungen>0</de.hh.up:fahrstreifenanzahl_in_beide_richtungen>
+      <de.hh.up:fahrstreifenanzahl_gegen_stationierungsrichtung>1</de.hh.up:fahrstreifenanzahl_gegen_stationierungsrichtung>
+      <de.hh.up:bahnigkeit>1</de.hh.up:bahnigkeit>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11780371_DE.HH.UP_GEOM'-->
+        <gml:LineString gml:id="DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11780371_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.574014 9.961380 53.574014 9.961380 53.574226 9.961629 53.574249 9.961654 53.574274 9.961681 53.574291 9.961697 53.574309 9.961712 53.574500 9.961871 53.574975 9.962229 53.575076 9.962304</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:zulaessige_hoechstgeschwindigkeiten>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:zulaessige_hoechstgeschwindigkeiten xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11787245">
+      <de.hh.up:geschwindigkeit_in>5-7 km/h</de.hh.up:geschwindigkeit_in>
+      <de.hh.up:geschwindigkeit_gegen>5-7 km/h</de.hh.up:geschwindigkeit_gegen>
+      <de.hh.up:sonderregelung_in>keine Sonderregelung</de.hh.up:sonderregelung_in>
+      <de.hh.up:sonderregelung_gegen>keine Sonderregelung</de.hh.up:sonderregelung_gegen>
+      <de.hh.up:wegeart>Stadtstraße (alle Straßen, die nicht BAB oder Bundesstraßen sind, sowie zu einer anderen Wegeart gehören)</de.hh.up:wegeart>
+      <de.hh.up:zone_bereich>Verkehrsberuhigter Bereich innerhalb einer Tempo30-Zone</de.hh.up:zone_bereich>
+      <de.hh.up:von_netzknoten>242513399</de.hh.up:von_netzknoten>
+      <de.hh.up:nach_netzknoten>242513441</de.hh.up:nach_netzknoten>
+      <de.hh.up:von_station>0</de.hh.up:von_station>
+      <de.hh.up:bis_station>75</de.hh.up:bis_station>
+      <de.hh.up:klasse>G</de.hh.up:klasse>
+      <de.hh.up:strassenschluessel>E077</de.hh.up:strassenschluessel>
+      <de.hh.up:wegenummer>1711</de.hh.up:wegenummer>
+      <de.hh.up:strassenname>Eidelstedter Weg</de.hh.up:strassenname>
+      <de.hh.up:landesschluessel>2</de.hh.up:landesschluessel>
+      <de.hh.up:kreisschluessel>3</de.hh.up:kreisschluessel>
+      <de.hh.up:gemeindeschluessel>302</de.hh.up:gemeindeschluessel>
+      <de.hh.up:abschnittslaenge>75</de.hh.up:abschnittslaenge>
+      <de.hh.up:ast>0</de.hh.up:ast>
+      <de.hh.up:fahrstreifenanzahl_in_stationierungsrichtung>1</de.hh.up:fahrstreifenanzahl_in_stationierungsrichtung>
+      <de.hh.up:fahrstreifenanzahl_in_beide_richtungen>0</de.hh.up:fahrstreifenanzahl_in_beide_richtungen>
+      <de.hh.up:fahrstreifenanzahl_gegen_stationierungsrichtung>1</de.hh.up:fahrstreifenanzahl_gegen_stationierungsrichtung>
+      <de.hh.up:bahnigkeit>1</de.hh.up:bahnigkeit>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11787245_DE.HH.UP_GEOM'-->
+        <gml:LineString gml:id="DE.HH.UP_ZULAESSIGE_HOECHSTGESCHWINDIGKEITEN_11787245_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.580896 9.955963 53.580893 9.956009 53.580886 9.956056 53.580776 9.956546 53.580770 9.956558 53.580762 9.956570 53.580718 9.956620 53.580711 9.956632 53.580705 9.956649 53.580634 9.956979</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:zulaessige_hoechstgeschwindigkeiten>
+  </wfs:member>
+</wfs:FeatureCollection>

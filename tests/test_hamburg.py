@@ -145,3 +145,28 @@ def test_road_events_read_for_willy_brandt_in_the_simulation():
         assert u.road_events and u.advisor.blocked_fn is None and u._closed_edges
     finally:
         u.close()
+
+
+def test_open_street_data_in_the_hamburg_simulation():
+    # public_data.json (read 23 Nov 2026): official limits at the recorded hour, zebra crossings,
+    # and the traffic file built from the 2019 volumes.
+    pytest.importorskip("traci")
+    from drivenow.hamburg.world import HamburgWorld
+    w = HamburgWorld(scenario="gaertnerstrasse", penetration=0.5, label="hh_public", official_limits=True,
+                     crossings=True, demand="dtv")
+    try:
+        assert w.official_limits and w.crossings and w.advisor.crossings_fn is not None
+        e, kmh = next((e, k) for e, k in w.official_limits.items() if k == 30)
+        assert w.net.edges[e].speed == pytest.approx(30 / 3.6)
+        assert w.conn.lane.getMaxSpeed(e + "_0") == pytest.approx(30 / 3.6)
+        assert w._route_file.endswith("routes_dtv.rou.xml")
+        for _ in range(50):
+            w.step()
+    finally:
+        w.close()
+    plain = HamburgWorld(scenario="gaertnerstrasse", penetration=0.5, label="hh_plain")
+    try:
+        assert not plain.official_limits and plain.advisor.crossings_fn is None
+        assert plain._route_file.endswith("routes.rou.xml")
+    finally:
+        plain.close()

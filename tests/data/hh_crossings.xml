@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<wfs:FeatureCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd https://registry.gdi-de.org/id/de.hh.up https://geodienste.hamburg.de/wfs_fussgaengerueberwege?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=DescribeFeatureType&amp;OUTPUTFORMAT=application%2Fgml%2Bxml%3B+version%3D3.2&amp;TYPENAME=de.hh.up:fussgaengerueberwege&amp;NAMESPACES=xmlns(de.hh.up,https%3A%2F%2Fregistry.gdi-de.org%2Fid%2Fde.hh.up)" xmlns:wfs="http://www.opengis.net/wfs/2.0" timeStamp="2026-11-23T22:58:41Z" xmlns:gml="http://www.opengis.net/gml/3.2" numberMatched="unknown" numberReturned="0">
+  <!--NOTE: numberReturned attribute should be 'unknown' as well, but this would not validate against the current version of the WFS 2.0 schema (change upcoming). See change request (CR 144): https://portal.opengeospatial.org/files?artifact_id=43925.-->
+  <wfs:member>
+    <de.hh.up:fussgaengerueberwege xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_FUSSGAENGERUEBERWEGE_200348">
+      <de.hh.up:vz_nr>293</de.hh.up:vz_nr>
+      <de.hh.up:bezeichnung>Fußgängerüberweg</de.hh.up:bezeichnung>
+      <de.hh.up:strassenschluessel>K383</de.hh.up:strassenschluessel>
+      <de.hh.up:strassenname>Kornträgergang</de.hh.up:strassenname>
+      <de.hh.up:koordinaten>565127.811, 5934132.959</de.hh.up:koordinaten>
+      <de.hh.up:quelle>CycloMedia</de.hh.up:quelle>
+      <de.hh.up:erfassungsdatum>2023-09-26</de.hh.up:erfassungsdatum>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_FUSSGAENGERUEBERWEGE_200348_DE.HH.UP_GEOM'-->
+        <gml:Point gml:id="DE.HH.UP_FUSSGAENGERUEBERWEGE_200348_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.552042 9.983057</gml:pos>
+        </gml:Point>
+      </de.hh.up:geom>
+    </de.hh.up:fussgaengerueberwege>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:fussgaengerueberwege xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_FUSSGAENGERUEBERWEGE_200322">
+      <de.hh.up:vz_nr>293</de.hh.up:vz_nr>
+      <de.hh.up:bezeichnung>Fußgängerüberweg</de.hh.up:bezeichnung>
+      <de.hh.up:strassenschluessel>D221</de.hh.up:strassenschluessel>
+      <de.hh.up:strassenname>Düsternstraße</de.hh.up:strassenname>
+      <de.hh.up:koordinaten>565191.267, 5933848.809</de.hh.up:koordinaten>
+      <de.hh.up:quelle>CycloMedia</de.hh.up:quelle>
+      <de.hh.up:erfassungsdatum>2023-09-22</de.hh.up:erfassungsdatum>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_FUSSGAENGERUEBERWEGE_200322_DE.HH.UP_GEOM'-->
+        <gml:Point gml:id="DE.HH.UP_FUSSGAENGERUEBERWEGE_200322_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.549480 9.983955</gml:pos>
+        </gml:Point>
+      </de.hh.up:geom>
+    </de.hh.up:fussgaengerueberwege>
+  </wfs:member>
+</wfs:FeatureCollection>

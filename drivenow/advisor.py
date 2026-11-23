@@ -8,7 +8,7 @@ the vehicles on it as ``(position, speed)`` pairs sorted by position.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import replace, dataclass, field
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from .glosa import (
@@ -96,6 +96,10 @@ class Advisor:
         # What is in the way (road_events.py, through FleetDB): a temporary speed limit on an
         # edge, (edge, time) -> m/s or None; and a closure, (edge, time) -> the event or None.
         self.limit_fn: Optional[Callable[[str, float], Optional[float]]] = None
+        # Zebra crossings (edge -> positions in m from its start): within ``crossing_hold`` m before
+        # one the advice does not ask to speed up.
+        self.crossings_fn: Optional[Callable[[str], List[float]]] = None
+        self.crossing_hold = 30.0
         self.blocked_fn: Optional[Callable[[str, float], object]] = None
         # A light reported out of order, (approach edge, time) -> bool: its timing is not used.
         self.signal_fault_fn: Optional[Callable[[str, float], bool]] = None
@@ -393,6 +397,11 @@ class Advisor:
             d = c.shown_distance if c.shown_distance is not None else c.distance
             first = NextControl(name, name, d, "" if name == "closure" else str(round(c.entry_speed * 3.6)),
                                 first.lights if first is not None else [])
+        if self.crossings_fn is not None and adv.target is not None and adv.target > v:
+            d = self._crossing_ahead(route, idx, pos)
+            if d is not None and d <= self.crossing_hold:
+                adv = replace(adv, target=v, notes=adv.notes + ["hold:crossing"])
+                first = NextControl("crossing", "crossing", d, "", first.lights if first is not None else [])
         if "yield:queue" in adv.notes:
             # The traffic ahead is what sets the speed now: tell the driver about it.
             q = next(c for c in controls if c.node == "queue")
@@ -400,6 +409,18 @@ class Advisor:
             first = NextControl("queue", "queue", d, str(round(q.entry_speed * 3.6)),
                                 first.lights if first is not None else [])
         return adv, first
+
+    def _crossing_ahead(self, route: Sequence[str], idx: int, pos: float) -> Optional[float]:
+        """Metres to the next zebra crossing on the route, within ``crossing_hold``."""
+        start = -pos
+        for k in range(idx, len(route)):
+            for p in self.crossings_fn(route[k]):
+                if start + p >= 0.0:
+                    return start + p
+            start += self.net.edges[route[k]].length
+            if start > self.crossing_hold:
+                return None
+        return None
 
     def _limit(self, edge_id: str, t: float) -> float:
         """The speed limit on an edge now: its own, or a lower temporary one (roadworks)."""

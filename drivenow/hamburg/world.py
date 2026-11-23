@@ -44,7 +44,8 @@ class HamburgWorld(ProbeReports, SumoWorld):
     def __init__(self, scenario: str = "gaertnerstrasse", penetration: float = 0.5, forecast: str = "predict",
                  seed: int = 1, dt: float = 0.2, gui: bool = False, label: str = "hamburg",
                  threshold: float = 0.8, scale: float = 1.0, road_events: Optional[str] = None,
-                 warmup: float = 0.0) -> None:
+                 warmup: float = 0.0, demand: str = "assumed", official_limits: bool = False,
+                 crossings: bool = False) -> None:
         data_dir = scenario_dir(scenario)
         scen = json.load(open(os.path.join(data_dir, "scenario.json")))
         self.scenario = scenario
@@ -62,7 +63,8 @@ class HamburgWorld(ProbeReports, SumoWorld):
             self._tls_links[tls].append((int(idx), rec))
         self._last_state: Dict[str, str] = {}
         super().__init__(os.path.join(data_dir, "corridor.net.xml"), penetration=penetration, seed=seed, dt=dt,
-                         gui=gui, label=label, route_file=os.path.join(data_dir, "routes.rou.xml"), teleport=300,
+                         gui=gui, label=label, teleport=300,
+                         route_file=os.path.join(data_dir, {"assumed": "routes.rou.xml", "dtv": "routes_dtv.rou.xml"}[demand]),
                          scale=scale)
         self.net.name = scen.get("title", "Amburgo")
         self._index_movements()
@@ -96,6 +98,29 @@ class HamburgWorld(ProbeReports, SumoWorld):
         self.road_events: List = []
         if road_events is not None:
             self._load_road_events(road_events)
+        # Hamburg's open street data (public_data.json, see hamburg/public_data.py): the
+        # official limits at the recorded hour, on the advice's map and on SUMO's lanes; the
+        # zebra crossings, before which the advice does not ask to speed up.
+        self.demand = demand
+        self.official_limits: Dict[str, int] = {}
+        self.crossings: Dict[str, List[float]] = {}
+        if official_limits or crossings:
+            self._load_public_data(official_limits, crossings)
+
+    def _load_public_data(self, limits: bool, crossings: bool) -> None:
+        from . import public_data as pd
+        snap = json.load(open(os.path.join(self._data_dir, "public_data.json")))
+        points = json.load(open(os.path.join(self._data_dir, "edge_points.json")))
+        if limits:
+            names = {e.id: e.name for e in self.net.edges.values()}
+            self.official_limits = pd.limits(snap, points, names, self.T0)
+            for e, kmh in self.official_limits.items():
+                self.net.edges[e].speed = kmh / 3.6
+                for i in range(self.conn.edge.getLaneNumber(e)):
+                    self.conn.lane.setMaxSpeed(f"{e}_{i}", kmh / 3.6)
+        if crossings:
+            self.crossings = pd.crossings(snap, self.net, points)
+            self.advisor.crossings_fn = lambda e: self.crossings.get(e, [])
 
     def _load_road_events(self, mode: str) -> None:
         from .road_events import on_network, read

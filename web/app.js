@@ -372,7 +372,7 @@ function gaugePoint(v, max) {
   const th = Math.PI * (1 - Math.min(Math.max(v / max, 0), 1));
   return [110 + 90 * Math.cos(th), 115 - 90 * Math.sin(th)];
 }
-const NEXT_NAME = { signal: "Semaforo", roundabout: "Rotonda", yield: "Precedenza", queue: "Coda", works: "Cantiere", closure: "Strada chiusa" };
+const NEXT_NAME = { signal: "Semaforo", roundabout: "Rotonda", yield: "Precedenza", queue: "Coda", works: "Cantiere", closure: "Strada chiusa", crossing: "Strisce pedonali" };
 const COLOR_NAME = { G: "verde", y: "giallo", r: "rosso" };
 
 let lastAnnounce = { id: null, n: 0 };
@@ -439,6 +439,8 @@ function updateHud() {
       : `Traffico a circa ${ng} km/h tra ${nd} m: alza il piede, non superare ${hi} km/h e lo raggiungerai alla sua velocità senza frenare.`;
   if (nk === "works" && kind === "cap")
     texts.cap = `Cantiere tra ${nd} m con limite a ${ng} km/h: alza il piede, non superare ${hi} km/h e ci arriverai alla velocità giusta senza frenare.`;
+  if (nk === "crossing")
+    texts[kind] = `Strisce pedonali tra ${nd} m: non accelerare, potrebbe attraversare qualcuno.`;
   if (nk === "closure" && (kind === "cap" || kind === "stop"))
     texts[kind] = `La strada è chiusa tra ${nd} m: alza il piede e lascia scorrere l'auto fino a fermarti prima della chiusura.`;
   $("advice").textContent = texts[kind];

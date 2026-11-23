@@ -561,3 +561,22 @@ def test_knowing_road_events_does_not_change_the_advice_at_an_ordinary_limit_dro
     two.limit_fn = lambda e, t: 56 * KMH if e == b.id else None
     assert one.advise([a.id, b.id], 0, a.length - 80.0, 90 * KMH, 0.0, {}) == \
         two.advise([a.id, b.id], 0, a.length - 80.0, 90 * KMH, 0.0, {})
+
+
+def test_no_speeding_up_just_before_a_zebra_crossing():
+    # Hamburg's zebra crossings (open data): within 30 m before one the advice does not ask to
+    # speed up, someone may step out; it does not lower the limit otherwise.
+    from drivenow.advisor import Advisor
+    net, a, b = _two_edges()
+    plain, zebra = Advisor(net), Advisor(net)
+    zebra.crossings_fn = lambda e: [20.0] if e == b.id else []
+    far = (a.length - 200.0, 20 * KMH)
+    assert plain.advise([a.id, b.id], 0, far[0], far[1], 0.0, {}) == zebra.advise([a.id, b.id], 0, far[0], far[1], 0.0, {})
+    base, _ = plain.advise([a.id, b.id], 0, a.length - 5.0, 20 * KMH, 0.0, {})
+    adv, nc = zebra.advise([a.id, b.id], 0, a.length - 5.0, 20 * KMH, 0.0, {})   # 25 m before it
+    assert base.target > 20 * KMH                                  # it would speed up here
+    assert adv.target == pytest.approx(20 * KMH) and nc.kind == "crossing" and nc.distance == pytest.approx(25.0)
+    assert "hold:crossing" in adv.notes
+    nocross = Advisor(net)
+    nocross.crossings_fn = lambda e: []
+    assert nocross.advise([a.id, b.id], 0, a.length - 5.0, 20 * KMH, 0.0, {})[0] == base

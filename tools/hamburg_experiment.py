@@ -47,11 +47,16 @@ ap.add_argument("--seed", type=int, default=1)
 ap.add_argument("--scale", type=float, default=1.0, help="share of the hour's traffic to run (1 = all)")
 ap.add_argument("--road-events", choices=["aware", "unaware"], default=None,
                 help="apply the road events read for the scenario (road_events.json); the advice knows them or not")
+ap.add_argument("--demand", choices=["assumed", "dtv"], default="assumed",
+                help="traffic file: the first one, or routes_dtv.rou.xml with the main roads from the 2019 volumes")
+ap.add_argument("--official-limits", action="store_true", help="Hamburg's official speed limits at the recorded hour")
+ap.add_argument("--crossings", action="store_true", help="the advice does not speed up just before zebra crossings")
 ap.add_argument("--warmup", type=float, default=0.0, help="minutes at the start whose trips are not in 'measured'")
 a = ap.parse_args()
 w = HamburgWorld(scenario=a.scenario, penetration=0.0 if a.mode == "none" else a.penetration, forecast="oracle" if a.mode == "oracle" else "predict",
                  seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}_{a.confirm_cycles}_{a.no_confirm_clean}_{a.slow_traffic}_{a.slow_standing_only}_{a.slow_min_gap}_{a.slow_min_kmh}_{a.follow_shown}_{a.display_up}_{a.vehicle_mix}_{a.profiles}_{a.turns}_{a.commit}_{a.gps}_{a.gps_max_sigma}_{a.gps_sigma}_{a.gps_delay}_{a.occupancy}_{a.penetration}", scale=a.scale,
-                 threshold=a.threshold, road_events=a.road_events, warmup=a.warmup * 60)
+                 threshold=a.threshold, road_events=a.road_events, warmup=a.warmup * 60,
+                 demand=a.demand, official_limits=a.official_limits, crossings=a.crossings)
 w.advisor.gap_aware = not a.no_gaps
 w.advisor.gap_left_turns = not a.no_left_gaps
 w.advisor.considerate = not a.inconsiderate
@@ -82,10 +87,20 @@ if a.learner == "levels":   # also suspected timings, used for small changes onl
 if a.learner == "old":      # timings never dropped, as before the check of recent reports
     w.probe.check = False
 t0 = time.time()
+# Mean speed on the main roads' edges after the warm-up, every 5 s, against their limit: to be
+# set beside Hamburg's traffic state (Verkehrslage), see tools/hamburg_verkehrslage_check.py.
+main_edges = [e.id for e in w.net.edges.values() if e.name in w.main_roads]
+speed_sum = {e: [0.0, 0] for e in main_edges}
 for i in range(int(a.minutes * 60 / w.dt)):
     if a.replan is not None and i == int(a.replan * 60 / w.dt):
         w.replan(seed=a.seed)
     w.step()
+    if w.t >= a.warmup * 60 and i % 25 == 0:
+        for e in main_edges:
+            if w.conn.edge.getLastStepVehicleNumber(e):
+                acc = speed_sum[e]
+                acc[0] += w.conn.edge.getLastStepMeanSpeed(e)
+                acc[1] += 1
     if i % 3000 == 0:
         print(a.mode, round(w.t), "s, vehicles", len(w.vehicles), "wall", round(time.time() - t0), flush=True)
 grp = w.stats[a.mode != "none"]
@@ -115,6 +130,10 @@ res["warmup_min"] = a.warmup
 res["measured"] = {"drivenow": w.measured[True].summary() if a.mode != "none" else None,
                    "others": w.measured[False].summary()}
 res["road_events"] = a.road_events
+res["main_edge_speed_share"] = {e: round(sv / n / w.net.edges[e].speed, 3) for e, (sv, n) in speed_sum.items() if n}
+res.update({"demand": a.demand, "official_limits": a.official_limits, "crossings": a.crossings,
+            "official_limit_edges": len(w.official_limits), "crossing_edges": len(w.crossings),
+            "loaded_trips": len(w.routes)})
 if a.road_events:
     res["road_events_on_network"] = [{"kind": e.kind, "blocked": e.blocked, "lanes_closed": e.lanes_closed,
                                       "edges": len(e.edges), "text": e.text[:80]} for e in w.road_events]

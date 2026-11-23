@@ -440,7 +440,12 @@ def detector_counts(things, rec_path, t0, t1):
     return counts
 
 
-def build_demand(sc, things, net_path, links, rec_path, t0, t1, main_volume, cache, out):
+def build_demand(sc, things, net_path, links, rec_path, t0, t1, main_volume, cache, out, edge_volume=None, period=0.4,
+                 other_volume=None):
+    """``edge_volume`` (edge -> vehicles/hour) replaces the one assumed ``main_volume`` on the
+    main roads where it is given (see --demand dtv); ``other_volume`` (edge -> vehicles/hour) is
+    a target for edges without a measured volume; ``period`` is randomTrips' spacing of
+    candidate trips (lower: more candidates, needed for heavier traffic)."""
     if os.path.exists(out):
         return
     import sumolib
@@ -449,8 +454,26 @@ def build_demand(sc, things, net_path, links, rec_path, t0, t1, main_volume, cac
     cand = os.path.join(cache, "candidates.rou.xml")
     if not os.path.exists(cand):
         run([sys.executable, os.path.join(tools, "randomTrips.py"), "-n", net_path, "-o",
-             os.path.join(cache, "trips.xml"), "-r", cand, "-e", "3600", "-p", "0.4", "--fringe-factor", "100",
+             os.path.join(cache, "trips.xml"), "-r", cand, "-e", "3600", "-p", str(period), "--fringe-factor", "100",
              "--min-distance", "250", "--seed", "7", "--validate"])
+    routes_in = cand
+    if edge_volume:
+        # Candidates for the main roads' traffic that start and end on the roads with a volume, so
+        # that it does not come in through the side streets (they would carry it otherwise).
+        cand2 = os.path.join(cache, "candidates_main.rou.xml")
+        if not os.path.exists(cand2):
+            prefix = os.path.join(cache, "main_weights")
+            for kind in ("src", "dst"):
+                with open(f"{prefix}.{kind}.xml", "w") as f:
+                    f.write('<edgedata>\n  <interval begin="0" end="3600">\n')
+                    for e in edge_volume:
+                        f.write(f'    <edge id="{e}" value="1"/>\n')
+                    f.write("  </interval>\n</edgedata>\n")
+            run([sys.executable, os.path.join(tools, "randomTrips.py"), "-n", net_path, "-o",
+                 os.path.join(cache, "trips_main.xml"), "-r", cand2, "-e", "3600", "-p", str(period),
+                 "--weights-prefix", prefix, "--min-distance", "250", "--seed", "11", "--validate",
+                 "--prefix", "m"])
+        routes_in = cand + "," + cand2
     counts = detector_counts(things, rec_path, t0, t1)
     rel = collections.Counter()
     for v in links.values():
@@ -464,14 +487,26 @@ def build_demand(sc, things, net_path, links, rec_path, t0, t1, main_volume, cac
         f.write("  </interval>\n</data>\n")
     net = sumolib.net.readNet(net_path)
     edges = os.path.join(cache, "edges.xml")
-    main = [e for e in net.getEdges() if e.getName() in sc["main_roads"] and e.getLaneNumber() >= sc["main_min_lanes"]]
+    if edge_volume is None:
+        main = [e for e in net.getEdges() if e.getName() in sc["main_roads"] and e.getLaneNumber() >= sc["main_min_lanes"]]
+    else:
+        main = [e for e in net.getEdges() if e.getID() in edge_volume]
     with open(edges, "w") as f:
         f.write('<data>\n  <interval id="hour" begin="0" end="3600">\n')
         for e in main:
-            f.write(f'    <edge id="{e.getID()}" entered="{main_volume}"/>\n')
+            if edge_volume is None:
+                f.write(f'    <edge id="{e.getID()}" entered="{main_volume}"/>\n')
+            elif e.getID() in edge_volume:
+                f.write(f'    <edge id="{e.getID()}" entered="{round(edge_volume[e.getID()])}"/>\n')
+        for eid, v in (other_volume or {}).items():
+            f.write(f'    <edge id="{eid}" entered="{round(v)}"/>\n')
         f.write("  </interval>\n</data>\n")
-    log(len(rel), "movements with real detector counts,", len(main), "main-road edges at", main_volume, "veh/h")
-    run([sys.executable, os.path.join(tools, "routeSampler.py"), "-r", cand, "--turn-files", turns,
+    if edge_volume is None:
+        log(len(rel), "movements with real detector counts,", len(main), "main-road edges at", main_volume, "veh/h")
+    else:
+        log(len(rel), "movements with real detector counts,", sum(1 for e in main if e.getID() in edge_volume),
+            "main-road edges from the 2019 volumes")
+    run([sys.executable, os.path.join(tools, "routeSampler.py"), "-r", routes_in, "--turn-files", turns,
          "--edgedata-files", edges, "-o", out, "--seed", "7"])
     # Same moderate driver imperfection for every car (SUMO's default sigma=0.5 adds a lot of random braking).
     s = open(out).read()
@@ -486,6 +521,10 @@ def main():
     ap.add_argument("--cache", required=True, help="folder for downloads and intermediate files")
     ap.add_argument("--start", type=int, default=1694703600, help="test hour start, unix time (default Thu 14 Sep 2023 15:00 UTC)")
     ap.add_argument("--lookback", type=int, default=5400, help="seconds of history kept before the test hour")
+    ap.add_argument("--demand", choices=["assumed", "dtv"], default="assumed",
+                    help="dtv: a second traffic file, routes_dtv.rou.xml, with the main roads from Hamburg's 2019 "
+                         "volumes (public_data.json, tools/hamburg_public_data.py): DTV x --peak-share / 2 per direction")
+    ap.add_argument("--peak-share", type=float, default=0.09, help="share of the daily volume in the test hour (assumed)")
     ap.add_argument("--main-volume", type=int, default=None,
                     help="assumed vehicles/hour per main-road edge (default: the scenario's own, else 400)")
     a = ap.parse_args()
@@ -497,6 +536,9 @@ def main():
     os.makedirs(cache, exist_ok=True)
     os.makedirs(out, exist_ok=True)
     sumo_home()
+    if a.demand == "dtv":
+        build_dtv_demand(a, sc, cache, out)
+        return
     things = fetch_things(sc["lights"], os.path.join(out, "lanes.json"))
     net = os.path.join(out, "corridor.net.xml")
     build_network(sc, things, cache, net)
@@ -512,6 +554,43 @@ def main():
                "main_volume": a.main_volume, "lights": sc["lights"], "bbox": sc["bbox"], "band": sc["band"]},
               open(os.path.join(out, "scenario.json"), "w"), indent=1)
     log("done:", out)
+
+
+def build_dtv_demand(a, sc, cache, out):
+    """The test hour's traffic with the main roads from the city's 2019 volumes."""
+    sys.path.insert(0, ROOT)
+    from drivenow.hamburg import public_data as pd
+    from drivenow.network import load_sumo_net
+    scen_path = os.path.join(out, "scenario.json")
+    scen = json.load(open(scen_path))
+    snap = json.load(open(os.path.join(out, "public_data.json")))
+    points = json.load(open(os.path.join(out, "edge_points.json")))
+    net_path = os.path.join(out, "corridor.net.xml")
+    names = {e.id: e.name for e in load_sumo_net(net_path).edges.values()}
+    # Every main road of the box with a 2019 volume, not only the scenario's axis: a constraint
+    # only there would fill the side streets with the extra traffic.
+    dtv = pd.volumes(snap, points, names, None)
+    edge_volume = {e: v * a.peak_share / 2 for e, v in dtv.items()}
+    things = json.load(open(os.path.join(out, "lanes.json")))
+    links = json.load(open(os.path.join(out, "links.json")))
+    rec = os.path.join(out, "signals.csv.gz")
+    dcache = os.path.join(cache, "dtv")
+    os.makedirs(dcache, exist_ok=True)
+    # Streets without a measured volume keep the traffic of the first traffic file (counted by the
+    # loop detectors where there are some): otherwise the extra main-road traffic fills them.
+    from collections import Counter
+    from drivenow.sumo_world import read_routes
+    old = Counter(e for r in read_routes(os.path.join(out, "routes.rou.xml")).values() for e in r)
+    other = {e: n for e, n in old.items() if e not in edge_volume and names.get(e)}
+    build_demand(sc, things, net_path, links, rec, scen["start"], scen["start"] + 3600, a.main_volume, dcache,
+                 os.path.join(out, "routes_dtv.rou.xml"), edge_volume=edge_volume, period=0.06, other_volume=other)
+    scen["demand_dtv"] = {"file": "routes_dtv.rou.xml", "source": "Verkehrsmengen auf Hauptverkehrsstraßen 2019 (DTV), "
+                          "Behörde für Verkehr und Mobilitätswende, DL-DE BY 2.0", "peak_share": a.peak_share,
+                          "peak_share_is": "assumed: share of the daily volume in the test hour, split evenly by direction",
+                          "main_edges_with_volume": len(edge_volume),
+                          "other_streets": "target: the traffic of routes.rou.xml (assumed: no open counts there)"}
+    json.dump(scen, open(scen_path, "w"), indent=1)
+    log("done:", os.path.join(out, "routes_dtv.rou.xml"))
 
 
 if __name__ == "__main__":

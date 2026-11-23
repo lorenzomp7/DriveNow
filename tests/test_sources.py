@@ -305,3 +305,32 @@ def test_hamburg_police_lane_closed_and_hours_from_the_text():
     assert in_force(txt, epoch("2026-11-23T10:00:00Z")) and not in_force(txt, epoch("2026-11-23T15:44:00Z"))
     assert not in_force(txt, epoch("2026-11-22T10:00:00Z"))          # a Sunday
     assert in_force("Hamburg, Y-Straße gesperrt", epoch("2026-11-22T03:00:00Z"))  # no hours: always
+
+
+def test_hamburg_official_speed_limits_with_their_hours():
+    # Real answers of Hamburg's speed limit WFS (23 Nov 2026), three sections.
+    from drivenow.sources import hamburg_speed_limits as sl
+    rows = sl.parse(raw("hh_speed_limits.xml"))
+    by = {r["street"]: r for r in rows}
+    bund, epp, eid = by["Bundesstraße"], by["Eppendorfer Weg"], by["Eidelstedter Weg"]
+    assert bund["kmh_in"] == 30 and bund["rule_in"] == "Werktags 6-22 h, sonst 50km/h" and len(bund["line"]) >= 2
+    assert eid["kmh_in"] == 7                                   # "5-7 km/h": walking pace, the upper value
+    thu17 = epoch("2023-09-14T15:00:00Z")                       # Thursday 17:00 in Hamburg
+    sat17, sun17, thu23 = epoch("2023-09-16T15:00:00Z"), epoch("2023-09-17T15:00:00Z"), epoch("2023-09-14T21:00:00Z")
+    assert sl.limit_at(bund["rule_in"], 30, thu17) == 30
+    assert sl.limit_at(bund["rule_in"], 30, sat17) == 30         # Werktage include Saturday
+    assert sl.limit_at(bund["rule_in"], 30, sun17) == 50
+    assert sl.limit_at(bund["rule_in"], 30, thu23) == 50         # after 22 h
+    assert sl.limit_at(epp["rule_in"], 30, sat17) == 50          # Mo-Fr only
+    assert sl.limit_at("6 - 19 h, sonst 50km/h", 30, sun17) == 30   # every day
+    assert sl.limit_at("keine Sonderregelung", 30, sun17) == 30
+    assert sl.limit_at("bei Nässe 80", 30, sun17) == 30 and sl.unknown_rules == {"bei Nässe 80"}
+
+
+def test_hamburg_traffic_volumes_and_zebra_crossings():
+    from drivenow.sources import hamburg_crossings, hamburg_volumes
+    vol = hamburg_volumes.parse(raw("hh_volumes.xml"))
+    assert [v["dtv"] for v in vol] == [26000, 26000] and vol[0]["sv_pct"] == 2 and len(vol[0]["line"]) >= 2
+    cr = hamburg_crossings.parse(raw("hh_crossings.xml"))
+    assert [c["street"] for c in cr] == ["Kornträgergang", "Düsternstraße"]
+    assert cr[0]["lon"] == pytest.approx(9.983057) and cr[0]["lat"] == pytest.approx(53.552042)
