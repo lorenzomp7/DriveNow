@@ -1,0 +1,544 @@
+{
+ "feed_info": {
+  "publisher": "one.network",
+  "contact_name": "Support",
+  "contact_email": "support@one.network",
+  "update_date": "2026-11-23T12:13:04.273+00:00",
+  "version": "4.2",
+  "data_sources": [
+   {
+    "data_source_id": "37278",
+    "organization_name": "Consor Engineering Firm"
+   },
+   {
+    "data_source_id": "35199",
+    "organization_name": "Archer Western Construction, LLC"
+   },
+   {
+    "data_source_id": "35056",
+    "organization_name": "OHLA USA"
+   },
+   {
+    "data_source_id": "35276",
+    "organization_name": "RTD Construction Inc"
+   },
+   {
+    "data_source_id": "35176",
+    "organization_name": "Jr. Davis Construction Co., Inc."
+   },
+   {
+    "data_source_id": "35054",
+    "organization_name": "Masci General Contractors, Inc"
+   },
+   {
+    "data_source_id": "ELGIN",
+    "organization_name": "ELGIN"
+   },
+   {
+    "data_source_id": "35073",
+    "organization_name": "Horsepower Electric, Inc."
+   },
+   {
+    "data_source_id": "35071",
+    "organization_name": "Preferred Materials Inc."
+   },
+   {
+    "data_source_id": "37837",
+    "organization_name": "Pinellas County, FL"
+   },
+   {
+    "data_source_id": "35115",
+    "organization_name": "Lane Construction Corporation (the)"
+   },
+   {
+    "data_source_id": "28357",
+    "organization_name": "Hillsborough County, Florida"
+   },
+   {
+    "data_source_id": "35211",
+    "organization_name": "Asphalt Group, Inc."
+   },
+   {
+    "data_source_id": "37411",
+    "organization_name": "AUM Construction"
+   },
+   {
+    "data_source_id": "37754",
+    "organization_name": "Plant City, FL"
+   },
+   {
+    "data_source_id": "37930",
+    "organization_name": "Scherer Construction"
+   },
+   {
+    "data_source_id": "37635",
+    "organization_name": "Osceola County, Florida"
+   },
+   {
+    "data_source_id": "37636",
+    "organization_name": "Seminole County, Florida"
+   },
+   {
+    "data_source_id": "35080",
+    "organization_name": "Weekley Asphalt Paving, Inc."
+   },
+   {
+    "data_source_id": "37264",
+    "organization_name": "CWR Contracting"
+   },
+   {
+    "data_source_id": "florida_hillsborough_county_permits",
+    "organization_name": "Hillsborough County, Florida"
+   },
+   {
+    "data_source_id": "25114",
+    "organization_name": "City of Tampa, Florida"
+   },
+   {
+    "data_source_id": "35088",
+    "organization_name": "De Moya Group Inc. (the)"
+   },
+   {
+    "data_source_id": "35044",
+    "organization_name": "Halley Engineering Contractors, Inc."
+   },
+   {
+    "data_source_id": "35087",
+    "organization_name": "General Asphalt Company, LLC"
+   },
+   {
+    "data_source_id": "35086",
+    "organization_name": "Roadway Construction, LLC"
+   },
+   {
+    "data_source_id": "35141",
+    "organization_name": "TransCore"
+   },
+   {
+    "data_source_id": "28704",
+    "organization_name": "Dallas 1"
+   },
+   {
+    "data_source_id": "28605",
+    "organization_name": "Hubbard Construction"
+   },
+   {
+    "data_source_id": "35207",
+    "organization_name": "Bacallao Construction & Engineering Development"
+   },
+   {
+    "data_source_id": "32896",
+    "organization_name": "Florida DOT"
+   },
+   {
+    "data_source_id": "37728",
+    "organization_name": "SLJV"
+   },
+   {
+    "data_source_id": "35943",
+    "organization_name": "Prince Contracting LLC"
+   },
+   {
+    "data_source_id": "35008",
+    "organization_name": "Chinchor Electric Inc."
+   },
+   {
+    "data_source_id": "35205",
+    "organization_name": "Florida Engineering & Development Corp"
+   },
+   {
+    "data_source_id": "37829",
+    "organization_name": "Signal Technology, Inc."
+   },
+   {
+    "data_source_id": "37808",
+    "organization_name": "AGC Electric Inc."
+   },
+   {
+    "data_source_id": "35125",
+    "organization_name": "Sema Construction, Inc."
+   },
+   {
+    "data_source_id": "35167",
+    "organization_name": "P & S Paving, Inc."
+   },
+   {
+    "data_source_id": "35200",
+    "organization_name": "The Stout Group LLC"
+   },
+   {
+    "data_source_id": "37368",
+    "organization_name": "American Utility Management & Energy Services"
+   },
+   {
+    "data_source_id": "37348",
+    "organization_name": "Southland Construction, Inc."
+   },
+   {
+    "data_source_id": "37349",
+    "organization_name": "City of Altamonte Springs"
+   },
+   {
+    "data_source_id": "37668",
+    "organization_name": "CPC Eng."
+   },
+   {
+    "data_source_id": "florida_dot_construction_projects",
+    "organization_name": "Florida DOT"
+   }
+  ]
+ },
+ "type": "FeatureCollection",
+ "bbox": [
+  -87.401603,
+  24.574516,
+  -80.053759,
+  30.823227
+ ],
+ "road_event_feed_info": {
+  "publisher": "one.network",
+  "contact_name": "Support",
+  "contact_email": "support@one.network",
+  "update_date": "2026-11-23T12:13:04.273+00:00",
+  "version": "4.2",
+  "data_sources": [
+   {
+    "data_source_id": "37278",
+    "organization_name": "Consor Engineering Firm"
+   },
+   {
+    "data_source_id": "35199",
+    "organization_name": "Archer Western Construction, LLC"
+   },
+   {
+    "data_source_id": "35056",
+    "organization_name": "OHLA USA"
+   },
+   {
+    "data_source_id": "35276",
+    "organization_name": "RTD Construction Inc"
+   },
+   {
+    "data_source_id": "35176",
+    "organization_name": "Jr. Davis Construction Co., Inc."
+   },
+   {
+    "data_source_id": "35054",
+    "organization_name": "Masci General Contractors, Inc"
+   },
+   {
+    "data_source_id": "ELGIN",
+    "organization_name": "ELGIN"
+   },
+   {
+    "data_source_id": "35073",
+    "organization_name": "Horsepower Electric, Inc."
+   },
+   {
+    "data_source_id": "35071",
+    "organization_name": "Preferred Materials Inc."
+   },
+   {
+    "data_source_id": "37837",
+    "organization_name": "Pinellas County, FL"
+   },
+   {
+    "data_source_id": "35115",
+    "organization_name": "Lane Construction Corporation (the)"
+   },
+   {
+    "data_source_id": "28357",
+    "organization_name": "Hillsborough County, Florida"
+   },
+   {
+    "data_source_id": "35211",
+    "organization_name": "Asphalt Group, Inc."
+   },
+   {
+    "data_source_id": "37411",
+    "organization_name": "AUM Construction"
+   },
+   {
+    "data_source_id": "37754",
+    "organization_name": "Plant City, FL"
+   },
+   {
+    "data_source_id": "37930",
+    "organization_name": "Scherer Construction"
+   },
+   {
+    "data_source_id": "37635",
+    "organization_name": "Osceola County, Florida"
+   },
+   {
+    "data_source_id": "37636",
+    "organization_name": "Seminole County, Florida"
+   },
+   {
+    "data_source_id": "35080",
+    "organization_name": "Weekley Asphalt Paving, Inc."
+   },
+   {
+    "data_source_id": "37264",
+    "organization_name": "CWR Contracting"
+   },
+   {
+    "data_source_id": "florida_hillsborough_county_permits",
+    "organization_name": "Hillsborough County, Florida"
+   },
+   {
+    "data_source_id": "25114",
+    "organization_name": "City of Tampa, Florida"
+   },
+   {
+    "data_source_id": "35088",
+    "organization_name": "De Moya Group Inc. (the)"
+   },
+   {
+    "data_source_id": "35044",
+    "organization_name": "Halley Engineering Contractors, Inc."
+   },
+   {
+    "data_source_id": "35087",
+    "organization_name": "General Asphalt Company, LLC"
+   },
+   {
+    "data_source_id": "35086",
+    "organization_name": "Roadway Construction, LLC"
+   },
+   {
+    "data_source_id": "35141",
+    "organization_name": "TransCore"
+   },
+   {
+    "data_source_id": "28704",
+    "organization_name": "Dallas 1"
+   },
+   {
+    "data_source_id": "28605",
+    "organization_name": "Hubbard Construction"
+   },
+   {
+    "data_source_id": "35207",
+    "organization_name": "Bacallao Construction & Engineering Development"
+   },
+   {
+    "data_source_id": "32896",
+    "organization_name": "Florida DOT"
+   },
+   {
+    "data_source_id": "37728",
+    "organization_name": "SLJV"
+   },
+   {
+    "data_source_id": "35943",
+    "organization_name": "Prince Contracting LLC"
+   },
+   {
+    "data_source_id": "35008",
+    "organization_name": "Chinchor Electric Inc."
+   },
+   {
+    "data_source_id": "35205",
+    "organization_name": "Florida Engineering & Development Corp"
+   },
+   {
+    "data_source_id": "37829",
+    "organization_name": "Signal Technology, Inc."
+   },
+   {
+    "data_source_id": "37808",
+    "organization_name": "AGC Electric Inc."
+   },
+   {
+    "data_source_id": "35125",
+    "organization_name": "Sema Construction, Inc."
+   },
+   {
+    "data_source_id": "35167",
+    "organization_name": "P & S Paving, Inc."
+   },
+   {
+    "data_source_id": "35200",
+    "organization_name": "The Stout Group LLC"
+   },
+   {
+    "data_source_id": "37368",
+    "organization_name": "American Utility Management & Energy Services"
+   },
+   {
+    "data_source_id": "37348",
+    "organization_name": "Southland Construction, Inc."
+   },
+   {
+    "data_source_id": "37349",
+    "organization_name": "City of Altamonte Springs"
+   },
+   {
+    "data_source_id": "37668",
+    "organization_name": "CPC Eng."
+   },
+   {
+    "data_source_id": "florida_dot_construction_projects",
+    "organization_name": "Florida DOT"
+   }
+  ]
+ },
+ "features": [
+  {
+   "id": "4627525956/296791544",
+   "type": "Feature",
+   "properties": {
+    "core_details": {
+     "data_source_id": "25114",
+     "event_type": "detour",
+     "related_road_events": [
+      {
+       "type": "related-work-zone",
+       "id": "4627525956"
+      }
+     ],
+     "road_names": [
+      "West Sligh Avenue",
+      "West Sligh Avenue, Tampa, Florida"
+     ],
+     "direction": "westbound",
+     "name": "Westbound Sligh Ave Detour",
+     "description": "Diversion route",
+     "creation_date": "2026-11-16T13:27:29.024+00:00",
+     "update_date": "2026-11-16T13:30:07.668+00:00",
+     "relationship": {
+      "parents": [
+       "4627525956"
+      ]
+     }
+    },
+    "start_date": "2026-11-16T14:00:00.000+00:00",
+    "end_date": "2026-11-30T22:00:00.000+00:00",
+    "is_start_date_verified": false,
+    "is_end_date_verified": false,
+    "event_status": "active",
+    "start_date_accuracy": "estimated",
+    "end_date_accuracy": "estimated"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -82.46723,
+      28.01073
+     ],
+     [
+      -82.46749,
+      28.01073
+     ],
+     [
+      -82.46775,
+      28.01074
+     ],
+     [
+      -82.46779,
+      28.01074
+     ],
+     [
+      -82.46779,
+      28.01074
+     ],
+     [
+      -82.46783,
+      28.01074
+     ]
+    ]
+   },
+   "bbox": [
+    -82.47612,
+    28.01068,
+    -82.46723,
+    28.01808
+   ]
+  },
+  {
+   "id": "4639950303/297197598",
+   "type": "Feature",
+   "properties": {
+    "core_details": {
+     "data_source_id": "25114",
+     "event_type": "work-zone",
+     "related_road_events": [
+      {
+       "type": "related-work-zone",
+       "id": "4639950303"
+      }
+     ],
+     "road_names": [
+      "South Poinsettia Drive",
+      "South Lincoln Avenue, Tampa, Florida"
+     ],
+     "direction": "westbound",
+     "name": "South Poinsettia Drive, Tampa",
+     "description": "Road closure",
+     "creation_date": "2026-11-20T19:21:48.502+00:00",
+     "update_date": "2026-11-20T19:21:48.502+00:00",
+     "relationship": {
+      "parents": [
+       "4639950303"
+      ]
+     }
+    },
+    "is_start_position_verified": false,
+    "is_end_position_verified": false,
+    "start_date": "2026-11-20T19:21:18.000+00:00",
+    "end_date": "2026-12-01T04:59:59.000+00:00",
+    "is_start_date_verified": true,
+    "is_end_date_verified": true,
+    "vehicle_impact": "all-lanes-closed",
+    "location_method": "unknown",
+    "worker_presence": {
+     "are_workers_present": true,
+     "method": "check-in-app",
+     "confidence": "high"
+    },
+    "event_status": "active",
+    "start_date_accuracy": "verified",
+    "end_date_accuracy": "verified",
+    "beginning_accuracy": "estimated",
+    "ending_accuracy": "estimated"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -82.49449,
+      27.93498
+     ],
+     [
+      -82.49449,
+      27.93493
+     ],
+     [
+      -82.49465,
+      27.93495
+     ],
+     [
+      -82.49478,
+      27.93495
+     ],
+     [
+      -82.49752,
+      27.93497
+     ],
+     [
+      -82.49752,
+      27.93502
+     ]
+    ]
+   },
+   "bbox": [
+    -82.49752,
+    27.93493,
+    -82.49449,
+    27.93502
+   ]
+  }
+ ]
+}

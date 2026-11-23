@@ -124,14 +124,36 @@ def torino_check():
 
 
 def wzdx_check():
+    # Every active feed of the registry that needs no key, read now.
     reg = wzdx.parse_registry(json.loads(get(wzdx.REGISTRY)))
-    return {"feeds": len(reg), "active": sum(r["active"] for r in reg), "need_key": sum(r["needs_key"] for r in reg),
-            "note": "the feeds' own hosts are not reachable from this environment"}
+    feeds, failed, ev = {}, {}, []
+    for r in reg:
+        if not r["url"] or r["needs_key"] or not r["active"]:
+            continue
+        try:
+            got = wzdx.parse(json.loads(get(r["url"], timeout=30)), "wzdx:" + r["name"])
+        except Exception as e:  # one feed down does not stop the others
+            failed[r["name"]] = type(e).__name__
+            continue
+        feeds[r["name"]] = len(got)
+        ev += got
+    return {"feeds_in_registry": len(reg), "open_active": len(feeds) + len(failed), "read": len(feeds),
+            "failed": failed, "events": len(ev), "kinds": dict(Counter(e.kind for e in ev)),
+            "active_now": sum(e.active(now) for e in ev), "with_speed_limit": sum(1 for e in ev if e.speed_limit),
+            "per_feed": feeds}
+
+
+def porto_check():
+    url = ("https://dadosabertos.cm-porto.pt/dataset/539db002-9e19-11f1-84ed-6abdb6d5cf34/resource/"
+           "75a3447c-bf9d-4c02-b3b7-aaecf5f00d2c/download/condicionamentos_nao_programados.xml")
+    ev, st = datex2.parse_situations(get(url), "porto")
+    return {**st, "kinds": dict(Counter(e.kind for e in ev)), "active_now": sum(e.active(now) for e in ev)}
 
 
 for name, fn in (("hamburg_police", hamburg_police_check), ("hamburg_traffic", hamburg_traffic_check),
                  ("autobahn", autobahn_check), ("ndw_netherlands", ndw_check), ("belgium", belgium_check),
-                 ("finland", finland_check), ("turin", torino_check), ("wzdx_registry", wzdx_check)):
+                 ("finland", finland_check), ("turin", torino_check), ("porto", porto_check),
+                 ("wzdx_usa", wzdx_check)):
     run(name, fn)
 if a.out:
     json.dump(report, open(a.out, "w"), ensure_ascii=False, indent=1)

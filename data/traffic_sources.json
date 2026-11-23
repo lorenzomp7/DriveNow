@@ -34,7 +34,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -130,14 +130,14 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "unreachable"
    }
   },
   {
    "name": "Datex-II v3 XML",
    "area": "Datex-II v3 XML",
    "region": "Europe",
-   "url": "https://opendata.porto.digital/dataset/cb350387-ceb0-4aac-8a27-adfcf512a456/resource/6758556c-bddf-4c87-a98c-9af08d6932c3/download/condicionamentos_nao_programados.xml",
+   "url": "https://dadosabertos.cm-porto.pt/dataset/cb350387-ceb0-4aac-8a27-adfcf512a456/resource/6758556c-bddf-4c87-a98c-9af08d6932c3/download/condicionamentos_nao_programados.xml",
    "kinds": [
     "closures",
     "restrictions",
@@ -150,8 +150,9 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "error (HTTP 404)"
+   },
+   "moved_from": "https://opendata.porto.digital/dataset/cb350387-ceb0-4aac-8a27-adfcf512a456/resource/6758556c-bddf-4c87-a98c-9af08d6932c3/download/condicionamentos_nao_programados.xml"
   },
   {
    "name": "European Data Portal",
@@ -187,7 +188,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -205,7 +206,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -223,7 +224,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -241,7 +242,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -297,7 +298,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -406,14 +407,14 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "unreachable"
    }
   },
   {
    "name": "France: Traffic count",
    "area": "France",
    "region": "France",
-   "url": "https://www.quandl.com/data/INSEE?keyword=traffic",
+   "url": "https://data.nasdaq.com/data/INSEE?keyword=traffic",
    "kinds": [
     "counts"
    ],
@@ -424,14 +425,15 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "error (HTTP 404)"
+   },
+   "moved_from": "https://www.quandl.com/data/INSEE?keyword=traffic"
   },
   {
    "name": "BayernInfo / VIZ Bayern",
    "area": "Bavaria",
    "region": "Germany",
-   "url": "https://bayerninfo.de/en/about-bayerninfo-1/data-offer/private-transport-data",
+   "url": "https://www.bayerninfo.de/en/about-bayerninfo-1/data-offer/private-transport-data",
    "kinds": [
     "queues",
     "incidents",
@@ -444,8 +446,9 @@
    "from": "checked by hand",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "reached"
+   },
+   "moved_from": "https://bayerninfo.de/en/about-bayerninfo-1/data-offer/private-transport-data"
   },
   {
    "name": "Germany: Cologne",
@@ -480,7 +483,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -498,7 +501,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "unreachable"
    }
   },
   {
@@ -517,7 +520,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -535,7 +538,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -553,7 +556,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "error (HTTP 404)"
    }
   },
   {
@@ -585,11 +588,11 @@
    "format": "portal",
    "access": "open",
    "adapter": null,
-   "notes": "",
+   "notes": "On 23 Nov 2026 the address sent to the site's home page (checked with the host allowed); the data is no longer there.",
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "moved (to a home page)"
    }
   },
   {
@@ -607,7 +610,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "unreachable"
    }
   },
   {
@@ -643,7 +646,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "unreachable"
    }
   },
   {
@@ -664,7 +667,7 @@
    "from": "checked by hand",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -770,7 +773,7 @@
    "name": "Italy: mountain pass conditions and closures",
    "area": "Italy",
    "region": "Italy",
-   "url": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-mountainroadsandpasses",
+   "url": "https://data.europa.eu/data/datasets/p_bz-webservices-southtyrolean-trafficreport-mountainroadsandpasses",
    "kinds": [
     "roadworks",
     "closures",
@@ -783,14 +786,15 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "reached"
+   },
+   "moved_from": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-mountainroadsandpasses"
   },
   {
    "name": "Italy: reports from neighboring regions",
    "area": "Italy",
    "region": "Italy",
-   "url": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-outofprovince",
+   "url": "https://data.europa.eu/data/datasets/p_bz-webservices-southtyrolean-trafficreport-outofprovince",
    "kinds": [
     "roadworks",
     "closures",
@@ -803,14 +807,15 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "reached"
+   },
+   "moved_from": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-outofprovince"
   },
   {
    "name": "Italy: roadworks and closures",
    "area": "Italy",
    "region": "Italy",
-   "url": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-works-closings",
+   "url": "https://data.europa.eu/data/datasets/p_bz-webservices-southtyrolean-trafficreport-works-closings",
    "kinds": [
     "roadworks",
     "closures",
@@ -823,14 +828,15 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "reached"
+   },
+   "moved_from": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-works-closings"
   },
   {
    "name": "Italy: traffic reports",
    "area": "Italy",
    "region": "Italy",
-   "url": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-currentsituation",
+   "url": "https://data.europa.eu/data/datasets/p_bz-webservices-southtyrolean-trafficreport-currentsituation",
    "kinds": [
     "roadworks",
     "closures",
@@ -843,8 +849,9 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "reached"
+   },
+   "moved_from": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-currentsituation"
   },
   {
    "name": "Bolzano / South Tyrol Open Data Hub",
@@ -900,7 +907,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -918,7 +925,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -937,7 +944,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -956,7 +963,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "unreachable"
    }
   },
   {
@@ -1074,7 +1081,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "error (HTTP 404)"
    }
   },
   {
@@ -1092,7 +1099,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1106,11 +1113,11 @@
    "format": "XML",
    "access": "open",
    "adapter": null,
-   "notes": "",
+   "notes": "On 23 Nov 2026 the address sent to the site's home page (checked with the host allowed); the data is no longer there.",
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "moved (to a home page)"
    }
   },
   {
@@ -1135,7 +1142,7 @@
    "name": "Porto unplanned road conditions (DATEX II v3)",
    "area": "Porto",
    "region": "Portugal",
-   "url": "https://opendata.porto.digital/dataset/condicionamentos-nao-programados",
+   "url": "https://dadosabertos.cm-porto.pt/dataset/condicionamentos-nao-programados",
    "kinds": [
     "closures",
     "restrictions"
@@ -1143,12 +1150,13 @@
    "format": "DATEX II",
    "access": "open",
    "adapter": "datex2",
-   "notes": "Did not answer from here on 23 Nov 2026.",
+   "notes": "Unplanned closures and restrictions in the city.",
    "from": "checked by hand",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "reached"
+   },
+   "moved_from": "https://opendata.porto.digital/dataset/condicionamentos-nao-programados"
   },
   {
    "name": "Slovenia",
@@ -1165,7 +1173,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "unreachable"
    }
   },
   {
@@ -1201,7 +1209,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1237,7 +1245,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "error (HTTP 404)"
    }
   },
   {
@@ -1255,7 +1263,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1280,7 +1288,7 @@
    "name": "UK: England",
    "area": "UK",
    "region": "UK",
-   "url": "https://www.trafficengland.com/services-info",
+   "url": "https://www.nationalhighways.co.uk/services-info",
    "kinds": [
     "traffic"
    ],
@@ -1292,13 +1300,14 @@
    "checked": {
     "date": "2026-11-23",
     "status": "blocked"
-   }
+   },
+   "moved_from": "https://www.trafficengland.com/services-info"
   },
   {
    "name": "UK: Scotland",
    "area": "UK",
    "region": "UK",
-   "url": "https://trafficscotland.org/datex/",
+   "url": "https://www.traffic.gov.scot/datex/",
    "kinds": [
     "traffic"
    ],
@@ -1309,14 +1318,15 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "error (HTTP 404)"
+   },
+   "moved_from": "https://trafficscotland.org/datex/"
   },
   {
    "name": "UK: Traffic flow data",
    "area": "UK",
    "region": "UK",
-   "url": "https://data.gov.uk/dataset/dft-eng-srn-routes-journey-times",
+   "url": "https://www.data.gov.uk/dataset/dft-eng-srn-routes-journey-times",
    "kinds": [
     "flow"
    ],
@@ -1327,8 +1337,9 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "reached"
+   },
+   "moved_from": "https://data.gov.uk/dataset/dft-eng-srn-routes-journey-times"
   },
   {
    "name": "Alabama",
@@ -1345,7 +1356,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1381,7 +1392,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1417,7 +1428,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1599,7 +1610,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1617,7 +1628,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1636,7 +1647,7 @@
    "from": "checked by hand",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "error (HTTP 404)"
    }
   },
   {
@@ -1673,7 +1684,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1819,7 +1830,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1838,7 +1849,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1857,7 +1868,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1895,7 +1906,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1914,7 +1925,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1933,7 +1944,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1952,7 +1963,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -1971,7 +1982,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2009,7 +2020,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2028,7 +2039,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2047,7 +2058,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "unreachable"
    }
   },
   {
@@ -2085,7 +2096,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2104,7 +2115,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2123,7 +2134,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2142,7 +2153,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2161,7 +2172,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2180,7 +2191,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2199,7 +2210,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2237,7 +2248,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2256,7 +2267,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2275,7 +2286,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2312,7 +2323,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2331,7 +2342,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2350,7 +2361,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2369,7 +2380,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2388,7 +2399,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2407,7 +2418,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2425,7 +2436,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2444,7 +2455,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2463,7 +2474,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2482,7 +2493,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2501,7 +2512,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2520,7 +2531,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2539,7 +2550,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2558,7 +2569,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2577,7 +2588,7 @@
    "from": "data.transportation.gov 69qe-yiui",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2595,7 +2606,7 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
@@ -2613,14 +2624,14 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {
    "name": "Datex2 Portal",
    "area": "Datex2 Portal",
    "region": "World",
-   "url": "https://www.datex2.eu/",
+   "url": "https://datex2.eu/",
    "kinds": [
     "traffic"
    ],
@@ -2631,8 +2642,9 @@
    "from": "graphhopper/open-traffic-collection",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
-   }
+    "status": "reached"
+   },
+   "moved_from": "https://www.datex2.eu/"
   },
   {
    "name": "EU - Historic Road data",
@@ -2817,7 +2829,7 @@
    "from": "checked by hand",
    "checked": {
     "date": "2026-11-23",
-    "status": "blocked"
+    "status": "reached"
    }
   },
   {

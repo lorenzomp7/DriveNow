@@ -111,7 +111,7 @@ manual = [
  ("Digitraffic traffic messages", "Finland", "Finland", "https://tie.digitraffic.fi/api/traffic-message/v1/messages", ["roadworks", "incidents", "restrictions"], "GeoJSON", "open", "digitraffic", "Needs Accept-Encoding: gzip and a Digitraffic-User header.", "reached"),
  ("5T Turin real-time flows", "Turin", "Italy", "https://opendata.5t.torino.it/get_fdt", ["flow", "speed"], "XML", "open", "torino", "Flow and speed per point, 5-minute periods.", "reached"),
  ("Väylä roadworks (DATEX II)", "Finland", "Finland", "https://aineistot.vayla.fi/roadworks/roadworks_d2.xml", ["roadworks"], "DATEX II", "open", "datex2", "Answered 400 on 23 Nov 2026.", "failed"),
- ("Porto unplanned road conditions (DATEX II v3)", "Porto", "Portugal", "https://opendata.porto.digital/dataset/condicionamentos-nao-programados", ["closures", "restrictions"], "DATEX II", "open", "datex2", "Did not answer from here on 23 Nov 2026.", "failed"),
+ ("Porto unplanned road conditions (DATEX II v3)", "Porto", "Portugal", "https://opendata.porto.digital/dataset/condicionamentos-nao-programados", ["closures", "restrictions"], "DATEX II", "open", "datex2", "Unplanned closures and restrictions in the city.", None),
  ("OpenStreetMap via Overpass (lights, limits, roadworks)", "World", "World", "https://overpass-api.de/api/interpreter", ["signals", "roadworks", "speed_limits"], "JSON", "open", "osm", "Connection reset from this environment on 23 Nov 2026.", "failed"),
  ("Mobilithek (German national access point)", "Germany", "Germany", "https://mobilithek.info/", ["flow", "incidents", "roadworks", "travel_time"], "DATEX II", "registration", "datex2", "Many datasets open, some need registration (e.g. Bavaria's jams every 3 min).", None),
  ("BayernInfo / VIZ Bayern", "Bavaria", "Germany", "https://bayerninfo.de/en/about-bayerninfo-1/data-offer/private-transport-data", ["queues", "incidents", "roadworks"], "DATEX II", "registration", "datex2", "Jams from connected vehicles and apps, every 3 min, via Mobilithek.", None),
@@ -164,6 +164,19 @@ entries = [e for e in entries if e["name"] not in DOCS and "open-traffic-collect
 for e in entries:
     if e["from"] != "checked by hand" and e["area"] and e["area"] != e["name"] and e["area"] not in e["name"]:
         e["name"] = f"{e['area']}: {e['name']}"
+# Addresses that have moved (the old one redirects here; checked on 23 November 2026).
+MOVED = {"https://opendata.porto.digital/": "https://dadosabertos.cm-porto.pt/",
+         "https://www.quandl.com/": "https://data.nasdaq.com/",
+         "https://bayerninfo.de/": "https://www.bayerninfo.de/",
+         "https://www.europeandataportal.eu/data/#/datasets/": "https://data.europa.eu/data/datasets/",
+         "https://www.trafficengland.com/": "https://www.nationalhighways.co.uk/",
+         "https://trafficscotland.org/": "https://www.traffic.gov.scot/",
+         "https://data.gov.uk/": "https://www.data.gov.uk/",
+         "https://www.datex2.eu/": "https://datex2.eu/"}
+for e in entries:
+    for old, new in MOVED.items():
+        if e["url"].startswith(old):
+            e["moved_from"], e["url"] = e["url"], new + e["url"][len(old):]
 # One entry per URL; the hand-checked one wins.
 seen = {}
 for e in entries:

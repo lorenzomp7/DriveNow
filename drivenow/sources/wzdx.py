@@ -4,7 +4,8 @@ About 40 public feeds, listed in USDOT's registry (data.transportation.gov,
 dataset 69qe-yiui; ``parse_registry``). Versions 3.x keep the fields on the
 feature's properties; 4.x put them under ``core_details``. Speeds are in mph
 (v3 ``reduced_speed_limit``) or km/h (v4 ``reduced_speed_limit_kph``).
-``vehicle_impact`` "all-lanes-closed" means the road is closed.
+``vehicle_impact`` "all-lanes-closed" means the road is closed. A "detour" road
+event is the diversion route: the open road traffic is sent onto, kept as "other".
 """
 
 from __future__ import annotations
@@ -45,8 +46,9 @@ def parse(feed: dict, source: str = "wzdx") -> List[RoadEvent]:
         else:
             limit = None
         impact = p.get("vehicle_impact", "")
-        blocked = impact == "all-lanes-closed" or etype == "detour"
-        kind = "closure" if blocked else ("restriction" if etype == "restriction" else "roadworks")
+        blocked = impact == "all-lanes-closed" and etype != "detour"
+        kind = ("other" if etype == "detour" else "closure" if blocked
+                else "restriction" if etype == "restriction" else "roadworks")
         line = _line(f.get("geometry"))
         if not line:
             continue
@@ -55,7 +57,8 @@ def parse(feed: dict, source: str = "wzdx") -> List[RoadEvent]:
         out.append(RoadEvent(
             id=f"{source}:{f.get('id') or core.get('road_event_id') or len(out)}", kind=kind, source=source, line=line,
             start=epoch(p.get("start_date")), end=epoch(p.get("end_date")), speed_limit=limit, blocked=blocked,
-            lanes_closed=closed, text=", ".join(core.get("road_names") or [core.get("road_name", "")])[:200]))
+            lanes_closed=closed, text=("Detour: " if etype == "detour" else "")
+            + ", ".join(core.get("road_names") or [core.get("road_name", "")])[:200]))
     return out
 
 

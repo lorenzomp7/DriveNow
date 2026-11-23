@@ -919,7 +919,11 @@ nel database delle auto (`fleet.py`) tre cose:
 
 **DATEX II:** si leggono solo le posizioni date in coordinate. Quelle date solo in
 codici Alert-C servono le tabelle di ogni paese: si contano e si scartano, senza
-indovinarle. Il Belgio, per esempio, oggi ne ha 213 su 213.
+indovinarle. Il Belgio, per esempio, oggi ne ha 221 su 221.
+
+**WZDx:** un evento "detour" è il percorso della deviazione, cioè la strada aperta
+su cui viene mandato il traffico. Si tiene come "other" e non come chiusura:
+altrimenti si chiuderebbe proprio la strada per aggirare il cantiere.
 
 **Cosa si ricava:**
 - **Percorrenza di ogni tratto** (`FleetDB.travel_time`), con la sua fonte e la
@@ -956,34 +960,48 @@ Per ognuna ci sono:
 - l'esito del controllo da questo ambiente.
 
 `tools/sources_catalog.py` le elenca per paese, tipo, accesso o adattatore, e con
-`--check` prova a raggiungerle. Esito del controllo del 23 novembre 2026:
+`--check` prova a raggiungerle. Esito del controllo del 23 novembre 2026, dopo aver
+aperto nell'ambiente di sviluppo gli host del catalogo:
 
 | Esito | Fonti |
 |---|---|
-| Raggiunte | 19 |
-| Bloccate dalla rete di questo ambiente | 91 |
-| Senza risposta | 41 |
-| Errore | 1 |
+| Raggiunte | 87 |
+| Senza risposta (il sito non risponde, interrompe o va in timeout) | 49 |
+| Errore (HTTP 404: la pagina non c'è più) | 8 |
+| Bloccate dalla rete di questo ambiente | 6 |
+| Spostate su una home page (i dati non ci sono più) | 2 |
+| Non controllata (MQTT di Amburgo, non HTTP; letta da `hamburg/live.py`) | 1 |
 
-Oltre agli host sbloccati per questa prova, aprire altri host è una scelta
-dell'ambiente di sviluppo.
+Prima di aprire gli host le fonti raggiunte erano 19. L'ambiente accetta al massimo
+128 host, quindi:
+- 12 fonti spostate sono nel catalogo con il nuovo indirizzo (`moved_from` tiene
+  il vecchio);
+- restano bloccate le 4 pagine di documentazione di Google, HERE, TomTom e Waze,
+  dove comunque non ci sono dati (il servizio dell'ambiente non le accetta);
+- restano bloccati anche il secondo rimando di National Highways (Inghilterra) e
+  il feed dell'Illinois, che chiede una chiave.
 
-**Letture dal vivo** (`tools/public_data_check.py`, 23 novembre 2026, ore 11 UTC):
+**Letture dal vivo** (`tools/public_data_check.py`, 23 novembre 2026, ore 12:14 UTC;
+esito completo in `data/public_data_check_2026-11-23.json`):
 
 | Fonte | Arrivato | Sulle reti di Amburgo |
 |---|---|---|
-| Polizia di Amburgo | 243 segnalazioni attive: 156 chiusure, 62 cantieri, 18 restrizioni, 7 code | Willy-Brandt-Straße: 2 chiusure, 2 cantieri, 3 restrizioni; Gärtnerstraße: nessuna |
-| Verkehrslage Amburgo | 632 + 353 tratti, dati di 6 minuti prima | velocità su 607 dei 867 tratti di Willy-Brandt-Straße e su 91 dei 105 di Gärtnerstraße |
-| Autostrade intorno ad Amburgo (A1, A7, A23, A24, A25, A255) | 598 intralci: 527 cantieri (252 con limite), 67 chiusure | nessuno: le due reti sono strade di città |
-| NDW (Paesi Bassi) | 1.250 situazioni (1.243 con coordinate), 104 limiti temporanei, 1.625 aperture di ponti in programma, 20.619 siti con velocità, 67.795 tratti con percorrenza | — |
-| Finlandia | 816 cantieri (611 con limite), 19 avvisi, 20 limiti di peso | — |
-| Torino | 112 punti, velocità media 62 km/h | — |
-| Belgio | 213 situazioni, tutte solo in Alert-C | — |
+| Polizia di Amburgo | 243 segnalazioni attive su 245: 156 chiusure, 62 cantieri, 19 restrizioni, 7 code, 1 semaforo fuori servizio | Willy-Brandt-Straße: 2 chiusure, 2 cantieri, 3 restrizioni; Gärtnerstraße: nessuna |
+| Verkehrslage Amburgo | 645 + 356 tratti, dati di 4,5 minuti prima | velocità su 617 dei 867 tratti di Willy-Brandt-Straße e su 92 dei 105 di Gärtnerstraße |
+| Autostrade intorno ad Amburgo (A1, A7, A23, A24, A25, A255) | 604 intralci: 528 cantieri, 67 chiusure, 5 code, 3 pericoli, 1 incidente (251 con limite) | nessuno: le due reti sono strade di città |
+| NDW (Paesi Bassi) | 1.294 situazioni (1.287 con coordinate), 102 limiti temporanei, 1.634 aperture di ponti in programma, 20.619 siti (17.715 con velocità), 67.795 tratti (65.927 con percorrenza) | — |
+| Finlandia | 824 cantieri (614 con limite), 19 avvisi, 20 limiti di peso | — |
+| Torino | 112 punti, velocità media 63,6 km/h | — |
+| Belgio | 221 situazioni, tutte solo in Alert-C | — |
+| Porto (DATEX II v3) | pubblicazione valida, nessun condizionamento in corso | — |
+| Cantieri USA (WZDx, 25 feed aperti dei 28 attivi senza chiave) | 42.167 eventi: 14.969 cantieri, 1.110 chiusure, 26.088 deviazioni ("other"); 8.946 attivi ora, 1.368 con limite | — |
 
 **Limiti:**
 - **HERE e TomTom:** sono provati solo su risposte scritte secondo il formato
-  pubblicato, perché manca la chiave. Lo stesso vale per WZDx e Overpass, i cui
-  host da qui non rispondono; questi file di prova finiscono in `_written.json`.
+  pubblicato, perché manca la chiave. Lo stesso vale per Overpass: l'host è aperto,
+  ma interrompe la connessione da qui. Questi file di prova finiscono in `_written.json`.
+- **WZDx:** dei 28 feed attivi senza chiave non si leggono New York (risposta
+  vuota), St. Charles (connessione interrotta) e Kansas (timeout).
 - **Direzione:** i messaggi della polizia di Amburgo sono punti senza direzione.
   Una chiusura in un senso solo si abbina a entrambi.
 - **Velocità dalla Verkehrslage:** è stimata da una classe (scorrevole 100%,

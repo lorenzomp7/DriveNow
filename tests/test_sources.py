@@ -127,6 +127,14 @@ def test_wzdx_v4_work_zones_and_the_feed_registry():
     assert len(reg) >= 40 and sum(1 for r in reg if r["url"]) >= 35
 
 
+def test_wzdx_detour_is_the_open_diversion_route_not_a_closure():
+    # Real Florida DOT answer (23 Nov 2026): a detour road event is the road traffic is
+    # sent onto. Closing it would close the way round the works.
+    detour, closed = wzdx.parse(js("wzdx_fldot_detour.json"), "fldot")
+    assert detour.kind == "other" and not detour.blocked and detour.text.startswith("Detour")
+    assert closed.kind == "closure" and closed.blocked
+
+
 def test_here_flow_and_incidents_into_the_database():
     db = FleetDB({e: 60.0 for e in POINTS})
     answers = {"flow": js("here_flow_written.json"), "incidents": js("here_incidents_written.json")}

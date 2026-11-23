@@ -1,14 +1,15 @@
 {
- "checked_utc": "2026-11-23 11:20",
+ "checked_utc": "2026-11-23 12:14",
  "sources": {
   "hamburg_police": {
-   "messages": 243,
-   "active_now": 242,
+   "messages": 245,
+   "active_now": 243,
    "kinds": {
     "closure": 156,
-    "restriction": 18,
+    "restriction": 19,
     "roadworks": 62,
-    "queue": 7
+    "queue": 7,
+    "signal_fault": 1
    },
    "on_networks": {
     "willy-brandt": {
@@ -18,136 +19,137 @@
     },
     "gaertnerstrasse": {}
    },
-   "seconds": 1.3
+   "seconds": 1.6
   },
   "hamburg_traffic": {
    "willy-brandt": {
-    "stretches": 632,
+    "stretches": 645,
     "states": {
-     "fliessend": 432,
-     "dicht": 190,
-     "zäh": 10
+     "dicht": 188,
+     "fliessend": 441,
+     "zäh": 16
     },
-    "edges_with_a_speed": 607,
+    "edges_with_a_speed": 617,
     "of_edges": 867,
-    "age_min": 5.9
+    "age_min": 4.5
    },
    "gaertnerstrasse": {
-    "stretches": 353,
+    "stretches": 356,
     "states": {
-     "zäh": 2,
-     "dicht": 73,
-     "fliessend": 278
+     "dicht": 71,
+     "fliessend": 282,
+     "zäh": 3
     },
-    "edges_with_a_speed": 91,
+    "edges_with_a_speed": 92,
     "of_edges": 105,
-    "age_min": 5.9
+    "age_min": 4.5
    },
-   "seconds": 4.5
+   "seconds": 4.7
   },
   "autobahn": {
-   "events": 598,
+   "events": 604,
    "kinds": {
-    "roadworks": 527,
-    "queue": 1,
+    "roadworks": 528,
     "hazard": 3,
+    "queue": 5,
+    "accident": 1,
     "closure": 67
    },
-   "with_speed_limit": 252,
+   "with_speed_limit": 251,
    "on_networks": {
     "willy-brandt": {},
     "gaertnerstrasse": {}
    },
-   "seconds": 20.8
+   "seconds": 24.4
   },
   "ndw_netherlands": {
    "actueel_beeld": {
-    "records": 1250,
-    "with_coordinates": 1243,
+    "records": 1294,
+    "with_coordinates": 1287,
     "alert_c_only": 7,
     "no_location": 0,
     "kinds": {
-     "closure": 560,
-     "obstruction": 172,
-     "roadworks": 125,
-     "restriction": 229,
-     "speed_limit": 104,
-     "bridge": 38,
-     "accident": 12,
-     "queue": 3
+     "closure": 556,
+     "accident": 13,
+     "roadworks": 123,
+     "restriction": 238,
+     "speed_limit": 102,
+     "obstruction": 204,
+     "bridge": 45,
+     "queue": 6
     },
-    "active_now": 1230
+    "active_now": 1273
    },
    "tijdelijke_verkeersmaatregelen_maximum_snelheden": {
-    "records": 104,
-    "with_coordinates": 104,
+    "records": 102,
+    "with_coordinates": 102,
     "alert_c_only": 0,
     "no_location": 0,
     "kinds": {
-     "speed_limit": 104
+     "speed_limit": 102
     },
-    "active_now": 104
+    "active_now": 102
    },
    "tijdelijke_verkeersmaatregelen_afsluitingen": {
-    "records": 777,
-    "with_coordinates": 770,
+    "records": 782,
+    "with_coordinates": 775,
     "alert_c_only": 7,
     "no_location": 0,
     "kinds": {
-     "roadworks": 123,
-     "restriction": 48,
-     "closure": 561,
-     "bridge": 38
+     "roadworks": 121,
+     "restriction": 52,
+     "closure": 557,
+     "bridge": 45
     },
-    "active_now": 757
+    "active_now": 761
    },
    "planningsfeed_brugopeningen": {
-    "records": 1625,
-    "with_coordinates": 1625,
+    "records": 1634,
+    "with_coordinates": 1634,
     "alert_c_only": 0,
     "no_location": 0,
     "kinds": {
-     "bridge": 1625
+     "bridge": 1634
     },
-    "active_now": 49
+    "active_now": 58
    },
    "veiligheidsgerelateerde_informatie_srti": {
-    "records": 184,
-    "with_coordinates": 184,
+    "records": 217,
+    "with_coordinates": 217,
     "alert_c_only": 0,
     "no_location": 0,
     "kinds": {
-     "obstruction": 172,
-     "accident": 12
+     "obstruction": 204,
+     "accident": 13
     },
-    "active_now": 184
+    "active_now": 217
    },
    "trafficspeed": {
     "sites": 20619,
-    "with_speed": 17740
+    "with_speed": 17715
    },
    "traveltime": {
     "sections": 67795,
-    "with_travel_time": 65874
+    "with_travel_time": 65927
    },
-   "seconds": 11.8
+   "seconds": 11.7
   },
   "belgium": {
-   "records": 213,
+   "records": 221,
    "with_coordinates": 0,
-   "alert_c_only": 213,
+   "alert_c_only": 221,
    "no_location": 0,
    "kinds": {},
    "seconds": 0.9
   },
   "finland": {
    "ROAD_WORK": {
-    "events": 816,
+    "events": 824,
     "kinds": {
-     "roadworks": 806,
+     "roadworks": 814,
      "closure": 10
     },
-    "with_speed_limit": 611
+    "with_speed_limit": 614
    },
    "TRAFFIC_ANNOUNCEMENT": {
     "events": 19,
@@ -163,20 +165,68 @@
     },
     "with_speed_limit": 0
    },
-   "seconds": 1.7
+   "seconds": 2.1
   },
   "turin": {
    "points": 112,
-   "with_traffic": 103,
-   "mean_speed_kmh": 62.0,
-   "seconds": 0.5
+   "with_traffic": 102,
+   "mean_speed_kmh": 63.6,
+   "seconds": 0.3
   },
-  "wzdx_registry": {
-   "feeds": 43,
-   "active": 42,
-   "need_key": 14,
-   "note": "the feeds' own hosts are not reachable from this environment",
-   "seconds": 0.5
+  "porto": {
+   "records": 0,
+   "with_coordinates": 0,
+   "alert_c_only": 0,
+   "no_location": 0,
+   "kinds": {},
+   "active_now": 0,
+   "seconds": 0.6
+  },
+  "wzdx_usa": {
+   "feeds_in_registry": 43,
+   "open_active": 28,
+   "read": 25,
+   "failed": {
+    "nysdot": "JSONDecodeError",
+    "stcharlesco_v4": "URLError",
+    "kansas": "TimeoutError"
+   },
+   "events": 42167,
+   "kinds": {
+    "roadworks": 14969,
+    "closure": 1110,
+    "other": 26088
+   },
+   "active_now": 8946,
+   "with_speed_limit": 1368,
+   "per_feed": {
+    "quebec": 581,
+    "odot": 81,
+    "kytc": 171,
+    "indot": 815,
+    "sddot": 132,
+    "fldot": 28753,
+    "modot": 445,
+    "njdot": 431,
+    "austin": 3540,
+    "pbs": 0,
+    "msdot": 103,
+    "fdot": 28,
+    "wsdot": 407,
+    "mcdot": 2288,
+    "CivicLink_CrewCast": 730,
+    "ladotd": 2,
+    "nddot": 27,
+    "necdot": 147,
+    "idot": 694,
+    "mdot": 57,
+    "mndot": 129,
+    "iddot": 1170,
+    "dedot": 22,
+    "wisdot": 1309,
+    "hidot": 105
+   },
+   "seconds": 58.2
   }
  }
 }
