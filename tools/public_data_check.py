@@ -13,7 +13,7 @@ from collections import Counter
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from drivenow.fleet import FleetDB
 from drivenow.road_events import bbox_of, match_all
-from drivenow.sources import autobahn, datex2, digitraffic, hamburg_police, hamburg_traffic, torino, wzdx
+from drivenow.sources import autobahn, datex2, digitraffic, hamburg_police, hamburg_roadworks, hamburg_traffic, torino, wzdx
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HEADERS = {"User-Agent": "DriveNow/dev (open data check)", "Accept-Encoding": "gzip"}
@@ -61,6 +61,13 @@ def hamburg_police_check():
     ev = hamburg_police.parse(get(hamburg_police.url()))
     return {"messages": len(ev), "active_now": sum(e.active(now) for e in ev),
             "kinds": dict(Counter(e.kind for e in ev)), "on_networks": on_networks(ev)}
+
+
+def hamburg_roadworks_check():
+    ev = hamburg_roadworks.parse(get(hamburg_roadworks.url()))
+    return {"sites": len(ev), "active_now": sum(e.active(now) for e in ev),
+            "kinds": dict(Counter(e.kind for e in ev)), "with_speed_limit": sum(1 for e in ev if e.speed_limit),
+            "on_networks": on_networks(ev)}
 
 
 def hamburg_traffic_check():
@@ -150,7 +157,8 @@ def porto_check():
     return {**st, "kinds": dict(Counter(e.kind for e in ev)), "active_now": sum(e.active(now) for e in ev)}
 
 
-for name, fn in (("hamburg_police", hamburg_police_check), ("hamburg_traffic", hamburg_traffic_check),
+for name, fn in (("hamburg_police", hamburg_police_check), ("hamburg_roadworks", hamburg_roadworks_check),
+                 ("hamburg_traffic", hamburg_traffic_check),
                  ("autobahn", autobahn_check), ("ndw_netherlands", ndw_check), ("belgium", belgium_check),
                  ("finland", finland_check), ("turin", torino_check), ("porto", porto_check),
                  ("wzdx_usa", wzdx_check)):

@@ -714,6 +714,25 @@
    }
   },
   {
+   "name": "Hamburg roadworks (Bauweiser, WFS)",
+   "area": "Hamburg",
+   "region": "Germany",
+   "url": "https://geodienste.hamburg.de/hh_wfs_baustellen",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WFS (GML)",
+   "access": "open",
+   "adapter": "hamburg_roadworks",
+   "notes": "About 135 sites, points with start and end day and a free text. DL-DE BY 2.0.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
    "name": "Hamburg traffic lights and loop detectors (live, MQTT)",
    "area": "Hamburg",
    "region": "Germany",
@@ -750,6 +769,22 @@
     "date": "2026-11-23",
     "status": "reached"
    }
+  },
+  {
+   "name": "LSBG Hamburg roadworks (Traffic Disturbance Roadworks, DATEX II v2)",
+   "area": "Hamburg",
+   "region": "Germany",
+   "url": "https://mobilithek.info/offers/110000000003540000",
+   "kinds": [
+    "roadworks",
+    "closures",
+    "restrictions"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "mobilithek",
+   "notes": "Every roadworks site on Hamburg's streets, hourly; Mobilithek subscription with provider approval and a machine certificate (mutual TLS, port 8443).",
+   "from": "checked by hand"
   },
   {
    "name": "Italy: Bolzano",
