@@ -857,7 +857,7 @@ parentesi lo sbilanciamento medio:
 | Gärtnerstraße 50% | 1,2–1,3 | 0,6 (−0,6) | 0,61 (+0,5) | 0,36 (+0,1) |
 
 - **Col semaforo la stima delle code è la migliore in tutti e quattro i casi.**
-  A Gärtnerstraße l'errore è circa la metà di quello con i soli telefoni e lo
+  A Gärtnerstraße l'errore è del 40–50% più basso che con i soli telefoni e lo
   sbilanciamento sparisce. A Willy-Brandt-Straße l'errore scende del 10–20%
   rispetto ai soli telefoni.
 - **Sulla consulenza:**
