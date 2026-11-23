@@ -543,3 +543,21 @@ def test_no_road_events_no_change():
     two.blocked_fn = lambda e, t: None
     for pos in (0.0, 50.0, a.length - 30.0):
         assert one.advise([a.id, b.id], 0, pos, 45 * KMH, 0.0, {}) == two.advise([a.id, b.id], 0, pos, 45 * KMH, 0.0, {})
+
+
+def test_knowing_road_events_does_not_change_the_advice_at_an_ordinary_limit_drop():
+    # Found running the US work zones: with road events known, an ordinary drop of the posted
+    # limit (100 -> 56 km/h between two map edges) was treated as roadworks ahead. Only a
+    # temporary limit lower than the street's own makes a "works" control.
+    from drivenow.advisor import Advisor
+    net, a, b = _two_edges()
+    a.speed, b.speed = 100 * KMH, 56 * KMH
+    one, two = Advisor(net), Advisor(net)
+    two.limit_fn = lambda e, t: None
+    two.blocked_fn = lambda e, t: None
+    for pos in (0.0, 50.0, a.length - 80.0, a.length - 30.0):
+        assert one.advise([a.id, b.id], 0, pos, 90 * KMH, 0.0, {}) == two.advise([a.id, b.id], 0, pos, 90 * KMH, 0.0, {})
+    # A works limit equal to the street's own is no works ahead either.
+    two.limit_fn = lambda e, t: 56 * KMH if e == b.id else None
+    assert one.advise([a.id, b.id], 0, a.length - 80.0, 90 * KMH, 0.0, {}) == \
+        two.advise([a.id, b.id], 0, a.length - 80.0, 90 * KMH, 0.0, {})

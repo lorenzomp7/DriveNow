@@ -258,7 +258,10 @@ class Advisor:
                     first = first or NextControl("closure", "closure", start)
                     break
                 lim = self._limit(edge.id, t)
-                if lim < prev_limit - 0.5:
+                # Roadworks ahead: a temporary limit below the street's own, and below where we
+                # drive now. An ordinary drop of the posted limit is not one (and is not
+                # anticipated without road events either).
+                if lim < edge.speed - 0.5 and lim < prev_limit - 0.5:
                     controls.append(Control("limit", start, "works", entry_speed=lim))
                     first = first or NextControl("works", "works", start, str(round(lim * 3.6)))
                 prev_limit = lim
