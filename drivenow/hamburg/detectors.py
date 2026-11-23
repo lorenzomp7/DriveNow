@@ -21,7 +21,7 @@ import gzip
 import json
 import os
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Tuple
 
 CAR_LENGTH = 5.0  # m, SUMO's default passenger car
@@ -36,6 +36,9 @@ class Loop:
     pos: float        # m from the start of the edge
     occupied: bool = False
     passages: int = 0
+    # The lights of every movement leaving from this lane (straight, right...): the lane can
+    # drive off when any of them is green.
+    signal_ds: List[int] = field(default_factory=list)
 
 
 def place_loops(data_dir: str, lengths: Dict[str, float], offset: float = 2.0) -> List[Loop]:
@@ -46,6 +49,12 @@ def place_loops(data_dir: str, lengths: Dict[str, float], offset: float = 2.0) -
     for c in ET.parse(os.path.join(data_dir, "corridor.net.xml")).getroot().iter("connection"):
         if "tl" in c.attrib and "linkIndex" in c.attrib:
             from_lane[(c.attrib["tl"], int(c.attrib["linkIndex"]))] = (c.attrib["from"], int(c.attrib["fromLane"]))
+    lane_ds: Dict[Tuple[str, int], List[int]] = {}
+    for key, rec in links.items():
+        tls, idx = key.split("|")
+        where = from_lane.get((tls, int(idx)))
+        if where is not None and rec.get("ds") and rec["ds"] not in lane_ds.setdefault(where, []):
+            lane_ds[where].append(rec["ds"])
     loops: Dict[Tuple[str, int], Loop] = {}
     for key, rec in links.items():
         thing = rec.get("thing")
@@ -55,7 +64,8 @@ def place_loops(data_dir: str, lengths: Dict[str, float], offset: float = 2.0) -
         where = from_lane.get((tls, int(idx)))
         if where is None or where[0] not in lengths:
             continue
-        loops.setdefault(where, Loop(thing, det[thing], where[0], where[1], max(lengths[where[0]] - offset, 0.0)))
+        loops.setdefault(where, Loop(thing, det[thing], where[0], where[1], max(lengths[where[0]] - offset, 0.0),
+                                     signal_ds=lane_ds.get(where, [])))
     return list(loops.values())
 
 

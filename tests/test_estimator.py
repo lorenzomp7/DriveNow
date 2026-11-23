@@ -68,3 +68,55 @@ def test_loop_emulator_counts_cars_as_the_real_detectors_do():
     assert lp.occupied and lp.passages == 2
     em.step([("b", 0, 5.0)])
     assert not lp.occupied
+
+
+def test_with_the_light_the_queue_grows_on_red_from_the_first_car_at_the_line():
+    q = LaneQueue(max_cars=40)
+    q.signal(0.0, True)
+    t = passages(q, 0.0, 30, 10.0)          # 0.1 cars/s, all through on green
+    assert q.cars(t) == 0
+    q.signal(t, False)                       # red
+    assert q.cars(t + 20.0) == 0             # nobody at the line yet: no queue
+    q.event(t + 25.0, True)                  # the first car reaches the line and stands
+    assert q.cars(t + 25.0) == 1
+    assert q.cars(t + 45.0) == 3             # 1 + 0.1 x 20, however often it is asked
+    q.signal(t + 45.0, True)                 # green: cars leave one per passage
+    q.event(t + 46.0, False)                 # the first one, that stood through red
+    assert q.cars(t + 46.5) == 2             # 3 + 0.1 x 1.5 - 1
+    passages(q, t + 47.0, 2, 2.0)
+    passages(q, t + 51.0, 2, 2.0)
+    assert q.cars(t + 54.0) == 0             # all gone: stays gone for the rest of green
+    assert q.cars(t + 70.0) == 0
+
+
+def test_a_queue_left_over_at_the_end_of_green_carries_into_red():
+    q = LaneQueue(max_cars=40)
+    q.signal(0.0, True)
+    t = passages(q, 0.0, 60, 5.0)            # 0.2 cars/s
+    q.signal(t, False)
+    q.event(t + 1.0, True)                   # a car stops at the line
+    q.signal(t + 51.0, True)                 # 1 + 0.2 x 50 = 11 waiting
+    q.event(t + 52.0, False)
+    passages(q, t + 53.0, 3, 2.0)            # only 4 get through
+    q.event(t + 59.0, True)                  # the next car stops on the loop
+    q.signal(t + 59.0, False)                # red again with 11 + 0.2 x 8 - 4 ~ 9 left
+    assert 7 <= q.cars(t + 59.0) <= 9         # (the car on the loop counts as a passage)
+    assert q.cars(t + 69.0) > q.cars(t + 59.0)  # and growing
+
+
+def test_no_queue_on_red_while_the_loop_is_free():
+    q = LaneQueue(max_cars=40)
+    q.signal(0.0, True)
+    t = passages(q, 0.0, 30, 10.0)
+    q.signal(t, False)
+    assert q.cars(t + 120.0) == 0
+
+
+def test_estimator_passes_the_light_to_its_lanes():
+    est = QueueEstimator([("a", 0)], {"a": 100.0}, upstream=lambda e: None)
+    q = est.lanes[("a", 0)]
+    est.signal("a", 0, 0.0, True)
+    t = passages(q, 0.0, 30, 10.0)
+    est.signal("a", 0, t, False)
+    est.event("a", 0, t + 5.0, True)
+    assert est.standing(t + 25.0) == {"a": 3}

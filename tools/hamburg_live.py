@@ -3,7 +3,7 @@
     python tools/hamburg_live.py --scenario willy-brandt --minutes 10 [--out live.json]
 
 Subscribes to the car loop detectors and signal colours of the scenario's lights
-(lanes.json), passes every loop state to the queue estimator (estimator.py) on
+(lanes.json), passes every colour and loop state to the queue estimator (estimator.py) on
 the scenario's SUMO lanes, and reports what came: messages per kind, which
 detectors spoke, how late they arrived (time received minus the observation's
 time) and the standing cars estimated at each approach with a loop. Needs network
@@ -35,9 +35,13 @@ for t in lanes:
 net = load_sumo_net(os.path.join(d, "corridor.net.xml"))
 lengths = {e.id: e.length for e in net.edges.values()}
 loops = place_loops(d, lengths)
-by_ds = {}
+by_ds, by_sig = {}, {}
 for lp in loops:
     by_ds.setdefault(lp.ds, []).append(lp)
+    for s in lp.signal_ds:
+        by_sig.setdefault(s, []).append(lp)
+colour = {}   # last known colour code of each light
+GREEN, KNOWN = {3, 6}, {1, 2, 3, 4, 6}   # Hamburg's colour codes (hamburg/signals.py); yellow counts as red
 est = QueueEstimator([(lp.edge, lp.lane) for lp in loops], lengths, upstream=lambda e: None)
 
 topics = [f"v1.1/Datastreams({ds})/Observations" for ds in kind_of]
@@ -62,6 +66,11 @@ try:
             heard[name] += 1
             for lp in by_ds.get(ds, []):
                 est.event(lp.edge, lp.lane, t, result > 0)
+        if int(result) in KNOWN and ds in by_sig:
+            colour[ds] = int(result)
+            for lp in by_sig[ds]:
+                # The lane can drive off when any of its movements has green.
+                est.signal(lp.edge, lp.lane, t, any(colour.get(s) in GREEN for s in lp.signal_ds))
         if received >= next_report:
             next_report += 60
             print(f"{round((received - t0) / 60)} min: {dict(count)}", flush=True)

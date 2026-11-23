@@ -184,6 +184,13 @@ class HamburgWorld(SumoWorld):
 
     def _step_loops(self) -> None:
         cars = [(v.edge, v.lane, v.pos) for vid, v in self.vehicles.items() if v.route and vid not in self._internal]
+        # The colour of each loop's light first (yellow counts as red, unknown changes nothing),
+        # then what the loops see.
+        real = self.T0 + self.t
+        for lp in self.loops:
+            codes = [c for c in (self.history.code_at(ds, real) for ds in lp.signal_ds) if c in (1, 2, 3, 4, 6)]
+            if codes:
+                self.estimator.signal(lp.edge, lp.lane, self.t, any(c in GREEN for c in codes))
         for lp, occ in self._loop_em.step(cars):
             self.estimator.event(lp.edge, lp.lane, self.t, occ)
         # A DriveNow car driving through close to the line without stopping: no queue left there.
