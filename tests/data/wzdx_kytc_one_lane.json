@@ -1,0 +1,92 @@
+{
+ "feed_info": {
+  "publisher": "Kentucky Transportation Cabinet (KYTC)",
+  "data_sources": [
+   {
+    "data_source_id": "KYTC-TOC",
+    "organization_name": "KYTC Transportation Operation Center",
+    "contact_name": "KYTC Transportation Operation Center",
+    "contact_email": "KYTCTOC.operators@ky.gov"
+   }
+  ],
+  "update_date": "2026-11-23T13:00:03Z",
+  "update_frequency": 1800,
+  "contact_name": "ITS",
+  "contact_email": "kytcits@ky.gov",
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "version": "4.1"
+ },
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "bbox": [
+    -85.7402529043,
+    38.2315129611,
+    -85.7373500987,
+    38.2452823949
+   ],
+   "id": "TOC-26885",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -85.740253,
+      38.231513
+     ],
+     [
+      -85.740184,
+      38.231915
+     ],
+     [
+      -85.740141,
+      38.232161
+     ],
+     [
+      -85.739986,
+      38.233073
+     ],
+     [
+      -85.73996,
+      38.233206
+     ]
+    ]
+   },
+   "properties": {
+    "core_details": {
+     "event_type": "work-zone",
+     "data_source_id": "KYTC-TOC",
+     "road_names": [
+      "KY-864"
+     ],
+     "direction": "northbound",
+     "description": "KY-864 between MM 14.5 and 15.5 in Jefferson County",
+     "creation_date": "2026-08-01T21:07:29Z",
+     "update_date": "2026-10-23T23:18:11Z"
+    },
+    "start_date": "2026-08-01T21:05:49Z",
+    "end_date": "2026-11-30T23:00:00Z",
+    "is_start_date_verified": false,
+    "is_end_date_verified": false,
+    "is_start_position_verified": false,
+    "is_end_position_verified": false,
+    "location_method": "unknown",
+    "vehicle_impact": "unknown",
+    "lanes": [
+     {
+      "order": 1,
+      "type": "general",
+      "status": "closed"
+     },
+     {
+      "order": 2,
+      "type": "shoulder",
+      "status": "open"
+     }
+    ],
+    "beginning_milepost": 14.5,
+    "ending_milepost": 15.5
+   }
+  }
+ ]
+}

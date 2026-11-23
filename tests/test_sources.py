@@ -127,6 +127,19 @@ def test_wzdx_v4_work_zones_and_the_feed_registry():
     assert len(reg) >= 40 and sum(1 for r in reg if r["url"]) >= 35
 
 
+def test_wzdx_which_lanes_are_closed_and_no_nan_limit():
+    ev = wzdx.parse(js("wzdx_v4_written.json"))
+    assert ev[0].closed_lanes == [1] and ev[0].lane_count == 2     # the left one of two
+    feed = {"features": [{"id": "n", "properties": {
+        "core_details": {"event_type": "work-zone", "road_names": ["US-31"]}, "reduced_speed_limit_kph": "NaN",
+        "lanes": [{"order": 1, "type": "shoulder", "status": "closed"}, {"order": 2, "type": "general", "status": "open"},
+                  {"order": 3, "type": "general", "status": "closed"}]},
+        "geometry": {"type": "LineString", "coordinates": [[-86.1, 39.7], [-86.1, 39.71]]}}]}
+    e, = wzdx.parse(feed)
+    assert e.speed_limit is None                                   # a "NaN" limit is no limit
+    assert e.closed_lanes == [2] and e.lane_count == 2 and e.lanes_closed == 1   # shoulders are not car lanes
+
+
 def test_wzdx_detour_is_the_open_diversion_route_not_a_closure():
     # Real Florida DOT answer (23 Nov 2026): a detour road event is the road traffic is
     # sent onto. Closing it would close the way round the works.
@@ -204,3 +217,17 @@ def test_the_catalogue_names_only_adapters_that_exist():
                 assert attr in ("", "live") or hasattr(m, attr)
             else:
                 importlib.import_module(f"drivenow.sources.{mod}")
+
+
+def test_wzdx_every_car_lane_closed_is_a_closure_even_with_the_shoulder_open():
+    # Real Iowa DOT answer (23 Nov 2026): "The road is closed ... A detour is in operation",
+    # reported as some-lanes-closed because a shoulder stays open.
+    ev, = wzdx.parse(js("wzdx_idot_closed.json"), "idot")
+    assert ev.blocked and ev.kind == "closure" and ev.closed_lanes == [1, 2] and ev.lane_count == 2
+
+
+def test_wzdx_one_listed_lane_closed_is_not_taken_as_the_road_closed():
+    # Real Kentucky answer (23 Nov 2026): impact "unknown", one general lane listed (closed)
+    # and a shoulder. Whether the road has more lanes is not said: one lane closed, no closure.
+    ev, = wzdx.parse(js("wzdx_kytc_one_lane.json"), "kytc")
+    assert not ev.blocked and ev.kind == "roadworks" and ev.lanes_closed == 1 and ev.lane_count == 1

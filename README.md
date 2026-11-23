@@ -1278,6 +1278,8 @@ drivenow/
   simulation.py   simulatore interno (IDM, semafori, rotonda, precedenza)
   sumo_world.py   ponte TraCI con SUMO
   probe.py        orari dei semafori senza dati, imparati dalle auto e ricontrollati
+  probe_reports.py  cosa dicono le auto DriveNow dei semafori senza dati (per probe.py)
+  wzdx_world.py   mondo SUMO intorno a un cantiere USA reale, con i cantieri del suo feed WZDx
   display.py      quello che vede il guidatore: numero stabile, annunci distanziati
   profile_learner.py  quanto rallenta ogni auto a piede alzato, imparato dalla sua guida
   positioning.py  il GPS di un telefono (rumore, ritardo, buchi) e il filtro di Kalman lungo la strada
@@ -1294,8 +1296,9 @@ drivenow/
 web/              mappa: index.html, style.css, app.js
 data/sumo/        reti a griglia 1×1–4×4 (dalla vecchia Traffc_light_control)
 data/hamburg/     scenario reale di Amburgo (rete, semafori registrati, traffico, lon/lat dei tratti)
+data/wzdx/        tre scenari intorno a cantieri USA reali (rete OSM, traffico ipotizzato, cantieri letti dal feed)
 data/traffic_sources.json  catalogo delle fonti di dati di traffico trovate (153 in 25 paesi)
-tools/            costruzione dello scenario di Amburgo, esperimenti (anche sensori e meteo:
+tools/            costruzione degli scenari di Amburgo e dei cantieri USA (wzdx_build.py), esperimenti (anche sensori e meteo:
                   perception_experiment.py), accuratezza delle previsioni imparate dalle
                   auto, registrazione delle pagine
 tests/            pytest (i test SUMO si saltano se SUMO non è installato)

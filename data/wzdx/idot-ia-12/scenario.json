@@ -1,0 +1,42 @@
+{
+ "scenario": "idot-ia-12",
+ "title": "Iowa DOT · IA-12",
+ "feed": "idot",
+ "organization": "Iowa DOT",
+ "state": "iowa",
+ "event_id": "wzdx:idot:OpenTMS-Event24868241186-NB",
+ "event": {
+  "kind": "closure",
+  "road": "IA-12",
+  "speed_limit_kmh": null,
+  "lanes_closed": 2,
+  "closed_lanes": [
+   1,
+   2
+  ],
+  "lane_count": 2,
+  "length_m": 1517,
+  "start": 1795004404.0,
+  "end": 1795647600.0
+ },
+ "clock0": 1795440333.0,
+ "read_utc": "2026-11-23T13:25:33Z",
+ "bbox": [
+  -96.401206,
+  42.486222,
+  -96.372975,
+  42.493573
+ ],
+ "osm_signals_near_zone": 14,
+ "sumo_lights": 12,
+ "sumo_lights_near_zone": 5,
+ "events_on_network": 3,
+ "events_in_force": 3,
+ "veh_per_hour": 900.0,
+ "veh_per_hour_is": "assumed: no open counts for these roads",
+ "lights": "OpenStreetMap's, with SUMO's guessed fixed-time programme (no open timings)",
+ "sources": {
+  "work_zones": "WZDx feed 'idot' of Iowa DOT, listed in USDOT's Work Zone Data Feed Registry",
+  "map": "© OpenStreetMap contributors, ODbL"
+ }
+}

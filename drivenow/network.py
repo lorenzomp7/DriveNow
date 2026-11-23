@@ -43,6 +43,7 @@ class Node:
     entry_speed: float = 25 / 3.6                           # roundabout / give-way crossing speed
     name: str = ""
     plan_source: str = ""                                   # 'sumo': read from the net file; 'drivenow': ours
+    tl: str = ""                                            # SUMO's traffic light id (often the node's own)
     right_before_left: bool = False                         # unsignalised, everyone gives way to the right
 
 
@@ -383,14 +384,21 @@ def load_sumo_net(path: str, fallback_cycle: float = 40.0) -> Network:
         node.radius = max(ends) if ends else 0.0
 
     logics = {tl.attrib["id"]: tl for tl in root.iter("tlLogic")}
+    # The light controlling each junction: SUMO may name it differently (guessed lights are
+    # "GS_<junction>") or join several junctions under one light.
+    tl_of: Dict[str, str] = {}
+    for tl, lk in tl_links.items():
+        for frm, _ in lk.values():
+            tl_of.setdefault(edges[frm].to_node, tl)
     for node in nodes.values():
         if node.kind != SIGNAL:
             continue
+        node.tl = tl_of.get(node.id, node.id)
         approaches = [e for e in edges.values() if e.to_node == node.id]
-        logic = logics.get(node.id)
+        logic = logics.get(node.tl)
         phases_xml = list(logic.iter("phase")) if logic is not None else []
         realistic = phases_xml and all(float(p.attrib["duration"]) < 1000 for p in phases_xml)
-        links = tl_links.get(node.id, {})
+        links = {i: fd for i, fd in tl_links.get(node.tl, {}).items() if edges[fd[0]].to_node == node.id}
         if realistic and links:
             # One group per approach edge, coloured like its straight movement.
             pick: Dict[str, int] = {}

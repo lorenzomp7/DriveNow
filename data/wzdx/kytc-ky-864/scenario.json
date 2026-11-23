@@ -1,0 +1,41 @@
+{
+ "scenario": "kytc-ky-864",
+ "title": "Kentucky Transportation Cabinet · KY-864",
+ "feed": "kytc",
+ "organization": "Kentucky Transportation Cabinet",
+ "state": "kentucky",
+ "event_id": "wzdx:kytc:TOC-26885",
+ "event": {
+  "kind": "roadworks",
+  "road": "KY-864",
+  "speed_limit_kmh": null,
+  "lanes_closed": 1,
+  "closed_lanes": [
+   1
+  ],
+  "lane_count": 1,
+  "length_m": 1599,
+  "start": 1785618349.0,
+  "end": 1796079600.0
+ },
+ "clock0": 1795440472.0,
+ "read_utc": "2026-11-23T13:27:52Z",
+ "bbox": [
+  -85.744828,
+  38.227894,
+  -85.732775,
+  38.248901
+ ],
+ "osm_signals_near_zone": 10,
+ "sumo_lights": 31,
+ "sumo_lights_near_zone": 14,
+ "events_on_network": 1,
+ "events_in_force": 1,
+ "veh_per_hour": 900.0,
+ "veh_per_hour_is": "assumed: no open counts for these roads",
+ "lights": "OpenStreetMap's, with SUMO's guessed fixed-time programme (no open timings)",
+ "sources": {
+  "work_zones": "WZDx feed 'kytc' of Kentucky Transportation Cabinet, listed in USDOT's Work Zone Data Feed Registry",
+  "map": "© OpenStreetMap contributors, ODbL"
+ }
+}

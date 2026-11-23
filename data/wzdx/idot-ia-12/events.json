@@ -1,0 +1,221 @@
+{
+ "feed": "idot",
+ "organization": "Iowa DOT",
+ "url": "https://iowa-atms.cloud-q-free.com/api/rest/dataprism/wzdx/wzdxfeed",
+ "read_utc": "2026-11-23T13:25:33Z",
+ "feed_info": null,
+ "features": [
+  {
+   "id": "OpenTMS-Event16032286314",
+   "type": "Feature",
+   "properties": {
+    "core_details": {
+     "event_type": "work-zone",
+     "data_source_id": "IowaDOT-WZDx",
+     "road_names": [
+      "IA-12"
+     ],
+     "direction": "northbound",
+     "description": "Between US 75 and IA 812 (Sioux City). There is a weight limit in effect. No vehicles over 40,000 lbs. Until December 31, 2029 at about 5:00PM CDT. Full schedule below: \u2022 October 9, 2024, 12:00PM - December 31, 2029, 5:00PM Comment: Sioux City RCE (712-239-1367) - Woodbury County **IA 12 North is also known as Gordon Dr. West and Business US 20 West**",
+     "update_date": "2026-08-10T20:01:17Z"
+    },
+    "start_date": "2024-10-09T17:00:00Z",
+    "end_date": "2029-12-31T23:00:00Z",
+    "start_date_accuracy": "estimated",
+    "end_date_accuracy": "estimated",
+    "beginning_accuracy": "estimated",
+    "ending_accuracy": "estimated",
+    "beginning_cross_street": "12N-3.5",
+    "ending_cross_street": "12N-4.5",
+    "beginning_milepost": 3.5,
+    "ending_milepost": 4.5,
+    "vehicle_impact": "all-lanes-open",
+    "restrictions": [
+     {
+      "type": "reduced-weight",
+      "value": 18144.0,
+      "unit": "kilograms"
+     }
+    ],
+    "types_of_work": [],
+    "lanes": [
+     {
+      "order": 1,
+      "type": "shoulder",
+      "status": "open"
+     },
+     {
+      "order": 2,
+      "type": "general",
+      "status": "open"
+     },
+     {
+      "order": 3,
+      "type": "general",
+      "status": "open"
+     },
+     {
+      "order": 4,
+      "type": "general",
+      "status": "open"
+     },
+     {
+      "order": 5,
+      "type": "shoulder",
+      "status": "open"
+     }
+    ],
+    "location_method": "unknown"
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      -96.375895,
+      42.489945
+     ],
+     [
+      -96.396333,
+      42.489841
+     ]
+    ]
+   }
+  },
+  {
+   "id": "OpenTMS-Event24868241186-NB",
+   "type": "Feature",
+   "properties": {
+    "core_details": {
+     "event_type": "work-zone",
+     "data_source_id": "IowaDOT-WZDx",
+     "road_names": [
+      "IA-12"
+     ],
+     "direction": "northbound",
+     "description": "Between US 75 and IA 812 (Sioux City). The road is closed due to road construction work. A detour is in operation. Follow the Iowa DOT-recommended detour around the closure. See map for detour(s). Until November 25, 2026 at about 5:00PM CST. Full schedule below: \u2022 November 18, 6:20AM - November 25, 5:00PM Comment: Sioux City RCE (712-239-1367) - Woodbury County",
+     "update_date": "2026-11-18T12:24:52Z"
+    },
+    "start_date": "2026-11-18T12:20:04Z",
+    "end_date": "2026-11-25T23:00:00Z",
+    "start_date_accuracy": "estimated",
+    "end_date_accuracy": "estimated",
+    "beginning_accuracy": "estimated",
+    "ending_accuracy": "estimated",
+    "beginning_cross_street": "12N-3.6",
+    "ending_cross_street": "12N-4.5",
+    "beginning_milepost": 3.6,
+    "ending_milepost": 4.5,
+    "vehicle_impact": "some-lanes-closed",
+    "types_of_work": [
+     {
+      "type_name": "surface-work"
+     }
+    ],
+    "lanes": [
+     {
+      "order": 1,
+      "type": "shoulder",
+      "status": "closed"
+     },
+     {
+      "order": 2,
+      "type": "general",
+      "status": "closed"
+     },
+     {
+      "order": 3,
+      "type": "general",
+      "status": "closed"
+     },
+     {
+      "order": 4,
+      "type": "shoulder",
+      "status": "open"
+     }
+    ],
+    "location_method": "unknown"
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      -96.377848,
+      42.489954
+     ],
+     [
+      -96.396333,
+      42.489841
+     ]
+    ]
+   }
+  },
+  {
+   "id": "OpenTMS-Event24868241186-SB",
+   "type": "Feature",
+   "properties": {
+    "core_details": {
+     "event_type": "work-zone",
+     "data_source_id": "IowaDOT-WZDx",
+     "road_names": [
+      "IA-12"
+     ],
+     "direction": "southbound",
+     "description": "Between US 75 and IA 812 (Sioux City). The road is closed due to road construction work. A detour is in operation. Follow the Iowa DOT-recommended detour around the closure. See map for detour(s). Until November 25, 2026 at about 5:00PM CST. Full schedule below: \u2022 November 18, 6:20AM - November 25, 5:00PM Comment: Sioux City RCE (712-239-1367) - Woodbury County",
+     "update_date": "2026-11-18T12:24:52Z"
+    },
+    "start_date": "2026-11-18T12:20:04Z",
+    "end_date": "2026-11-25T23:00:00Z",
+    "start_date_accuracy": "estimated",
+    "end_date_accuracy": "estimated",
+    "beginning_accuracy": "estimated",
+    "ending_accuracy": "estimated",
+    "beginning_cross_street": "12N-3.6",
+    "ending_cross_street": "12N-4.5",
+    "beginning_milepost": 3.6,
+    "ending_milepost": 4.5,
+    "vehicle_impact": "some-lanes-closed",
+    "types_of_work": [
+     {
+      "type_name": "surface-work"
+     }
+    ],
+    "lanes": [
+     {
+      "order": 1,
+      "type": "shoulder",
+      "status": "closed"
+     },
+     {
+      "order": 2,
+      "type": "general",
+      "status": "closed"
+     },
+     {
+      "order": 3,
+      "type": "general",
+      "status": "closed"
+     },
+     {
+      "order": 4,
+      "type": "shoulder",
+      "status": "open"
+     }
+    ],
+    "location_method": "unknown"
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      -96.377848,
+      42.489954
+     ],
+     [
+      -96.396333,
+      42.489841
+     ]
+    ]
+   }
+  }
+ ]
+}

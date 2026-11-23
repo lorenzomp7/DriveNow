@@ -35,6 +35,8 @@ class RoadEvent:
     speed_limit: Optional[float] = None         # m/s, temporary
     blocked: bool = False                       # the road (this way) is closed
     lanes_closed: Optional[int] = None
+    closed_lanes: List[int] = field(default_factory=list)   # which: 1 = leftmost car lane, when known
+    lane_count: Optional[int] = None            # car lanes the source counts there
     queue_length: Optional[float] = None        # m
     text: str = ""
     edges: List[str] = field(default_factory=list)

@@ -1,0 +1,199 @@
+{
+ "feed": "kytc",
+ "organization": "Kentucky Transportation Cabinet",
+ "url": "https://storage.googleapis.com/kytc-its-2020-openrecords/public/feeds/WZDx/kytc_wzdx_v4.1.geojson",
+ "read_utc": "2026-11-23T13:27:52Z",
+ "feed_info": {
+  "publisher": "Kentucky Transportation Cabinet (KYTC)",
+  "data_sources": [
+   {
+    "data_source_id": "KYTC-TOC",
+    "organization_name": "KYTC Transportation Operation Center",
+    "contact_name": "KYTC Transportation Operation Center",
+    "contact_email": "KYTCTOC.operators@ky.gov"
+   }
+  ],
+  "update_date": "2026-11-23T13:00:03Z",
+  "update_frequency": 1800,
+  "contact_name": "ITS",
+  "contact_email": "kytcits@ky.gov",
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "version": "4.1"
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "bbox": [
+    -85.7402529043,
+    38.2315129611,
+    -85.7373500987,
+    38.2452823949
+   ],
+   "id": "TOC-26885",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -85.740253,
+      38.231513
+     ],
+     [
+      -85.740184,
+      38.231915
+     ],
+     [
+      -85.740141,
+      38.232161
+     ],
+     [
+      -85.739986,
+      38.233073
+     ],
+     [
+      -85.73996,
+      38.233206
+     ],
+     [
+      -85.739812,
+      38.234063
+     ],
+     [
+      -85.739794,
+      38.234204
+     ],
+     [
+      -85.739758,
+      38.234379
+     ],
+     [
+      -85.739613,
+      38.235206
+     ],
+     [
+      -85.739438,
+      38.236234
+     ],
+     [
+      -85.7394,
+      38.236435
+     ],
+     [
+      -85.739389,
+      38.236532
+     ],
+     [
+      -85.739391,
+      38.236601
+     ],
+     [
+      -85.739411,
+      38.236694
+     ],
+     [
+      -85.739462,
+      38.236837
+     ],
+     [
+      -85.739485,
+      38.236909
+     ],
+     [
+      -85.739498,
+      38.236985
+     ],
+     [
+      -85.739492,
+      38.237118
+     ],
+     [
+      -85.739276,
+      38.238322
+     ],
+     [
+      -85.739024,
+      38.239758
+     ],
+     [
+      -85.738777,
+      38.241192
+     ],
+     [
+      -85.738602,
+      38.242201
+     ],
+     [
+      -85.738421,
+      38.243247
+     ],
+     [
+      -85.737848,
+      38.243216
+     ],
+     [
+      -85.737776,
+      38.24322
+     ],
+     [
+      -85.737757,
+      38.243228
+     ],
+     [
+      -85.737731,
+      38.243248
+     ],
+     [
+      -85.737703,
+      38.243277
+     ],
+     [
+      -85.737689,
+      38.243334
+     ],
+     [
+      -85.73748,
+      38.244533
+     ],
+     [
+      -85.73735,
+      38.245282
+     ]
+    ]
+   },
+   "properties": {
+    "core_details": {
+     "event_type": "work-zone",
+     "data_source_id": "KYTC-TOC",
+     "road_names": [
+      "KY-864"
+     ],
+     "direction": "northbound",
+     "description": "KY-864 between MM 14.5 and 15.5 in Jefferson County",
+     "creation_date": "2026-08-01T21:07:29Z",
+     "update_date": "2026-10-23T23:18:11Z"
+    },
+    "start_date": "2026-08-01T21:05:49Z",
+    "end_date": "2026-11-30T23:00:00Z",
+    "is_start_date_verified": false,
+    "is_end_date_verified": false,
+    "is_start_position_verified": false,
+    "is_end_position_verified": false,
+    "location_method": "unknown",
+    "vehicle_impact": "unknown",
+    "lanes": [
+     {
+      "order": 1,
+      "type": "general",
+      "status": "closed"
+     },
+     {
+      "order": 2,
+      "type": "shoulder",
+      "status": "open"
+     }
+    ],
+    "beginning_milepost": 14.5,
+    "ending_milepost": 15.5
+   }
+  }
+ ]
+}
