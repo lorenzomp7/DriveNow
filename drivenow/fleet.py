@@ -186,6 +186,10 @@ class FleetDB:
         """An event closing ``edge`` now, or None."""
         return next((ev for ev in self.events_on(edge, t) if ev.blocked), None)
 
+    def signal_fault(self, edge: str, t: float) -> bool:
+        """The light at the end of ``edge`` is reported out of order."""
+        return any(ev.kind == "signal_fault" for ev in self.events_on(edge, t))
+
     def travel_time(self, edge: str, t: float, limit: Optional[float] = None,
                     max_age: float = 600.0) -> Optional[Tuple[float, str, float]]:
         """(seconds, source, age in s) to drive ``edge``, from the most direct estimate there is:

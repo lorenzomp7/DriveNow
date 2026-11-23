@@ -259,6 +259,8 @@ class Control:
     crossed at no more than ``entry_speed``; ``windows`` are the gaps in
     that traffic (times when no main-road car is close to the junction),
     already including the safety margins.
+    kind ``limit``: a lower temporary speed limit from ``distance`` on (roadworks), to be
+    reached at no more than ``entry_speed``; unlike ``yield`` the lights beyond still count.
     """
 
     kind: str
@@ -357,7 +359,17 @@ def _advise(
     notes: List[str] = []
     signals: List[Control] = []
     gap: Optional[Control] = None
+    # A temporary limit or a closed road ahead caps the speed wherever it is, also beyond the
+    # lights the advice looks at.
     for c in controls:
+        if c.kind == "limit" or (c.kind == "yield" and c.node == "closure"):
+            cap = coast_cap(c.distance, c.entry_speed, profile)
+            if cap < v_cap:
+                v_cap = cap
+                notes.append(f"{c.kind}:{c.node}")
+    for c in controls:
+        if c.kind == "limit":
+            continue
         if c.kind in ("yield", "gap"):
             cap = coast_cap(c.distance, c.entry_speed, profile)
             if cap < v_cap:

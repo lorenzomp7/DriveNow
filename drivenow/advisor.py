@@ -93,6 +93,12 @@ class Advisor:
         # show every gap in the main-road traffic, (node, time) -> bool. None: not used.
         self.segment_speed_fn: Optional[Callable[[str, float], Optional[float]]] = None
         self.gap_trust_fn: Optional[Callable[[str, float], bool]] = None
+        # What is in the way (road_events.py, through FleetDB): a temporary speed limit on an
+        # edge, (edge, time) -> m/s or None; and a closure, (edge, time) -> the event or None.
+        self.limit_fn: Optional[Callable[[str, float], Optional[float]]] = None
+        self.blocked_fn: Optional[Callable[[str, float], object]] = None
+        # A light reported out of order, (approach edge, time) -> bool: its timing is not used.
+        self.signal_fault_fn: Optional[Callable[[str, float], bool]] = None
         self.profile = profile
         self.margins = margins
         self.horizon = horizon
@@ -125,6 +131,8 @@ class Advisor:
 
     def _signal(self, edge_id: str, next_edge: Optional[str], t: float):
         """Green windows and group for a movement, from the source or the node's plan."""
+        if self.signal_fault_fn is not None and self.signal_fault_fn(edge_id, t):
+            return None   # out of order: nothing is known about it, and an unknown light is no green
         if self.windows_fn is not None:
             return self.windows_fn(edge_id, next_edge, t)
         node = self.net.nodes[self.net.edges[edge_id].to_node]
@@ -238,9 +246,22 @@ class Advisor:
         slow: Optional[Tuple[float, float, int]] = None  # nearest slow car: distance, speed, cars before it
         seen = 0                          # cars ahead so far
         signal_queues: List[Tuple[float, int]] = []  # confident lights: distance, standing cars before them
+        prev_limit = self._limit(route[idx], t)
         for k in range(idx, len(route)):
             edge = self.net.edges[route[k]]
             start = dist - (pos if k == idx else 0.0)  # distance to where this edge begins
+            if k > idx and (self.limit_fn is not None or self.blocked_fn is not None):
+                if self.blocked_fn is not None and self.blocked_fn(edge.id, t):
+                    # The road is closed from here: the car will have to stop before it.
+                    controls.append(Control("yield", max(start - 2.0, 0.0), "closure", entry_speed=0.0,
+                                            shown_distance=start))
+                    first = first or NextControl("closure", "closure", start)
+                    break
+                lim = self._limit(edge.id, t)
+                if lim < prev_limit - 0.5:
+                    controls.append(Control("limit", start, "works", entry_speed=lim))
+                    first = first or NextControl("works", "works", start, str(round(lim * 3.6)))
+                prev_limit = lim
             dist += edge.length - (pos if k == idx else 0.0)
             ahead = [(p, u) for p, u in occupancy.get(edge.id, []) if k != idx or p > pos + 0.5]
             standing = [p for p, u in ahead if u < STOPPED]
@@ -359,9 +380,16 @@ class Advisor:
                                        if self.net.turn(route[k], n) != "t"]
                         break
         controls, first = self.controls_ahead(route, idx, pos, t, occupancy, v, options)
-        limit = self.net.edges[route[idx]].speed
+        limit = self._limit(route[idx], t)
         adv = advise(controls, v, limit, profile or self.profile, self.margins, self.max_signals,
                      self.uncertain_drop)
+        if "yield:closure" in adv.notes or "limit:works" in adv.notes:
+            # A closed road or roadworks ahead is what sets the speed now: tell the driver.
+            name = "closure" if "yield:closure" in adv.notes else "works"
+            c = next(c for c in controls if c.node == name)
+            d = c.shown_distance if c.shown_distance is not None else c.distance
+            first = NextControl(name, name, d, "" if name == "closure" else str(round(c.entry_speed * 3.6)),
+                                first.lights if first is not None else [])
         if "yield:queue" in adv.notes:
             # The traffic ahead is what sets the speed now: tell the driver about it.
             q = next(c for c in controls if c.node == "queue")
@@ -369,6 +397,15 @@ class Advisor:
             first = NextControl("queue", "queue", d, str(round(q.entry_speed * 3.6)),
                                 first.lights if first is not None else [])
         return adv, first
+
+    def _limit(self, edge_id: str, t: float) -> float:
+        """The speed limit on an edge now: its own, or a lower temporary one (roadworks)."""
+        limit = self.net.edges[edge_id].speed
+        if self.limit_fn is not None:
+            tmp = self.limit_fn(edge_id, t)
+            if tmp:
+                limit = min(limit, tmp)
+        return limit
 
     # -- the map layer --------------------------------------------------------
 

@@ -156,3 +156,28 @@ def test_osm_lights_roadworks_and_limits():
     near = osm.nearest_nodes(got["signals"], {"J1": (9.9901, 53.5500), "J2": (9.98, 53.54)})
     assert near == {"J1": 11}
     assert "traffic_signals" in osm.query((9.98, 53.54, 10.02, 53.56))
+
+
+def test_hamburg_police_messages_closures_works_queues_and_lights_out_of_order():
+    from drivenow.sources import hamburg_police
+    ev = hamburg_police.parse(raw("hh_police_current.xml"))
+    assert [e.kind for e in ev] == ["closure", "roadworks", "queue", "roadworks"]
+    assert ev[0].blocked and not ev[1].blocked                      # "halbseitig gesperrt": half the road
+    assert all(e.start and len(e.line) == 1 for e in ev)
+    fault, = hamburg_police.parse(raw("hh_police_signal_fault.xml"))
+    assert fault.kind == "signal_fault" and "Ampelanlage" in fault.text
+    # Local time without a zone: 06:00 in Hamburg in May is 04:00 UTC.
+    assert hamburg_police._local("2023-05-30T06:00:00") == epoch("2023-05-30T04:00:00Z")
+
+
+def test_a_light_out_of_order_is_not_used_by_the_advice():
+    from drivenow.advisor import Advisor
+    from drivenow.network import demo_city
+    net = demo_city()
+    edge = next(e for e in net.edges.values() if net.nodes[e.to_node].kind == "signal")
+    adv = Advisor(net)
+    assert adv._signal(edge.id, None, 0.0) is not None
+    db = FleetDB({e: net.edges[e].length for e in net.edges})
+    db.event(RoadEvent("f", "signal_fault", "hamburg-police", [], edges=[edge.id]))
+    adv.signal_fault_fn = db.signal_fault
+    assert adv._signal(edge.id, None, 0.0) is None

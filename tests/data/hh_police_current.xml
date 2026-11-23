@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<wfs:FeatureCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd https://registry.gdi-de.org/id/de.hh.up https://geodienste.hamburg.de/wfs_verkehrsinformation?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=DescribeFeatureType&amp;OUTPUTFORMAT=application%2Fgml%2Bxml%3B+version%3D3.2&amp;TYPENAME=de.hh.up:hauptmeldungen_aktuell&amp;NAMESPACES=xmlns(de.hh.up,https%3A%2F%2Fregistry.gdi-de.org%2Fid%2Fde.hh.up)" xmlns:wfs="http://www.opengis.net/wfs/2.0" timeStamp="2026-11-23T11:16:07Z" xmlns:gml="http://www.opengis.net/gml/3.2" numberMatched="unknown" numberReturned="0">
+  <!--NOTE: numberReturned attribute should be 'unknown' as well, but this would not validate against the current version of the WFS 2.0 schema (change upcoming). See change request (CR 144): https://portal.opengeospatial.org/files?artifact_id=43925.-->
+  <wfs:member>
+    <de.hh.up:hauptmeldungen_aktuell xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_5138232">
+      <de.hh.up:id>LMS/638635.1</de.hh.up:id>
+      <de.hh.up:status>BAUSTELLE</de.hh.up:status>
+      <de.hh.up:description>Hamburg, Überseering
+zwischen New-York-Ring und Jahnring
+in beiden Richtungen gesperrt, Bauarbeiten, bis 30.06.2033</de.hh.up:description>
+      <de.hh.up:art>ConstructionWorks</de.hh.up:art>
+      <de.hh.up:art_detail>constructionWork</de.hh.up:art_detail>
+      <de.hh.up:start>2023-05-30T06:00:00</de.hh.up:start>
+      <de.hh.up:end>2033-06-30T21:59:00</de.hh.up:end>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_5138232_DE.HH.UP_GEOM'-->
+        <gml:Point gml:id="DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_5138232_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.603780 10.017460</gml:pos>
+        </gml:Point>
+      </de.hh.up:geom>
+    </de.hh.up:hauptmeldungen_aktuell>
+  </wfs:member>
+<wfs:member>
+    <de.hh.up:hauptmeldungen_aktuell xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_78195431">
+      <de.hh.up:id>LMS/r_LMS/1013592_LMS-TH/58.3</de.hh.up:id>
+      <de.hh.up:status>BAUSTELLE</de.hh.up:status>
+      <de.hh.up:description>Hamburg, Gustav-Adolf-Straße
+zwischen Tratzigerstraße und Rechteck
+halbseitig gesperrt, Blockabfertigung, vorübergehende Regelung durch provisorische Ampelanlagen, Bauarbeiten, bis voraussichtlich 15.09.2027</de.hh.up:description>
+      <de.hh.up:art>ConstructionWorks</de.hh.up:art>
+      <de.hh.up:art_detail>constructionWork</de.hh.up:art_detail>
+      <de.hh.up:start>2026-09-01T06:25:00</de.hh.up:start>
+      <de.hh.up:end>2027-09-15T21:59:00</de.hh.up:end>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_78195431_DE.HH.UP_GEOM'-->
+        <gml:Point gml:id="DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_78195431_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.571890 10.085940</gml:pos>
+        </gml:Point>
+      </de.hh.up:geom>
+    </de.hh.up:hauptmeldungen_aktuell>
+  </wfs:member>
+<wfs:member>
+    <de.hh.up:hauptmeldungen_aktuell xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_84989178">
+      <de.hh.up:id>LMS/r_LMS/1028859_LMS-TH/58.1</de.hh.up:id>
+      <de.hh.up:status>STAU</de.hh.up:status>
+      <de.hh.up:description>Hamburg, Bergiusstraße
+zwischen Am Born und Alma-Wartenberg-Platz
+geänderte Verkehrsregelung, bitte folgen Sie der Beschilderung und nicht dem Navigationsgerät</de.hh.up:description>
+      <de.hh.up:art>AbnormalTraffic</de.hh.up:art>
+      <de.hh.up:art_detail></de.hh.up:art_detail>
+      <de.hh.up:start>2026-10-20T09:45:00</de.hh.up:start>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_84989178_DE.HH.UP_GEOM'-->
+        <gml:Point gml:id="DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_84989178_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.553150 9.926260</gml:pos>
+        </gml:Point>
+      </de.hh.up:geom>
+    </de.hh.up:hauptmeldungen_aktuell>
+  </wfs:member>
+<wfs:member>
+    <de.hh.up:hauptmeldungen_aktuell xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_79937893">
+      <de.hh.up:id>LMS/r_LMS/1017820_LMS-TH/58.1</de.hh.up:id>
+      <de.hh.up:status>WARTUNG</de.hh.up:status>
+      <de.hh.up:description>Hamburg, Veddeler Brückenstraße
+zwischen Veddeler Marktplatz und Hovestieg
+in beiden Richtungen Fahrbahn auf einen Fahrstreifen verengt, Brückenarbeiten, bis 10.03.2027</de.hh.up:description>
+      <de.hh.up:art>MaintenanceWorks</de.hh.up:art>
+      <de.hh.up:art_detail>maintenanceWork</de.hh.up:art_detail>
+      <de.hh.up:start>2026-09-14T06:35:00</de.hh.up:start>
+      <de.hh.up:end>2027-03-10T22:59:00</de.hh.up:end>
+      <de.hh.up:geom>
+        <!--Inlined geometry 'DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_79937893_DE.HH.UP_GEOM'-->
+        <gml:Point gml:id="DE.HH.UP_HAUPTMELDUNGEN_AKTUELL_79937893_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.525723 10.022869</gml:pos>
+        </gml:Point>
+      </de.hh.up:geom>
+    </de.hh.up:hauptmeldungen_aktuell>
+  </wfs:member>
+</wfs:FeatureCollection>

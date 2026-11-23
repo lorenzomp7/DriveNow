@@ -124,6 +124,8 @@ class SumoWorld:
         self.flow_delay = (60.0, 120.0)
         self.fleet: Optional[FleetDB] = None
         self.estimator = None   # with "fused": a QueueEstimator from loop detectors (see hamburg/world.py)
+        self._road_events: Dict[str, object] = {}
+        self._road_db: Optional[FleetDB] = None
         self._fleet_clock = 0.0
         self._flow_rng = random.Random(seed * 15485863 + 7)
         self._flow_sum: Dict[str, List[float]] = {}   # edge -> [sum of speeds, samples] this window
@@ -324,6 +326,35 @@ class SumoWorld:
 
     # -- the other cars, as DriveNow knows them on the road ------------------------
 
+    def load_road_events(self, events, apply_to_sumo: bool = True) -> int:
+        """Roadworks, closures and the like (road_events.RoadEvent, already matched to this
+        network's edges): the advice knows them, and with ``apply_to_sumo`` every simulated car
+        drives by them too (the temporary limit on the edge's lanes, closed edges shut).
+        Returns how many events touch the network."""
+        events = [ev for ev in events if any(e in self.net.edges for e in ev.edges)]
+        self._road_events.update({ev.id: ev for ev in events})
+        db = self.fleet
+        if db is None:
+            if self._road_db is None:
+                self._road_db = FleetDB({e.id: e.length for e in self.net.edges.values()})
+            db = self._road_db
+        db.events.update(self._road_events)
+        self.advisor.limit_fn, self.advisor.blocked_fn = db.speed_limit, db.blocked
+        self.advisor.signal_fault_fn = db.signal_fault
+        if apply_to_sumo:
+            for ev in events:
+                for e in ev.edges:
+                    if e not in self.net.edges:
+                        continue
+                    if ev.blocked:
+                        for i in range(self.conn.edge.getLaneNumber(e)):
+                            self.conn.lane.setDisallowed(f"{e}_{i}", ["all"])
+                    elif ev.speed_limit:
+                        for i in range(self.conn.edge.getLaneNumber(e)):
+                            lane = f"{e}_{i}"
+                            self.conn.lane.setMaxSpeed(lane, min(self.conn.lane.getMaxSpeed(lane), ev.speed_limit))
+        return len(events)
+
     def _feed_fleet(self) -> None:
         if self.fleet is None:
             self.fleet = FleetDB({e.id: e.length for e in self.net.edges.values()},
@@ -331,6 +362,9 @@ class SumoWorld:
             self.advisor.gap_trust_fn = self.fleet.gap_trust
             if self.occupancy_source in ("fleet+flow", "fused"):
                 self.advisor.segment_speed_fn = self._segment_speed
+            self.fleet.events.update(self._road_events)
+            self.advisor.limit_fn, self.advisor.blocked_fn = self.fleet.speed_limit, self.fleet.blocked
+            self.advisor.signal_fault_fn = self.fleet.signal_fault
         self._fleet_clock -= self.dt
         if self._fleet_clock > 1e-9:
             return

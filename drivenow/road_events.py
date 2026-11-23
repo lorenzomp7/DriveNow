@@ -19,7 +19,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 # The kinds of event, whatever the source calls them.
 KINDS = ("roadworks", "closure", "restriction", "speed_limit", "accident", "obstruction",
-         "queue", "weather", "bridge", "hazard", "other")
+         "queue", "weather", "bridge", "hazard", "signal_fault", "other")
 
 Points = Dict[str, Sequence[float]]   # edge -> [lon, lat, heading in degrees, length in m]
 

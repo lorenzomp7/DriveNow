@@ -498,3 +498,48 @@ def test_slow_aggregated_traffic_delays_the_arrival():
     occ = {edge.id: [(edge.length - 10.0, 0.1 + 2.0)]}
     _, e2 = adv._traffic_ahead(edge.id, 0.0, occ, 0.0)
     assert e2 >= earliest
+
+
+def _two_edges():
+    from drivenow.network import demo_city
+    net = demo_city()
+    a = next(e for e in net.edges.values() if e.length > 150 and e.next_edges)
+    b = net.edges[a.next_edges[0]]
+    return net, a, b
+
+
+def test_roadworks_ahead_cap_the_speed_without_hiding_what_follows():
+    from drivenow.advisor import Advisor
+    net, a, b = _two_edges()
+    adv = Advisor(net)
+    base_ctrl, _ = adv.controls_ahead([a.id, b.id], 0, 0.0, 0.0, {})
+    adv.limit_fn = lambda e, t: 30 * KMH if e == b.id else None
+    ctrl, first = adv.controls_ahead([a.id, b.id], 0, 0.0, 0.0, {})
+    works = [c for c in ctrl if c.kind == "limit"]
+    assert len(works) == 1 and works[0].distance == pytest.approx(a.length) and works[0].entry_speed == pytest.approx(30 * KMH)
+    assert len(ctrl) == len(base_ctrl) + 1                     # the other controls are still there
+    advice, nc = adv.advise([a.id, b.id], 0, a.length - 60.0, 50 * KMH, 0.0, {})
+    assert advice.high <= coast_cap(60.0, 30 * KMH, P) + 1e-6
+    # On the roadworks edge itself the temporary limit is the limit.
+    advice, _ = adv.advise([b.id], 0, 0.0, 20 * KMH, 0.0, {})
+    assert advice.high <= 30 * KMH + 1e-6
+
+
+def test_a_closed_road_ahead_means_stopping_before_it():
+    from drivenow.advisor import Advisor
+    net, a, b = _two_edges()
+    adv = Advisor(net)
+    adv.blocked_fn = lambda e, t: e == b.id
+    advice, nc = adv.advise([a.id, b.id], 0, a.length - 40.0, 50 * KMH, 0.0, {})
+    assert nc.kind == "closure" and nc.distance == pytest.approx(40.0)
+    assert advice.high <= coast_cap(38.0, 0.0, P) + 1e-6
+
+
+def test_no_road_events_no_change():
+    from drivenow.advisor import Advisor
+    net, a, b = _two_edges()
+    one, two = Advisor(net), Advisor(net)
+    two.limit_fn = lambda e, t: None
+    two.blocked_fn = lambda e, t: None
+    for pos in (0.0, 50.0, a.length - 30.0):
+        assert one.advise([a.id, b.id], 0, pos, 45 * KMH, 0.0, {}) == two.advise([a.id, b.id], 0, pos, 45 * KMH, 0.0, {})

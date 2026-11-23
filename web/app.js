@@ -372,7 +372,7 @@ function gaugePoint(v, max) {
   const th = Math.PI * (1 - Math.min(Math.max(v / max, 0), 1));
   return [110 + 90 * Math.cos(th), 115 - 90 * Math.sin(th)];
 }
-const NEXT_NAME = { signal: "Semaforo", roundabout: "Rotonda", yield: "Precedenza", queue: "Coda" };
+const NEXT_NAME = { signal: "Semaforo", roundabout: "Rotonda", yield: "Precedenza", queue: "Coda", works: "Cantiere", closure: "Strada chiusa" };
 const COLOR_NAME = { G: "verde", y: "giallo", r: "rosso" };
 
 let lastAnnounce = { id: null, n: 0 };
@@ -408,6 +408,8 @@ function updateHud() {
   const giveWay = nk === "yield";
   if (giveWay) labels.stop = "Dai precedenza";
   if (nk === "queue") labels.cap = Number(ng) < 8 ? "Coda ferma più avanti" : "Traffico lento più avanti";
+  if (nk === "works") labels.cap = `Cantiere, limite ${ng} km/h`;
+  if (nk === "closure") { labels.cap = "Strada chiusa più avanti"; labels.stop = "Strada chiusa più avanti"; }
   const k = $("kind"); k.textContent = labels[kind]; k.className = "kind " + kind;
 
   const node = nn ? nodes.get(nn) : null;
@@ -435,6 +437,10 @@ function updateHud() {
     texts.cap = Number(ng) < 8
       ? `Coda ferma tra ${nd} m: alza il piede, non superare ${hi} km/h e arriverai in fondo alla coda senza frenare.`
       : `Traffico a circa ${ng} km/h tra ${nd} m: alza il piede, non superare ${hi} km/h e lo raggiungerai alla sua velocità senza frenare.`;
+  if (nk === "works" && kind === "cap")
+    texts.cap = `Cantiere tra ${nd} m con limite a ${ng} km/h: alza il piede, non superare ${hi} km/h e ci arriverai alla velocità giusta senza frenare.`;
+  if (nk === "closure" && (kind === "cap" || kind === "stop"))
+    texts[kind] = `La strada è chiusa tra ${nd} m: alza il piede e lascia scorrere l'auto fino a fermarti prima della chiusura.`;
   $("advice").textContent = texts[kind];
   $("band").textContent = lo !== null && hi !== null ? `${lo}–${hi} km/h` : hi !== null ? `fino a ${hi} km/h` : "nessuna";
   $("speed").textContent = `${speed} km/h · limite ${limit}`;
