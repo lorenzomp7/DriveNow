@@ -1,0 +1,247 @@
+{
+ "scenario": "willy-brandt",
+ "minutes": 60,
+ "warmup_min": 10,
+ "penetration": 0.5,
+ "forecast": "predict",
+ "road_events_read_utc": 1795448668.1548538,
+ "conditions": {
+  "none_-": {
+   "trips": [
+    2387.4,
+    60.71
+   ],
+   "travel_time": [
+    331.88,
+    7.33
+   ],
+   "stops": [
+    3.43,
+    0.02
+   ],
+   "brake_energy_kj": [
+    376.34,
+    3.86
+   ],
+   "all_trips": [
+    2387.4,
+    60.71
+   ],
+   "still": [
+    752.8,
+    37.62
+   ],
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  "none_aware": {
+   "trips": [
+    2272.6,
+    155.85
+   ],
+   "travel_time": [
+    368.0,
+    36.52
+   ],
+   "stops": [
+    3.25,
+    0.23
+   ],
+   "brake_energy_kj": [
+    381.14,
+    9.36
+   ],
+   "all_trips": [
+    2272.6,
+    155.85
+   ],
+   "still": [
+    722.4,
+    121.32
+   ],
+   "rerouted": [
+    533.0,
+    0.0
+   ],
+   "no_way_round": [
+    8.0,
+    0.0
+   ],
+   "zone_time_s": [
+    0.0,
+    0.0
+   ],
+   "zone_speeding_s": [
+    0.0,
+    0.0
+   ],
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  "predict_-": {
+   "trips": [
+    1086.2,
+    54.19
+   ],
+   "travel_time": [
+    345.8,
+    15.88
+   ],
+   "stops": [
+    3.01,
+    0.09
+   ],
+   "brake_energy_kj": [
+    222.48,
+    2.31
+   ],
+   "all_trips": [
+    2186.2,
+    99.6
+   ],
+   "still": [
+    900.4,
+    46.78
+   ],
+   "others_time": [
+    332.98,
+    14.14
+   ],
+   "others_brake": [
+    338.74,
+    6.98
+   ],
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  "predict_aware": {
+   "trips": [
+    1111.2,
+    41.88
+   ],
+   "travel_time": [
+    385.16,
+    38.87
+   ],
+   "stops": [
+    3.04,
+    0.23
+   ],
+   "brake_energy_kj": [
+    231.82,
+    3.72
+   ],
+   "all_trips": [
+    2229.4,
+    96.51
+   ],
+   "still": [
+    770.0,
+    77.08
+   ],
+   "rerouted": [
+    533.0,
+    0.0
+   ],
+   "no_way_round": [
+    8.0,
+    0.0
+   ],
+   "zone_time_s": [
+    0.0,
+    0.0
+   ],
+   "zone_speeding_s": [
+    0.0,
+    0.0
+   ],
+   "others_time": [
+    371.22,
+    41.3
+   ],
+   "others_brake": [
+    354.56,
+    3.34
+   ],
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  "predict_unaware": {
+   "trips": [
+    1111.2,
+    41.88
+   ],
+   "travel_time": [
+    385.16,
+    38.87
+   ],
+   "stops": [
+    3.04,
+    0.23
+   ],
+   "brake_energy_kj": [
+    231.82,
+    3.72
+   ],
+   "all_trips": [
+    2229.4,
+    96.51
+   ],
+   "still": [
+    770.0,
+    77.08
+   ],
+   "rerouted": [
+    533.0,
+    0.0
+   ],
+   "no_way_round": [
+    8.0,
+    0.0
+   ],
+   "zone_time_s": [
+    0.0,
+    0.0
+   ],
+   "zone_speeding_s": [
+    0.0,
+    0.0
+   ],
+   "others_time": [
+    371.22,
+    41.3
+   ],
+   "others_brake": [
+    354.56,
+    3.34
+   ],
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  }
+ }
+}

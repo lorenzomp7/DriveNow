@@ -945,7 +945,7 @@ altrimenti si chiuderebbe proprio la strada per aggirare il cantiere.
   consulenza e, se richiesto, anche alle corsie di SUMO, così vi si attengono
   tutte le auto simulate.
 
-**Il catalogo:** `data/traffic_sources.json` raccoglie 153 fonti in 25 paesi,
+**Il catalogo:** `data/traffic_sources.json` raccoglie 155 fonti in 25 paesi,
 costruito con `tools/build_sources_catalog.py`:
 - dai link di `graphhopper/open-traffic-collection`;
 - dal registro USDOT dei cantieri (43 feed);
@@ -956,7 +956,7 @@ Per ognuna ci sono:
 - tipi di dato;
 - formato;
 - accesso (aperto, registrazione, chiave, solo enti);
-- l'adattatore che la legge (79 fonti);
+- l'adattatore che la legge (81 fonti);
 - l'esito del controllo da questo ambiente.
 
 `tools/sources_catalog.py` le elenca per paese, tipo, accesso o adattatore, e con
@@ -972,7 +972,9 @@ aperto nell'ambiente di sviluppo gli host del catalogo:
 | Spostate su una home page (i dati non ci sono più) | 2 |
 | Non controllata (MQTT di Amburgo, non HTTP; letta da `hamburg/live.py`) | 1 |
 
-Prima di aprire gli host le fonti raggiunte erano 19. L'ambiente accetta al massimo
+Prima di aprire gli host le fonti raggiunte erano 19. Dopo il controllo sono state aggiunte 2 fonti
+di Amburgo: il WFS dei cantieri della città (raggiunto) e l'offerta DATEX II del LSBG su Mobilithek
+(solo con abbonamento). L'ambiente accetta al massimo
 128 host, quindi:
 - 12 fonti spostate sono nel catalogo con il nuovo indirizzo (`moved_from` tiene
   il vecchio);
@@ -1009,6 +1011,112 @@ esito completo in `data/public_data_check_2026-11-23.json`):
   mie, non numeri della città.
 - **Google Maps, Waze e Apple Maps** il traffico ce l'hanno, ma non lo danno
   come dato: si veda "Dove sono le altre auto".
+
+### Cantieri e chiusure di Amburgo nelle simulazioni
+
+**DATEX II per Amburgo: solo con abbonamento.** L'unico feed DATEX II con i cantieri delle
+strade di Amburgo è "Traffic Disturbance Roadworks" del LSBG su Mobilithek (offerta
+110000000003540000):
+- DATEX II v2, aggiornato ogni ora, licenza aperta;
+- per riceverlo servono un account Mobilithek, l'approvazione del fornitore e un certificato
+  macchina rilasciato da Mobilithek.
+
+Il client è pronto, in `drivenow/sources/mobilithek.py`. Legge i dati come prevede la
+specifica tecnica di Mobilithek (§7.1.2.2.1):
+- GET su `https://mobilithek.info:8443/…/subscription/<id>/clientPullService?subscriptionID=<id>`;
+- TLS reciproco con il certificato, gzip, `If-Modified-Since`;
+- 204/304 = niente di nuovo, 403 = abbonamento non autorizzato.
+
+È provato solo su una risposta scritta secondo il formato (`tests/data/lsbg_written_v2.xml`):
+senza abbonamento non ho dati veri. **Non funziona dalle sessioni cloud di sviluppo**: il loro
+proxy intercetta il TLS e non lascia passare né il certificato client né la porta 8443. Si
+usa da un computer con connessione diretta:
+
+```bash
+openssl pkcs12 -in macchina.p12 -out macchina.pem -nodes
+python tools/hamburg_road_events.py --scenario willy-brandt --mobilithek-subscription ID --cert macchina.pem
+```
+
+**Fonti aperte usate ora** (`tools/hamburg_road_events.py`; le risposte grezze sono salvate
+in `data/hamburg/<scenario>/road_events.json`, quindi le prove si possono ripetere):
+- **Messaggi della polizia** (`hamburg_police.py`). "rechter/linker Fahrstreifen gesperrt"
+  chiude quella corsia. Un messaggio valido solo in certe ore ("Mo - Fr zwischen 10:00 Uhr und
+  16:00 Uhr") è escluso fuori da quelle ore.
+- **Cantieri della città** (`hamburg_roadworks.py`, WFS "Bauweiser"): 135 cantieri, letti
+  come punti con data di inizio e fine.
+  - È una chiusura solo se il testo dice "Vollsperrung" e nulla la limita a un tratto, a
+    un'ora o a una fase: 2 su 135.
+  - Il limite di velocità c'è solo se il testo lo scrive esplicitamente: 1 su 135.
+  - Il feed non dice quali corsie sono chiuse.
+- **Strade citate:** i messaggi sono punti senza direzione, e un punto vicino a un incrocio è
+  vicino a più strade. Si tengono quindi solo i tratti della strada citata ("Hamburg,
+  Repsoldstraße zwischen …"). Prima di questa correzione la chiusura della Repsoldstraße
+  chiudeva anche il Nordkanalbrücke.
+
+**Le date: un "cosa succederebbe se".** Le simulazioni riproducono il 14 settembre 2023 dalle
+17:00. Dei cantieri pubblicati oggi, 14 erano in vigore quel giorno ma nessuno sulle due reti.
+Gli intralci letti il 23 novembre 2026 (16:44 ad Amburgo) sono quindi applicati, così come
+erano in quel momento, all'ora registrata: i semafori restano quelli del 2023.
+
+| Willy-Brandt-Straße | Cosa succede nella simulazione |
+|---|---|
+| Repsoldstraße, Hahntrapp: chiuse (polizia) | tratti chiusi, auto deviate |
+| Ludwig-Erhard-Straße, Willy-Brandt-Straße: corsia di destra chiusa (polizia) | una corsia chiusa su 3 tratti ciascuna, in entrambi i sensi (i messaggi non dicono quale) |
+| Kirchenallee (una corsia), Raboisen (senso unico), Steinstraße (cantiere della città) | nessun effetto: corsia non indicata, senso unico non rappresentato |
+| Spaldingstraße, corsia di destra | escluso: solo lun–ven 10–16 |
+
+Sulla Gärtnerstraße non resta nulla di applicabile. Il cantiere della città è "abschnittsweise
+Vollsperrung", cioè chiusa a tratti senza dire quale, e la polizia non segnala nulla. Per
+questo non ci ho fatto simulazioni.
+
+**Prove sulla Willy-Brandt-Straße:**
+- 25 simulazioni: 5 seed × 5 condizioni;
+- 60 minuti ciascuna, di cui 10 di riscaldamento non contati;
+- previsione dei semafori dalla registrazione ("predict");
+- metà delle auto con DriveNow, nelle prove con DriveNow;
+- viaggi contati: da 2.052 a 2.463 per esecuzione.
+
+I seed cambiano l'imprecisione dei guidatori e quali auto hanno DriveNow; il traffico è
+quello ricostruito per quell'ora. Le colonne riportano, per viaggio, tempo, fermate ed energia
+di frenata, con media ± deviazione standard sui 5 seed. Con DriveNow sono quelle delle auto
+DriveNow; senza DriveNow, di tutte le auto.
+
+| Condizione | Tempo (s) | Fermate | Frenata (kJ) | Auto ancora in rete alla fine |
+|---|---|---|---|---|
+| senza DriveNow, senza intralci | 331,9 ± 7,3 | 3,43 | 376 ± 4 | 753 |
+| senza DriveNow, con gli intralci | 368,0 ± 36,5 | 3,25 | 381 ± 9 | 722 |
+| DriveNow, senza intralci | 345,8 ± 15,9 | 3,01 | 222 ± 2 | 900 |
+| DriveNow, con gli intralci (li conosca o no) | 385,2 ± 38,9 | 3,04 | 232 ± 4 | 770 |
+
+Con gli intralci, in ogni esecuzione sono state deviate 533 auto e 8 sono state tolte perché
+non avevano un'altra strada.
+
+**Cosa si vede:**
+- **Gli intralci di oggi pesano:** +36 s per viaggio senza DriveNow (+11%), con molta
+  variabilità tra i seed (± 37 s), dovuta alle deviazioni e alle corsie chiuse sull'asse
+  principale.
+- **DriveNow aiuta anche con gli intralci:**
+  - le sue auto frenano il 39% in meno di tutte le auto senza DriveNow (232 contro 381 kJ),
+    quasi come senza intralci (−41%);
+  - il prezzo è di 14–17 s in più per viaggio (+4–5%).
+- **Conoscere gli intralci non cambia nulla qui.** "Conosce" e "non conosce" danno gli stessi
+  numeri, perché:
+  - questi intralci non hanno limiti di velocità;
+  - le auto deviate non entrano mai nei tratti chiusi;
+  - il consiglio non usa le corsie chiuse: le vede solo attraverso le code.
+
+  Servirebbero i limiti dei cantieri, che il feed DATEX II del LSBG dovrebbe avere e le fonti
+  aperte no.
+- **Da notare, anche senza intralci:** con metà delle auto DriveNow alla fine dell'ora restano
+  in rete più auto (900 contro 753) e i viaggi completati sono l'8% in meno. Va capito a parte.
+
+**Limiti:**
+- **Punti senza direzione:** una corsia chiusa in un solo senso viene chiusa in entrambi.
+- **Testi interpretati:** chiusure e corsie sono ricavate dal testo con regole prudenti, che
+  nel dubbio non chiudono nulla.
+- **Niente orari reali:** gli intralci sono di oggi, i semafori e il traffico del 2023.
+
+Risultati per condizione: `data/hamburg/willy-brandt/road_events_results_2026-11-23.json`.
 
 ### Cantieri USA (WZDx) in simulazione
 
@@ -1421,7 +1529,8 @@ drivenow/
   fleet.py        il database delle auto in movimento: auto DriveNow una per una e traffico per tratto
   traffic_sources.py  traffico aggregato da TomTom Traffic Flow e dalle code di Waze for Cities
   road_events.py  intralci comuni a tutte le fonti: cantieri, chiusure, code, semafori fuori servizio
-  sources/        adattatori per formato: DATEX II, Autobahn, Amburgo, Finlandia, Torino, WZDx, HERE, OSM
+  sources/        adattatori per formato: DATEX II (anche l'abbonamento Mobilithek), Autobahn, Amburgo
+                  (polizia, cantieri della città, Verkehrslage), Finlandia, Torino, WZDx, HERE, OSM
   estimator.py    code ai semafori dalle spire e dai telefoni
   perception.py   sensori dell'auto (telecamera, radar, lidar, meteo) e loro fusione
   autopilot.py    guida autonoma sui pedali, da quello che vedono i sensori
