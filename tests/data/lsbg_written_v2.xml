@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- WRITTEN, not a real answer: no subscription to LSBG's "Traffic Disturbance Roadworks"
+     (Mobilithek offer 110000000003540000) was available. Laid out after DATEX II v2
+     (SituationPublication, MDM TrafficMessages profile): one roadworks record with a
+     temporary limit and a closed lane, one road closure, one record located by Alert-C only. -->
+<d2LogicalModel xmlns="http://datex2.eu/schema/2/2_0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" modelBaseVersion="2">
+  <exchange><supplierIdentification><country>de</country><nationalIdentifier>DE-MDM-LSBG</nationalIdentifier></supplierIdentification></exchange>
+  <payloadPublication xsi:type="SituationPublication" lang="de">
+    <publicationTime>2026-11-23T15:00:00+01:00</publicationTime>
+    <publicationCreator><country>de</country><nationalIdentifier>DE-MDM-LSBG</nationalIdentifier></publicationCreator>
+    <situation id="LSBG-1" version="1">
+      <situationRecord xsi:type="MaintenanceWorks" id="LSBG-1-R1" version="1">
+        <validity><validityStatus>definedByValidityTimeSpec</validityStatus>
+          <validityTimeSpecification><overallStartTime>2026-08-31T00:00:00+02:00</overallStartTime><overallEndTime>2028-05-31T23:59:00+02:00</overallEndTime></validityTimeSpecification></validity>
+        <generalPublicComment><comment><values><value lang="de">Steinstraße: ein Fahrstreifen Richtung Osten</value></values></comment></generalPublicComment>
+        <groupOfLocations xsi:type="Linear">
+          <linearExtension><linearByCoordinatesExtension>
+            <linearCoordinatesStartPoint><pointCoordinates><latitude>53.55095</latitude><longitude>9.99950</longitude></pointCoordinates></linearCoordinatesStartPoint>
+            <linearCoordinatesEndPoint><pointCoordinates><latitude>53.55160</latitude><longitude>10.00420</longitude></pointCoordinates></linearCoordinatesEndPoint>
+          </linearByCoordinatesExtension></linearExtension>
+        </groupOfLocations>
+        <impact><numberOfLanesRestricted>1</numberOfLanesRestricted></impact>
+        <roadMaintenanceType>roadworks</roadMaintenanceType>
+        <situationRecordExtension><temporarySpeedLimit>30</temporarySpeedLimit></situationRecordExtension>
+      </situationRecord>
+    </situation>
+    <situation id="LSBG-2" version="1">
+      <situationRecord xsi:type="RoadOrCarriagewayOrLaneManagement" id="LSBG-2-R1" version="1">
+        <validity><validityStatus>active</validityStatus>
+          <validityTimeSpecification><overallStartTime>2026-11-09T00:00:00+01:00</overallStartTime><overallEndTime>2027-03-30T23:59:00+02:00</overallEndTime></validityTimeSpecification></validity>
+        <groupOfLocations xsi:type="Point"><locationForDisplay><latitude>53.57790</latitude><longitude>9.97120</longitude></locationForDisplay></groupOfLocations>
+        <roadOrCarriagewayOrLaneManagementType>roadClosed</roadOrCarriagewayOrLaneManagementType>
+      </situationRecord>
+    </situation>
+    <situation id="LSBG-3" version="1">
+      <situationRecord xsi:type="MaintenanceWorks" id="LSBG-3-R1" version="1">
+        <groupOfLocations xsi:type="Point"><alertCPoint xsi:type="AlertCMethod2Point"><alertCLocationCountryCode>D</alertCLocationCountryCode><alertCLocationTableNumber>1</alertCLocationTableNumber></alertCPoint></groupOfLocations>
+      </situationRecord>
+    </situation>
+  </payloadPublication>
+</d2LogicalModel>

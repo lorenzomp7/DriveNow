@@ -231,3 +231,77 @@ def test_wzdx_one_listed_lane_closed_is_not_taken_as_the_road_closed():
     # and a shoulder. Whether the road has more lanes is not said: one lane closed, no closure.
     ev, = wzdx.parse(js("wzdx_kytc_one_lane.json"), "kytc")
     assert not ev.blocked and ev.kind == "roadworks" and ev.lanes_closed == 1 and ev.lane_count == 1
+
+
+def test_hamburg_city_roadworks_dates_points_closures_and_limits():
+    # Real answer of Hamburg's roadworks WFS (Bauweiser, 23 Nov 2026), four sites.
+    from drivenow.sources import hamburg_roadworks as hr
+    ev = {e.text.split(" | ")[0]: e for e in hr.parse(raw("hh_baustellen.xml"))}
+    stein = next(e for k, e in ev.items() if k.startswith("Steinstraße"))
+    garten = next(e for k, e in ev.items() if "Gärtnerstraße" in k)
+    suelldorf = next(e for k, e in ev.items() if k.startswith("Sülldorfer"))
+    dallbregen = next(e for k, e in ev.items() if k.startswith("Dallbregen"))
+    schleuse = next(e for k, e in ev.items() if k.startswith("Reiherstiegschleuse"))
+    # "bleibt bis auf die Vollsperrung (voraussichtlich im Frühjahr 2027) ... befahrbar": not closed now.
+    assert stein.kind == "roadworks" and not stein.blocked
+    assert not garten.blocked                     # "Abschnittsweise Vollsperrung": which section is not said
+    # "unter Vollsperrung" but later "bis auf ... der einzelnen Bauphasen": phases, so not closed.
+    assert not suelldorf.blocked
+    assert dallbregen.blocked and dallbregen.kind == "closure"   # "... wird ... vollgesperrt."
+    assert schleuse.speed_limit == pytest.approx(30 / 3.6) and not schleuse.blocked
+    assert all(len(e.line) == 1 for e in ev.values())
+    # 31.08.2026 to 31.05.2028, Hamburg time; the end day counts.
+    assert stein.start == hr._day("31.08.2026") and stein.end == hr._day("31.05.2028") + 86400
+    assert stein.start == epoch("2026-08-30T22:00:00Z")
+    assert "BBOX=53.5" in hr.url((9.98, 53.54, 10.02, 53.56))
+
+
+def test_mobilithek_subscription_pull_of_lsbg_datex2():
+    # Hamburg's roadworks in DATEX II v2 (LSBG) come only through a Mobilithek subscription,
+    # with a machine certificate. The answer here is written (lsbg_written_v2.xml).
+    import gzip as _gz
+    from drivenow.sources import mobilithek
+    body = _gz.compress(raw("lsbg_written_v2.xml"))
+    asked = []
+    answers = [(200, {"Last-Modified": "Mon, 23 Nov 2026 14:00:00 GMT"}, body), (304, {}, b""), (204, {}, b"")]
+
+    def fetch(url, headers):
+        asked.append((url, dict(headers)))
+        return answers.pop(0)
+
+    sub = mobilithek.MobilithekPull("2000000", fetch=fetch)
+    assert sub.url() == ("https://mobilithek.info:8443/mobilithek/api/v1.0/subscription/2000000/"
+                         "clientPullService?subscriptionID=2000000")
+    ev, st = sub.pull()
+    assert asked[0][1]["Accept-Encoding"] == "gzip" and "If-Modified-Since" not in asked[0][1]
+    assert st == {"status": 200, "records": 3, "with_coordinates": 2, "alert_c_only": 1, "no_location": 0}
+    works, closed = ev
+    assert works.kind == "roadworks" and works.speed_limit == pytest.approx(30 / 3.6) and works.lanes_closed == 1
+    assert len(works.line) == 2 and closed.blocked and closed.kind == "closure"
+    assert sub.pull() == ([], {"status": 304})                       # nothing newer
+    assert asked[1][1]["If-Modified-Since"] == "Mon, 23 Nov 2026 14:00:00 GMT"
+    assert sub.pull() == ([], {"status": 204})                       # no package yet
+    with pytest.raises(PermissionError):
+        mobilithek.MobilithekPull("2000000", fetch=lambda u, h: (403, {}, b"")).pull()
+    with pytest.raises(ValueError):
+        mobilithek.MobilithekPull("2000000")                         # no certificate, no fetch
+    with pytest.raises(ValueError):
+        mobilithek.MobilithekPull("abc", fetch=fetch)                # the id is a number
+
+
+def test_hamburg_police_lane_closed_and_hours_from_the_text():
+    # Wording of real messages read on 23 Nov 2026.
+    from drivenow.sources import hamburg_police as hp
+    from drivenow.hamburg.road_events import street, in_force
+    right = hp._lanes("B4 Hamburg, Willy-Brandt-Straße zwischen Dovenfleet und Oberbaumbrücke rechter Fahrstreifen gesperrt, Dauerbaustelle")
+    left = hp._lanes("Hamburg, X-Straße zwischen A und B linker Fahrstreifen gesperrt")
+    assert right == (1, []) and left == (1, [1]) and hp._lanes("Hamburg, Y-Straße gesperrt") == (None, [])
+    assert street("B4 Hamburg, Willy-Brandt-Straße zwischen Dovenfleet und Oberbaumbrücke rechter Fahrstreifen") == "Willy-Brandt-Straße"
+    assert street("Hamburg, Hahntrapp bis Hopfenmarkt zwischen Bohnenstraße und Kleiner Burstah gesperrt") == "Hahntrapp"
+    assert street("Hamburg, Norderstraße in Höhe Hammerbrookstraße in beiden Richtungen gesperrt") == "Norderstraße"
+    assert street("Steinstraße, Speersort / Straßenumbau | Autoverkehr: ...") == "Steinstraße"
+    # "Mo - Fr zwischen 10:00 Uhr und 16:00 Uhr": in force on a Monday at 11:00 Hamburg time, not at 16:44.
+    txt = "Hamburg, Spaldingstraße zwischen Repsoldstraße und B4 rechter Fahrstreifen gesperrt, bis 04.12.2026, Mo - Fr zwischen 10:00 Uhr und 16:00 Uhr"
+    assert in_force(txt, epoch("2026-11-23T10:00:00Z")) and not in_force(txt, epoch("2026-11-23T15:44:00Z"))
+    assert not in_force(txt, epoch("2026-11-22T10:00:00Z"))          # a Sunday
+    assert in_force("Hamburg, Y-Straße gesperrt", epoch("2026-11-22T03:00:00Z"))  # no hours: always

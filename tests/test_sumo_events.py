@@ -81,4 +81,6 @@ def test_which_sumo_lanes_an_event_closes():
     assert idx(None, RoadEvent("a", "roadworks", "t", [], closed_lanes=[1], lane_count=2, lanes_closed=1), 2) == [1]
     assert idx(None, RoadEvent("b", "roadworks", "t", [], closed_lanes=[1], lane_count=3, lanes_closed=1), 2) == [0]
     assert idx(None, RoadEvent("c", "roadworks", "t", [], lanes_closed=3), 2) == [0]          # one stays open
+    # "linker Fahrstreifen": the leftmost lane, whatever the number of lanes
+    assert idx(None, RoadEvent("e", "restriction", "t", [], closed_lanes=[1], lanes_closed=1), 3) == [2]
     assert idx(None, RoadEvent("d", "closure", "t", [], blocked=True), 2) == [0, 1]

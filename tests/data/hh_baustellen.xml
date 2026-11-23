@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<wfs:FeatureCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd https://registry.gdi-de.org/id/de.hh.up https://geodienste.hamburg.de/hh_wfs_baustellen?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=DescribeFeatureType&amp;OUTPUTFORMAT=application%2Fgml%2Bxml%3B+version%3D3.2&amp;TYPENAME=de.hh.up:baustelle&amp;NAMESPACES=xmlns(de.hh.up,https%3A%2F%2Fregistry.gdi-de.org%2Fid%2Fde.hh.up)" xmlns:wfs="http://www.opengis.net/wfs/2.0" timeStamp="2026-11-23T15:39:18Z" xmlns:gml="http://www.opengis.net/gml/3.2" numberMatched="unknown" numberReturned="0">
+  <!--NOTE: numberReturned attribute should be 'unknown' as well, but this would not validate against the current version of the WFS 2.0 schema (change upcoming). See change request (CR 144): https://portal.opengeospatial.org/files?artifact_id=43925.-->
+  <wfs:member>
+    <de.hh.up:baustelle xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_BAUSTELLE_861962">
+      <de.hh.up:titel>Reiherstiegschleuse / Erneuerung Schleuse, Brücke und Straße</de.hh.up:titel>
+      <de.hh.up:organisation>Hamburg Port Authority</de.hh.up:organisation>
+      <de.hh.up:anlass>Neubau der Reiherstiegschleuse und Brücke</de.hh.up:anlass>
+      <de.hh.up:umfang>Hohe Schaar-Straße 36-44, 21107 Hamburg
+ca. 450 m
+Reduzierung der Geschwindigkeit auf 30km/h
+Sperrung der südlichen Straßenbrücken im Bereich Reiherstiegschleuse
+zweistreifige Verkehrsführung über die Nördlichen Straßenbrücken
+der Fußgänger- und Radverkehr erfolgt auf dem nördlichen Gehweg (der südliche Gehweg ist gesperrt)</de.hh.up:umfang>
+      <de.hh.up:baubeginn>20.06.2024</de.hh.up:baubeginn>
+      <de.hh.up:bauende>31.12.2027</de.hh.up:bauende>
+      <de.hh.up:letzteaktualisierung>2025-03-28T12:54:45</de.hh.up:letzteaktualisierung>
+      <de.hh.up:istzugangeingeschraenkt>false</de.hh.up:istzugangeingeschraenkt>
+      <de.hh.up:iststoerung>true</de.hh.up:iststoerung>
+      <de.hh.up:isthotspot>false</de.hh.up:isthotspot>
+      <de.hh.up:istfreigegeben>true</de.hh.up:istfreigegeben>
+      <de.hh.up:mehrwert>Verbesserung der Infrastruktur Land und Wasser</de.hh.up:mehrwert>
+      <de.hh.up:istoepnveingeschraenkt>true</de.hh.up:istoepnveingeschraenkt>
+      <de.hh.up:oevnveinschraenkungen>Bushaltestelle „Hohe-Schaar“ Richtung Kornweide wurde ca. 130m nach Westen verlegt</de.hh.up:oevnveinschraenkungen>
+      <de.hh.up:hatinternetlink>false</de.hh.up:hatinternetlink>
+      <de.hh.up:hatumleitungsbeschreibung>false</de.hh.up:hatumleitungsbeschreibung>
+      <de.hh.up:istparkraumeingeschraenkt>false</de.hh.up:istparkraumeingeschraenkt>
+      <de.hh.up:tns_koordinate_value>
+        <!--Inlined geometry 'DE.HH.UP_BAUSTELLE_861962_DE.HH.UP_TNS_KOORDINATE_VALUE'-->
+        <gml:Point gml:id="DE.HH.UP_BAUSTELLE_861962_DE.HH.UP_TNS_KOORDINATE_VALUE" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.480242 9.983625</gml:pos>
+        </gml:Point>
+      </de.hh.up:tns_koordinate_value>
+    </de.hh.up:baustelle>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:baustelle xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_BAUSTELLE_1022213">
+      <de.hh.up:titel>Sülldorfer Kirchenweg - Grundinstandsetzung</de.hh.up:titel>
+      <de.hh.up:organisation>Freie und Hansestadt Hamburg Bezirksamt Altona</de.hh.up:organisation>
+      <de.hh.up:anlass>Das Bezirksamt Altona startet am 23.09.2024 mit der Herstellung einer neuen Straßenentwässerungsleitung und der Grundinstandsetzung im Sülldorfer Kirchenweg.</de.hh.up:anlass>
+      <de.hh.up:umfang>Die Umsetzung der Arbeiten erfolgt unter Vollsperrung des Sülldorfer Kirchenweges, d.h. dass eine Durchfahrt von Sülldorf nach Blankenese und umgekehrt nicht möglich ist.
+Für die Anwohner im Sülldorfer Kirchenweg bedeutet dies, dass der Sülldorfer Kirchenweg bis auf die unmittelbaren Baubereiche der einzelnen Bauphasen weiterhin erreichbar ist.</de.hh.up:umfang>
+      <de.hh.up:baubeginn>23.09.2024</de.hh.up:baubeginn>
+      <de.hh.up:bauende>31.12.2026</de.hh.up:bauende>
+      <de.hh.up:letzteaktualisierung>2024-09-30T07:18:41</de.hh.up:letzteaktualisierung>
+      <de.hh.up:istzugangeingeschraenkt>false</de.hh.up:istzugangeingeschraenkt>
+      <de.hh.up:iststoerung>true</de.hh.up:iststoerung>
+      <de.hh.up:isthotspot>false</de.hh.up:isthotspot>
+      <de.hh.up:istfreigegeben>true</de.hh.up:istfreigegeben>
+      <de.hh.up:mehrwert>Die Instandsetzungsarbeiten zielen langfristig darauf die Infrastruktur, Versorgungsnetze und Lebensqualität in dem o.g. Viertel zu verbessern.</de.hh.up:mehrwert>
+      <de.hh.up:istoepnveingeschraenkt>true</de.hh.up:istoepnveingeschraenkt>
+      <de.hh.up:oevnveinschraenkungen>Die vorhandene Buslinie wird ab dem 23.09.2024 für die gesamte Dauer der Bauzeit großräumig umgeleitet.
+Zur Erreichbarkeit des Quartieres werden von den Verkehrsbetrieben Kleinbusse aus und in Richtung
+Blankenese eingesetzt, die den Sülldorfer Kirchenweg mit einem Grundangebot bis zum Friedhof bzw.
+Blütenweg (je nach Bauphase) versorgen.
+Für die Radfahrer wird eine Umleitungsstrecke für beide Fahrtrichtungen über Babendiekstraße –
+Eichengrund - Am Sorgfeld ausgeschildert.</de.hh.up:oevnveinschraenkungen>
+      <de.hh.up:hatinternetlink>false</de.hh.up:hatinternetlink>
+      <de.hh.up:hatumleitungsbeschreibung>false</de.hh.up:hatumleitungsbeschreibung>
+      <de.hh.up:istparkraumeingeschraenkt>false</de.hh.up:istparkraumeingeschraenkt>
+      <de.hh.up:tns_koordinate_value>
+        <!--Inlined geometry 'DE.HH.UP_BAUSTELLE_1022213_DE.HH.UP_TNS_KOORDINATE_VALUE'-->
+        <gml:Point gml:id="DE.HH.UP_BAUSTELLE_1022213_DE.HH.UP_TNS_KOORDINATE_VALUE" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.578104 9.799547</gml:pos>
+        </gml:Point>
+      </de.hh.up:tns_koordinate_value>
+    </de.hh.up:baustelle>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:baustelle xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_BAUSTELLE_4133419">
+      <de.hh.up:titel>Wrangeltraße-Gärtnerstraße / Verlegung Trinkwasserleitungen</de.hh.up:titel>
+      <de.hh.up:organisation>HAMBURG WASSER</de.hh.up:organisation>
+      <de.hh.up:anlass>Neuverlegung von Leitungen</de.hh.up:anlass>
+      <de.hh.up:umfang>Abschnittsweise Vollsperrung zwischen Hausnummer 100 und 118</de.hh.up:umfang>
+      <de.hh.up:baubeginn>09.11.2026</de.hh.up:baubeginn>
+      <de.hh.up:bauende>30.03.2027</de.hh.up:bauende>
+      <de.hh.up:letzteaktualisierung>2026-10-30T16:47:33</de.hh.up:letzteaktualisierung>
+      <de.hh.up:istzugangeingeschraenkt>false</de.hh.up:istzugangeingeschraenkt>
+      <de.hh.up:iststoerung>true</de.hh.up:iststoerung>
+      <de.hh.up:isthotspot>false</de.hh.up:isthotspot>
+      <de.hh.up:istfreigegeben>true</de.hh.up:istfreigegeben>
+      <de.hh.up:mehrwert>Diese Baustelle ist notwendig für die reibungslose und hygienisch einwandfreie Versorgung der Anlieger mit Trinkwasser.</de.hh.up:mehrwert>
+      <de.hh.up:istoepnveingeschraenkt>false</de.hh.up:istoepnveingeschraenkt>
+      <de.hh.up:hatinternetlink>true</de.hh.up:hatinternetlink>
+      <de.hh.up:internetlink>https://www.hamburgwasser.de/service/aktuell/baustellen/detail/wrangelstrasse-100-118</de.hh.up:internetlink>
+      <de.hh.up:hatumleitungsbeschreibung>false</de.hh.up:hatumleitungsbeschreibung>
+      <de.hh.up:istparkraumeingeschraenkt>true</de.hh.up:istparkraumeingeschraenkt>
+      <de.hh.up:parkraumeinschraenkung>Halteverbote</de.hh.up:parkraumeinschraenkung>
+      <de.hh.up:tns_koordinate_value>
+        <!--Inlined geometry 'DE.HH.UP_BAUSTELLE_4133419_DE.HH.UP_TNS_KOORDINATE_VALUE'-->
+        <gml:Point gml:id="DE.HH.UP_BAUSTELLE_4133419_DE.HH.UP_TNS_KOORDINATE_VALUE" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.583609 9.965521</gml:pos>
+        </gml:Point>
+      </de.hh.up:tns_koordinate_value>
+    </de.hh.up:baustelle>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:baustelle xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_BAUSTELLE_3752806">
+      <de.hh.up:titel>Steinstraße, Speersort / Straßenumbau</de.hh.up:titel>
+      <de.hh.up:organisation>Landesbetrieb Straßen, Brücken und Gewässer</de.hh.up:organisation>
+      <de.hh.up:anlass>Vor dem Hintergrund des 2020 veröffentlichten Handlungskonzeptes Innenstadt wurde seitens der Behörden entschieden, den Individualverkehr in den Innenstadtgebieten zu minimieren. Die Aufenthaltsqualität im Bereich des Hammaburg-Platzes und des Jakobikirchhofs soll gesteigert werden. Der Straßenzug Steinstraße / Speersort soll zur Kommunaltrasse für den ÖPNV, Taxi, Rad- und Fußverkehr von der Straße Jakobikirchhof (Ost) bis zur Schmiedestraße umgebaut werden. Die Verbindungsfunktion für den Fuß- und Radverkehr zwischen Mönckebergquartier und Kontorhausviertel soll mit der geplanten Umgestaltung zusätzlich gestärkt und hervorgehoben werden.</de.hh.up:anlass>
+      <de.hh.up:umfang>Autoverkehr: Die Steinstraße bleibt bis auf die Vollsperrung (voraussichtlich im Frühjahr 2027) durchgehend auf einem Fahrstreifen in Richtung Osten befahrbar.
+Radverkehr: In Fahrtrichtung von Ost nach West wird eine Umleitung über die Mönckebergstraße und den Klosterwall eingerichtet. In Richtung Osten ist die Fahrbahn der Steinstraße weiterhin freigegeben.
+Fußverkehr: Kann die Baustelle sicher passieren oder wird auf barrierefreie Wege umgeleitet. Diese sind für Kinderwagen, Rollatoren und Rollstühle geeignet.
+ÖPNV: Ab Baubeginn können Linienbusse die Steinstraße nur noch in Richtung Osten befahren. In Fahrtrichtung Westen werden die Buslinien umgeleitet. In der Zeit der Vollsperrung müssen alle Busse umgeleitet werden.</de.hh.up:umfang>
+      <de.hh.up:baubeginn>31.08.2026</de.hh.up:baubeginn>
+      <de.hh.up:bauende>31.05.2028</de.hh.up:bauende>
+      <de.hh.up:letzteaktualisierung>2026-09-09T10:20:27</de.hh.up:letzteaktualisierung>
+      <de.hh.up:istzugangeingeschraenkt>true</de.hh.up:istzugangeingeschraenkt>
+      <de.hh.up:einschraenkungsbegruendung>Für Pflasterarbeiten werden die Flächen vor den Gebäuden zeitweise eingeschränkt erreichbar sein. Zuwegung wird aber stets aufrecht erhalten.</de.hh.up:einschraenkungsbegruendung>
+      <de.hh.up:iststoerung>true</de.hh.up:iststoerung>
+      <de.hh.up:isthotspot>false</de.hh.up:isthotspot>
+      <de.hh.up:istfreigegeben>true</de.hh.up:istfreigegeben>
+      <de.hh.up:mehrwert>Die Freie und Hansestadt Hamburg beabsichtigt, die Steinstraße umzugestalten. Die Fahrbahn wird von 4 auf 2 Fahrstreifen verschmälert. Somit werden die Nebenflächen breiter und eine Baumallee sowie Grün- und Blühzonen können angelegt werden. Zudem ist eine neue Radverkehrsanlage in Form eines nicht benutzungspflichtigen Radweges geplant. Die vorhandenen Bushaltestellen werden in Richtung Osten verschoben, um eine Reduzierung des Lärmpegels für die Anwohner und Anlieger der Steinstraße zu erzielen.</de.hh.up:mehrwert>
+      <de.hh.up:istoepnveingeschraenkt>true</de.hh.up:istoepnveingeschraenkt>
+      <de.hh.up:oevnveinschraenkungen>Die Hochbahn AG erarbeitet derzeit ein Konzept für die Umleitungsstrecken und die Verlegung der Bushaltestellen. Über die konkreten Änderungen werden Sie rechtzeitig informiert. Bitte beachten Sie die Aushänge an den Haltestellen sowie die Hinweise der Hochbahn. Weitere Informationen zu Fahrplänen und Umleitungen finden Sie unter www.hvv.de</de.hh.up:oevnveinschraenkungen>
+      <de.hh.up:hatinternetlink>true</de.hh.up:hatinternetlink>
+      <de.hh.up:internetlink>https://lsbg.hamburg.de/steinstrasse</de.hh.up:internetlink>
+      <de.hh.up:hatumleitungsbeschreibung>false</de.hh.up:hatumleitungsbeschreibung>
+      <de.hh.up:istparkraumeingeschraenkt>true</de.hh.up:istparkraumeingeschraenkt>
+      <de.hh.up:parkraumeinschraenkung>Parkflächen stehen innerhalb des Baustellenbereichs nicht zur Verfügung. Für den Lieferverkehr werden spezielle Ladezonen eingerichtet. Diese können jedoch je nach Baufortschritt verlegt oder zeitweise aufgehoben werden.</de.hh.up:parkraumeinschraenkung>
+      <de.hh.up:tns_koordinate_value>
+        <!--Inlined geometry 'DE.HH.UP_BAUSTELLE_3752806_DE.HH.UP_TNS_KOORDINATE_VALUE'-->
+        <gml:Point gml:id="DE.HH.UP_BAUSTELLE_3752806_DE.HH.UP_TNS_KOORDINATE_VALUE" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.550080 10.001383</gml:pos>
+        </gml:Point>
+      </de.hh.up:tns_koordinate_value>
+    </de.hh.up:baustelle>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:baustelle xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" gml:id="DE.HH.UP_BAUSTELLE_4176730">
+      <de.hh.up:titel>Dallbregen / Kranarbeiten</de.hh.up:titel>
+      <de.hh.up:organisation>Sonstige</de.hh.up:organisation>
+      <de.hh.up:anlass>Kranarbeiten</de.hh.up:anlass>
+      <de.hh.up:umfang>Der Dallbregen wird zwischen dem Heidacker und dem Baumacker vollgesperrt.</de.hh.up:umfang>
+      <de.hh.up:baubeginn>26.11.2026</de.hh.up:baubeginn>
+      <de.hh.up:bauende>30.11.2026</de.hh.up:bauende>
+      <de.hh.up:letzteaktualisierung>2026-11-10T06:47:44</de.hh.up:letzteaktualisierung>
+      <de.hh.up:istzugangeingeschraenkt>false</de.hh.up:istzugangeingeschraenkt>
+      <de.hh.up:iststoerung>true</de.hh.up:iststoerung>
+      <de.hh.up:isthotspot>false</de.hh.up:isthotspot>
+      <de.hh.up:istfreigegeben>true</de.hh.up:istfreigegeben>
+      <de.hh.up:mehrwert>Durchführung von Kranarbeiten</de.hh.up:mehrwert>
+      <de.hh.up:istoepnveingeschraenkt>false</de.hh.up:istoepnveingeschraenkt>
+      <de.hh.up:hatinternetlink>false</de.hh.up:hatinternetlink>
+      <de.hh.up:hatumleitungsbeschreibung>false</de.hh.up:hatumleitungsbeschreibung>
+      <de.hh.up:istparkraumeingeschraenkt>false</de.hh.up:istparkraumeingeschraenkt>
+      <de.hh.up:tns_koordinate_value>
+        <!--Inlined geometry 'DE.HH.UP_BAUSTELLE_4176730_DE.HH.UP_TNS_KOORDINATE_VALUE'-->
+        <gml:Point gml:id="DE.HH.UP_BAUSTELLE_4176730_DE.HH.UP_TNS_KOORDINATE_VALUE" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:pos>53.621037 9.897626</gml:pos>
+        </gml:Point>
+      </de.hh.up:tns_koordinate_value>
+    </de.hh.up:baustelle>
+  </wfs:member>
+</wfs:FeatureCollection>

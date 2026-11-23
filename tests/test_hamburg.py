@@ -117,3 +117,31 @@ def test_sumo_runs_the_recorded_lights(scenario):
         assert any(row[11] == "signal" for row in snap["vehicles"])
     finally:
         w.close()
+
+
+def test_road_events_read_for_willy_brandt_in_the_simulation():
+    # The police messages and city roadworks read on 23 Nov 2026 (road_events.json), applied
+    # as they were then: lanes and streets closed in SUMO; known to the advice or not.
+    pytest.importorskip("traci")
+    from drivenow.hamburg.world import HamburgWorld
+    w = HamburgWorld(scenario="willy-brandt", penetration=0.5, label="hh_events_aware", road_events="aware")
+    try:
+        names = {w.net.edges[e].name for ev in w.road_events for e in ev.edges}
+        assert "Willy-Brandt-Straße" in names and "Repsoldstraße" in names
+        assert "Spaldingstraße" not in names                 # only Mo-Fr 10-16: not in force when read
+        assert w.clock0 and w.advisor.blocked_fn is not None
+        closed = [e for ev in w.road_events if ev.blocked for e in ev.edges]
+        assert closed and all(e in w._closed_edges for e in closed)
+        lane = next(ev for ev in w.road_events if ev.lanes_closed and "Willy-Brandt" in ev.text)
+        e = lane.edges[0]
+        assert "passenger" in w.conn.lane.getDisallowed(e + "_0")      # the right lane is shut
+        assert "passenger" not in w.conn.lane.getDisallowed(e + "_1")  # the others stay open
+        for _ in range(100):
+            w.step()
+    finally:
+        w.close()
+    u = HamburgWorld(scenario="willy-brandt", penetration=0.5, label="hh_events_unaware", road_events="unaware")
+    try:
+        assert u.road_events and u.advisor.blocked_fn is None and u._closed_edges
+    finally:
+        u.close()

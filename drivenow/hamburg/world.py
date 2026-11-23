@@ -43,7 +43,8 @@ UI_CHAR = {3: "G", 6: "G", 2: "y", 4: "y", 1: "r"}
 class HamburgWorld(ProbeReports, SumoWorld):
     def __init__(self, scenario: str = "gaertnerstrasse", penetration: float = 0.5, forecast: str = "predict",
                  seed: int = 1, dt: float = 0.2, gui: bool = False, label: str = "hamburg",
-                 threshold: float = 0.8, scale: float = 1.0) -> None:
+                 threshold: float = 0.8, scale: float = 1.0, road_events: Optional[str] = None,
+                 warmup: float = 0.0) -> None:
         data_dir = scenario_dir(scenario)
         scen = json.load(open(os.path.join(data_dir, "scenario.json")))
         self.scenario = scenario
@@ -85,6 +86,28 @@ class HamburgWorld(ProbeReports, SumoWorld):
         self._loop_em: Optional[LoopEmulator] = None
         self._queue_clock = 0.0
         self.queue_errors: Dict[str, Dict[str, List[Tuple[int, int]]]] = {}  # group -> source -> [(estimated, true)]
+        # Trips that started after the warm-up (s).
+        self.warmup = warmup
+        self.measured = {True: GroupStats(), False: GroupStats()}
+        # Road events read for this scenario (data/hamburg/<scenario>/road_events.json, see
+        # hamburg/road_events.py): "aware" the advice knows them, "unaware" only the road has
+        # them. They apply as they were when read (clock0): a "what if" on the recorded hour,
+        # whose lights stay those recorded in 2023.
+        self.road_events: List = []
+        if road_events is not None:
+            self._load_road_events(road_events)
+
+    def _load_road_events(self, mode: str) -> None:
+        from .road_events import on_network, read
+        if mode not in ("aware", "unaware"):
+            raise ValueError("road_events: aware or unaware")
+        snap = json.load(open(os.path.join(self._data_dir, "road_events.json")))
+        points = json.load(open(os.path.join(self._data_dir, "edge_points.json")))
+        names = {e.id: e.name for e in self.net.edges.values()}
+        self.clock0 = float(snap["read_utc"])
+        self.road_events = on_network(read(snap), points, names, self.clock0)
+        self.road_events_advice = mode == "aware"
+        self.load_road_events(self.road_events)
 
     # -- which recorded signal controls which movement ------------------------
 
@@ -142,6 +165,8 @@ class HamburgWorld(ProbeReports, SumoWorld):
         return total > 0 and main / total >= 0.6
 
     def _on_arrival(self, veh) -> None:
+        if veh.t_start >= self.warmup:
+            self.measured[veh.equipped].add(veh, self.t)
         if self.along_corridor(veh.route):
             self.corridor_stats[veh.equipped].add(veh, self.t)
 

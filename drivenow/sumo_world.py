@@ -410,7 +410,7 @@ class SumoWorld:
         """SUMO lane indices (0 = rightmost) the event closes on an edge with ``n`` lanes."""
         if ev.blocked:
             return list(range(n))
-        if ev.closed_lanes and ev.lane_count == n:
+        if ev.closed_lanes and ev.lane_count in (None, n):   # counted from the left
             idx = sorted(n - k for k in ev.closed_lanes if 1 <= k <= n)
         else:
             idx = list(range(ev.lanes_closed or 0))       # unknown which: from the right

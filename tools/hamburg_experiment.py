@@ -45,10 +45,13 @@ ap.add_argument("--det-offset", type=float, default=2.0, help="m before the stop
 ap.add_argument("--penetration", type=float, default=1.0, help="share of DriveNow cars (predict/oracle)")
 ap.add_argument("--seed", type=int, default=1)
 ap.add_argument("--scale", type=float, default=1.0, help="share of the hour's traffic to run (1 = all)")
+ap.add_argument("--road-events", choices=["aware", "unaware"], default=None,
+                help="apply the road events read for the scenario (road_events.json); the advice knows them or not")
+ap.add_argument("--warmup", type=float, default=0.0, help="minutes at the start whose trips are not in 'measured'")
 a = ap.parse_args()
 w = HamburgWorld(scenario=a.scenario, penetration=0.0 if a.mode == "none" else a.penetration, forecast="oracle" if a.mode == "oracle" else "predict",
                  seed=a.seed, label=f"exp_{a.seed}_{a.mode}_{a.threshold}_{a.scenario}_{a.no_gaps}_{a.no_left_gaps}_{a.inconsiderate}_{a.no_learn}_{a.no_queue}_{a.replan}_{a.learner}_{a.confirm_cycles}_{a.no_confirm_clean}_{a.slow_traffic}_{a.slow_standing_only}_{a.slow_min_gap}_{a.slow_min_kmh}_{a.follow_shown}_{a.display_up}_{a.vehicle_mix}_{a.profiles}_{a.turns}_{a.commit}_{a.gps}_{a.gps_max_sigma}_{a.gps_sigma}_{a.gps_delay}_{a.occupancy}_{a.penetration}", scale=a.scale,
-                 threshold=a.threshold)
+                 threshold=a.threshold, road_events=a.road_events, warmup=a.warmup * 60)
 w.advisor.gap_aware = not a.no_gaps
 w.advisor.gap_left_turns = not a.no_left_gaps
 w.advisor.considerate = not a.inconsiderate
@@ -108,6 +111,15 @@ if w.queue_errors:
     res["queue_error"] = {g: {k: qerr(v) for k, v in d.items()} for g, d in w.queue_errors.items()}
     res["loops"] = [{"thing": th, "emulated": em, "recorded": rec} for th, em, rec in w.loop_counts()]
 res["unequipped"] = w.stats[False].summary() if a.mode != "none" else None
+res["warmup_min"] = a.warmup
+res["measured"] = {"drivenow": w.measured[True].summary() if a.mode != "none" else None,
+                   "others": w.measured[False].summary()}
+res["road_events"] = a.road_events
+if a.road_events:
+    res["road_events_on_network"] = [{"kind": e.kind, "blocked": e.blocked, "lanes_closed": e.lanes_closed,
+                                      "edges": len(e.edges), "text": e.text[:80]} for e in w.road_events]
+    res.update({"events_in_force_at_start": sum(w._applied.values()), "zone_speeding_s": round(w.zone_speeding, 1),
+                "zone_time_s": round(w.zone_time, 1), "rerouted": w.rerouted, "no_way_round": w.no_way_round})
 print(json.dumps(res))
 if a.out:
     json.dump(res, open(a.out, "w"))

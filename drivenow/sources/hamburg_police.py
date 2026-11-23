@@ -8,7 +8,8 @@ given). Licence: Datenlizenz Deutschland Namensnennung 2.0, "Freie und
 Hansestadt Hamburg, Polizei Hamburg".
 
 From the description: "gesperrt" closes the road unless only a lane or half of
-it is ("halbseitig", "Fahrstreifen"); "Ampelanlage außer Betrieb" or "Ampel
+it is ("halbseitig", "Fahrstreifen"); "rechter/linker Fahrstreifen gesperrt" closes
+that lane; "Ampelanlage außer Betrieb" or "Ampel
 ausgefallen" is a light out of order, which the advice must not use.
 """
 
@@ -31,6 +32,15 @@ _KIND = {"ConstructionWorks": "roadworks", "MaintenanceWorks": "roadworks", "Abn
          "GeneralObstruction": "obstruction", "EquipmentOrSystemFault": "hazard"}
 _FAULT = re.compile(r"ampel\w*\s+(außer betrieb|ausgefallen|gestört)|ampelausfall", re.I)
 _PARTIAL = re.compile(r"halbseitig|fahrstreifen|spur|einengung|verengt", re.I)
+_LANE = re.compile(r"\b(rechter|linker)\s+fahrstreifen\s+gesperrt", re.I)
+
+
+def _lanes(text: str):
+    """(lanes closed, which: 1 = the leftmost) from "rechter/linker Fahrstreifen gesperrt"."""
+    m = _LANE.search(text)
+    if not m:
+        return None, []
+    return 1, ([1] if m.group(1).lower() == "linker" else [])
 
 
 def url(bbox=None) -> str:
@@ -78,7 +88,8 @@ def parse(data, source: str = "hamburg-police") -> List[RoadEvent]:
             kind = "signal_fault"
         elif blocked:
             kind = "closure"
+        lanes, which = _lanes(text) if not blocked else (None, [])
         out.append(RoadEvent(id=f"{source}:{v.get('id')}", kind=kind, source=source, line=line,
                              start=_local(v.get("start")), end=_local(v.get("end")), blocked=blocked,
-                             text=text[:240]))
+                             lanes_closed=lanes, closed_lanes=which, text=text[:240]))
     return out
