@@ -219,9 +219,30 @@ class LiveFeed:
         head = self._read_head(self.sock)
         if b" 101" not in head.split(b"\r\n")[0]:
             raise ConnectionError("no websocket: " + head.split(b"\r\n")[0].decode(errors="replace"))
+        # The broker closes the connection if anything comes before its CONNACK, or before
+        # the SUBACK of the previous subscription.
         self._send(connect_packet("drivenow-" + os.urandom(4).hex()))
+        self._expect(2)
         for i in range(0, len(self.topics), 50):
             self._send(subscribe_packet(i // 50 + 1, self.topics[i:i + 50]))
+            self._expect(9)
+
+    def _expect(self, kind: int) -> bytes:
+        """Wait for the next packet of MQTT type ``kind`` (2 CONNACK, 9 SUBACK)."""
+        end = time.time() + self.timeout
+        while time.time() < end:
+            data = self.sock.recv(65536)
+            if not data:
+                raise ConnectionError("connection closed by the server")
+            for op, payload in self._ws.feed(data):
+                if op == 0x8:
+                    raise ConnectionError("websocket closed by the server")
+                for k, _, body in self._mqtt.feed(payload):
+                    if k == kind:
+                        if kind == 2 and len(body) >= 2 and body[1] != 0:
+                            raise ConnectionError(f"broker refused the connection (code {body[1]})")
+                        return body
+        raise ConnectionError(f"no answer of MQTT type {kind}")
 
     def _send(self, packet: bytes) -> None:
         self.sock.sendall(ws_frame(packet))
