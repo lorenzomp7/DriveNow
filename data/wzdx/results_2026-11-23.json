@@ -1,0 +1,1173 @@
+{
+ "runs": 105,
+ "summary": [
+  {
+   "scenario": "idot-ia-12",
+   "condition": "DriveNow, tempi known, conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 331.4,
+    "sd": 12.86,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 664.8,
+    "sd": 1.48,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 227.4,
+    "sd": 7.41,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.31,
+    "sd": 0.05,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 242.34,
+    "sd": 7.75,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 172.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 37.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 208.5,
+    "sd": 7.27,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "idot-ia-12",
+   "condition": "DriveNow, tempi known, non conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 331.4,
+    "sd": 12.86,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 664.8,
+    "sd": 1.48,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 227.4,
+    "sd": 7.41,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.31,
+    "sd": 0.05,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 242.34,
+    "sd": 7.75,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 172.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 37.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 208.5,
+    "sd": 7.27,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "idot-ia-12",
+   "condition": "DriveNow, tempi known, senza cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 345.6,
+    "sd": 16.88,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 695.2,
+    "sd": 0.84,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 202.7,
+    "sd": 2.23,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.08,
+    "sd": 0.04,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 236.14,
+    "sd": 2.92,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 192.0,
+    "sd": 1.76,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "idot-ia-12",
+   "condition": "DriveNow, tempi learned, conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 332.0,
+    "sd": 12.31,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 665.4,
+    "sd": 0.89,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 224.22,
+    "sd": 7.64,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.53,
+    "sd": 0.08,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 288.2,
+    "sd": 9.51,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 172.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 37.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 209.14,
+    "sd": 6.69,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "idot-ia-12",
+   "condition": "DriveNow, tempi learned, non conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 332.0,
+    "sd": 12.31,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 665.4,
+    "sd": 0.89,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 224.22,
+    "sd": 7.64,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.53,
+    "sd": 0.08,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 288.2,
+    "sd": 9.51,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 172.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 37.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 209.14,
+    "sd": 6.69,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "idot-ia-12",
+   "condition": "senza DriveNow, con i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.0,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 665.4,
+    "sd": 0.89,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 665.4,
+    "sd": 0.89,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 211.44,
+    "sd": 0.69,
+    "n": 5
+   },
+   "stops": {
+    "mean": 2.1,
+    "sd": 0.02,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 556.94,
+    "sd": 3.9,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 172.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 37.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": null
+  },
+  {
+   "scenario": "idot-ia-12",
+   "condition": "senza DriveNow, senza cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.0,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 696.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 696.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 192.96,
+    "sd": 0.59,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.65,
+    "sd": 0.01,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 533.18,
+    "sd": 1.99,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": null
+  },
+  {
+   "scenario": "kytc-ky-864",
+   "condition": "DriveNow, tempi known, conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 335.8,
+    "sd": 16.16,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 679.2,
+    "sd": 1.1,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 196.38,
+    "sd": 4.81,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.25,
+    "sd": 0.04,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 481.36,
+    "sd": 15.94,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 204.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 24.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 190.42,
+    "sd": 4.43,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "kytc-ky-864",
+   "condition": "DriveNow, tempi known, non conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 335.8,
+    "sd": 16.16,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 679.2,
+    "sd": 1.1,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 196.38,
+    "sd": 4.81,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.25,
+    "sd": 0.04,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 481.36,
+    "sd": 15.94,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 204.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 24.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 190.42,
+    "sd": 4.43,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "kytc-ky-864",
+   "condition": "DriveNow, tempi known, senza cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 346.4,
+    "sd": 13.2,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 695.0,
+    "sd": 1.58,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 194.4,
+    "sd": 3.47,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.23,
+    "sd": 0.05,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 465.78,
+    "sd": 10.57,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 187.04,
+    "sd": 3.37,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "kytc-ky-864",
+   "condition": "DriveNow, tempi learned, conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 335.6,
+    "sd": 16.06,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 678.8,
+    "sd": 1.1,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 193.0,
+    "sd": 3.29,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.51,
+    "sd": 0.01,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 538.2,
+    "sd": 15.15,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 204.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 24.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 188.6,
+    "sd": 3.16,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "kytc-ky-864",
+   "condition": "DriveNow, tempi learned, non conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 335.6,
+    "sd": 16.06,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 678.8,
+    "sd": 1.1,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 193.0,
+    "sd": 3.29,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.51,
+    "sd": 0.01,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 538.2,
+    "sd": 15.15,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 204.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 24.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 188.6,
+    "sd": 3.16,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "kytc-ky-864",
+   "condition": "senza DriveNow, con i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.0,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 678.6,
+    "sd": 0.55,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 678.6,
+    "sd": 0.55,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 186.9,
+    "sd": 0.48,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.91,
+    "sd": 0.02,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 917.4,
+    "sd": 3.99,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 204.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 24.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": null
+  },
+  {
+   "scenario": "kytc-ky-864",
+   "condition": "senza DriveNow, senza cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.0,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 695.2,
+    "sd": 1.3,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 695.2,
+    "sd": 1.3,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 186.18,
+    "sd": 0.2,
+    "n": 5
+   },
+   "stops": {
+    "mean": 1.94,
+    "sd": 0.01,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 914.6,
+    "sd": 4.75,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": null
+  },
+  {
+   "scenario": "modot-44-66-7th-st-lp-44-mo-66",
+   "condition": "DriveNow, tempi known, conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 349.2,
+    "sd": 16.69,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 699.6,
+    "sd": 1.34,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 176.04,
+    "sd": 1.49,
+    "n": 5
+   },
+   "stops": {
+    "mean": 0.54,
+    "sd": 0.04,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 183.84,
+    "sd": 2.65,
+    "n": 5
+   },
+   "zone_speeding_pct": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 164.98,
+    "sd": 0.6,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "modot-44-66-7th-st-lp-44-mo-66",
+   "condition": "DriveNow, tempi known, non conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 349.2,
+    "sd": 16.69,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 699.6,
+    "sd": 1.34,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 176.1,
+    "sd": 1.63,
+    "n": 5
+   },
+   "stops": {
+    "mean": 0.55,
+    "sd": 0.05,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 187.3,
+    "sd": 3.13,
+    "n": 5
+   },
+   "zone_speeding_pct": {
+    "mean": 1.99,
+    "sd": 0.24,
+    "n": 5
+   },
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 164.92,
+    "sd": 0.79,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "modot-44-66-7th-st-lp-44-mo-66",
+   "condition": "DriveNow, tempi known, senza cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 350.2,
+    "sd": 16.15,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 700.8,
+    "sd": 1.1,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 175.88,
+    "sd": 1.64,
+    "n": 5
+   },
+   "stops": {
+    "mean": 0.56,
+    "sd": 0.05,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 197.62,
+    "sd": 4.93,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 164.42,
+    "sd": 0.47,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "modot-44-66-7th-st-lp-44-mo-66",
+   "condition": "DriveNow, tempi learned, conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 348.6,
+    "sd": 16.59,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 699.0,
+    "sd": 0.71,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 175.0,
+    "sd": 1.05,
+    "n": 5
+   },
+   "stops": {
+    "mean": 0.73,
+    "sd": 0.05,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 219.14,
+    "sd": 5.71,
+    "n": 5
+   },
+   "zone_speeding_pct": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 164.84,
+    "sd": 0.57,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "modot-44-66-7th-st-lp-44-mo-66",
+   "condition": "DriveNow, tempi learned, non conosce i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.5,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 348.8,
+    "sd": 16.63,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 699.4,
+    "sd": 0.55,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 175.08,
+    "sd": 1.58,
+    "n": 5
+   },
+   "stops": {
+    "mean": 0.75,
+    "sd": 0.04,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 224.1,
+    "sd": 6.74,
+    "n": 5
+   },
+   "zone_speeding_pct": {
+    "mean": 2.1,
+    "sd": 0.32,
+    "n": 5
+   },
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": {
+    "mean": 164.74,
+    "sd": 0.78,
+    "n": 5
+   }
+  },
+  {
+   "scenario": "modot-44-66-7th-st-lp-44-mo-66",
+   "condition": "senza DriveNow, con i cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.0,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 700.6,
+    "sd": 0.89,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 700.6,
+    "sd": 0.89,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 167.36,
+    "sd": 0.46,
+    "n": 5
+   },
+   "stops": {
+    "mean": 0.98,
+    "sd": 0.01,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 389.7,
+    "sd": 3.04,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": null
+  },
+  {
+   "scenario": "modot-44-66-7th-st-lp-44-mo-66",
+   "condition": "senza DriveNow, senza cantieri",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "penetration": 0.0,
+   "minutes": 60,
+   "warmup_min": 10,
+   "veh_per_hour_assumed": 900.0,
+   "trips_counted": {
+    "mean": 701.0,
+    "sd": 1.22,
+    "n": 5
+   },
+   "all_trips": {
+    "mean": 701.0,
+    "sd": 1.22,
+    "n": 5
+   },
+   "travel_time_s": {
+    "mean": 167.0,
+    "sd": 0.6,
+    "n": 5
+   },
+   "stops": {
+    "mean": 0.98,
+    "sd": 0.0,
+    "n": 5
+   },
+   "brake_energy_kj": {
+    "mean": 403.08,
+    "sd": 2.8,
+    "n": 5
+   },
+   "zone_speeding_pct": null,
+   "rerouted": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "no_way_round": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 5
+   },
+   "others_travel_time_s": null
+  }
+ ]
+}

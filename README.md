@@ -1010,6 +1010,141 @@ esito completo in `data/public_data_check_2026-11-23.json`):
 - **Google Maps, Waze e Apple Maps** il traffico ce l'hanno, ma non lo danno
   come dato: si veda "Dove sono le altre auto".
 
+### Cantieri USA (WZDx) in simulazione
+
+I cantieri dei feed WZDx sono negli Stati Uniti, quindi le prove girano su reti americane
+costruite intorno a cantieri reali, attivi il 23 novembre 2026.
+
+**Come si costruisce uno scenario.** `tools/wzdx_build.py` legge i feed WZDx aperti e prende i
+cantieri:
+- in vigore per l'ora successiva;
+- con un limite ridotto o corsie chiuse;
+- lunghi da 300 a 2.000 m.
+
+Poi scarica la mappa OpenStreetMap della zona e la trasforma in una rete SUMO con le stesse
+opzioni usate per Amburgo. Tiene il cantiere solo se nella rete restano almeno 3 semafori
+vicini. In `data/wzdx/<nome>/` salva:
+- la rete;
+- il traffico;
+- le coordinate dei tratti;
+- `events.json`, cioè le voci del feed lette in quel momento: è una registrazione, quindi le
+  prove si possono ripetere.
+
+```bash
+python tools/wzdx_build.py --pick 2 --cache /tmp/wzdx
+python tools/wzdx_experiment.py predict --scenario modot-44-66-7th-st-lp-44-mo-66 --lights learned --events aware --seed 1
+python tools/wzdx_summary.py CARTELLA_RISULTATI
+```
+
+| Scenario | Cantiere (dal feed) | Semafori nella rete (vicino al cantiere) |
+|---|---|---|
+| `idot-ia-12`, Sioux City (Iowa) | Gordon Drive (IA-12) chiusa nei due sensi, con deviazione | 12 (5) |
+| `kytc-ky-864`, Louisville (Kentucky) | Logan Street (KY-864), una corsia chiusa verso nord per 1,6 km | 31 (14) |
+| `modot-44-66-7th-st-lp-44-mo-66`, Joplin (Missouri) | East 7th Street (Route 66), limite di 56 km/h per 1,6 km | 7 (4) |
+
+**Cosa fa la simulazione** (`drivenow/sumo_world.py`, `drivenow/wzdx_world.py`):
+- **Orario:** l'orologio della simulazione parte dall'ora in cui il feed è stato letto. Ogni
+  cantiere vale tra il suo inizio e la sua fine, e alla fine le corsie tornano come prima.
+- **Limiti e corsie:** il limite si applica alle corsie in SUMO. Le corsie chiuse sono quelle
+  indicate dal feed (contate da sinistra) quando il loro numero coincide con quello di SUMO;
+  altrimenti si chiudono da destra. Una corsia resta sempre aperta, salvo che la strada sia
+  chiusa.
+- **Strada chiusa:** le auto il cui percorso la attraversa vengono deviate. Lo stesso vale per
+  le auto il cui percorso non è più percorribile dopo una chiusura di corsie. Un'auto senza
+  alternativa viene tolta e contata ("senza via").
+- **Il consiglio:** può conoscere i cantieri ("conosce") oppure no ("non conosce"; la strada li
+  ha comunque).
+- **Misura di sicurezza:** si misura per quanto tempo il consiglio indica più del limite del
+  cantiere + 2 km/h.
+
+**I semafori:** OpenStreetMap dà dove sono, ma per queste strade non esistono tempi aperti.
+SUMO assegna quindi un piano fisso stimato. Ci sono due casi:
+- **tempi noti:** il consiglio conosce quel piano, come se la città lo trasmettesse (SPaT);
+- **tempi imparati:** il consiglio impara ogni accesso dalle auto DriveNow (`probe.ProbeLearner`),
+  come per i semafori senza dati di Amburgo. Un semaforo non ancora imparato non dà consiglio:
+  non vale mai come verde.
+
+**Le prove:**
+- 105 simulazioni: 3 scenari × 7 condizioni × 5 seed;
+- 60 minuti ciascuna, di cui 10 di riscaldamento non contati;
+- traffico ipotizzato di 900 auto/h entranti (per queste strade non ci sono conteggi aperti);
+- metà delle auto con DriveNow nelle prove con DriveNow.
+
+Viaggi completati e contati, dopo il riscaldamento: da 665 a 701 per esecuzione, di cui circa
+metà DriveNow.
+
+Il file del traffico è uno solo per scenario. I seed cambiano quindi l'imprecisione dei
+guidatori in SUMO e quali auto hanno DriveNow, non la domanda: lo scarto (±, deviazione standard
+sui 5 seed) misura solo quella variabilità.
+
+Le colonne riportano, per viaggio: tempo, fermate ed energia dissipata in frenata. Con DriveNow
+sono quelle delle auto DriveNow; senza DriveNow, di tutte le auto.
+"Oltre il limite" è la quota del tempo passato nel cantiere in cui il consiglio indicava più del
+suo limite.
+
+| Scenario | Condizione | Tempo (s) | Fermate | Frenata (kJ) | Oltre il limite |
+|---|---|---|---|---|---|
+| Sioux City | senza DriveNow, senza cantiere | 193,0 ± 0,6 | 1,6 | 533 ± 2 | — |
+| | senza DriveNow, con il cantiere | 211,4 ± 0,7 | 2,1 | 557 ± 4 | — |
+| | DriveNow, tempi noti | 227,4 ± 7,4 | 1,3 | 242 ± 8 | — |
+| | DriveNow, tempi imparati | 224,2 ± 7,6 | 1,5 | 288 ± 10 | — |
+| Louisville | senza DriveNow, senza cantiere | 186,2 ± 0,2 | 1,9 | 915 ± 5 | — |
+| | senza DriveNow, con il cantiere | 186,9 ± 0,5 | 1,9 | 917 ± 4 | — |
+| | DriveNow, tempi noti | 196,4 ± 4,8 | 1,2 | 481 ± 16 | — |
+| | DriveNow, tempi imparati | 193,0 ± 3,3 | 1,5 | 538 ± 15 | — |
+| Joplin | senza DriveNow, senza cantiere | 167,0 ± 0,6 | 1,0 | 403 ± 3 | — |
+| | senza DriveNow, con il cantiere | 167,4 ± 0,5 | 1,0 | 390 ± 3 | — |
+| | DriveNow, tempi noti, conosce il cantiere | 176,0 ± 1,5 | 0,5 | 184 ± 3 | 0,0% |
+| | DriveNow, tempi noti, non lo conosce | 176,1 ± 1,6 | 0,6 | 187 ± 3 | 2,0 ± 0,2% |
+| | DriveNow, tempi imparati, conosce il cantiere | 175,0 ± 1,1 | 0,7 | 219 ± 6 | 0,0% |
+| | DriveNow, tempi imparati, non lo conosce | 175,1 ± 1,6 | 0,8 | 224 ± 7 | 2,1 ± 0,3% |
+
+In tutte le prove DriveNow c'è anche la versione "non conosce il cantiere". A Sioux City e
+Louisville dà numeri identici a "conosce": lì il cantiere non ha limite, e le auto deviate non
+entrano mai nel tratto chiuso. Tutti i numeri sono in `data/wzdx/results_2026-11-23.json`.
+
+**Cosa si vede:**
+- **Con il cantiere, DriveNow aiuta ancora.** Le auto DriveNow frenano circa la metà
+  (−48% a −57% con i tempi noti, −41% a −48% con i tempi imparati) e si fermano meno.
+  - **Prezzo:** 6–16 s in più per viaggio, cioè il 3–8%.
+  - **Il cantiere chiuso (Sioux City)** allunga i viaggi di tutti: +18 s senza DriveNow, +25 s
+    per le auto DriveNow.
+  - **37 auto su circa 900** non avevano un'altra strada e sono state tolte: i loro viaggi non
+    sono contati.
+- **Conoscere il cantiere conta dove c'è un limite (Joplin).** Il consiglio che non lo conosce
+  indica più di 56 km/h per il 2% del tempo passato nel cantiere; quello che lo conosce, mai.
+  - La frenata scende di poco, circa il 2%, dentro la variabilità tra i seed.
+  - L'effetto è piccolo perché il limite del cantiere coincide con quello della strada (35 mph)
+    su quasi tutta la sua lunghezza. Supera il limite stradale solo su 4 tratti dove OSM non ha
+    `maxspeed` e SUMO mette 100 km/h.
+- **Una corsia chiusa (Louisville)** cambia poco i tempi: +0,7 s senza DriveNow.
+  - Ha però costretto a deviare 204 auto, la cui svolta partiva dalla corsia chiusa.
+  - 24 auto sono state tolte perché non avevano un'altra strada.
+- **Tempi imparati contro tempi noti:** 6–9 punti di frenata in meno di vantaggio, ma sempre
+  sopra il 40%.
+
+**Errori trovati facendo queste prove (corretti, con test):**
+- **Cantieri e limiti di strada.** Con gli intralci caricati, il consiglio trattava come
+  cantiere ogni calo normale del limite lungo il percorso. Ora un controllo "cantiere" nasce
+  solo da un limite temporaneo più basso di quello della strada.
+- **Semafori stimati e riuniti.** Quando SUMO dava al semaforo un nome diverso da quello
+  dell'incrocio ("GS_…" per quelli stimati, impianti riuniti), `load_sumo_net` lasciava
+  l'incrocio senza il suo programma: a Sioux City erano 10 su 12.
+- **WZDx:**
+  - un limite `NaN` (feed dell'Indiana) ora vale "nessun limite";
+  - due o più corsie per auto tutte chiuse sono una chiusura anche se la banchina resta aperta
+    (Iowa);
+  - una sola corsia elencata come chiusa non lo è (Kentucky).
+
+**Limiti:**
+- I semafori e il traffico non sono quelli veri: il piano è stimato da SUMO e il volume è
+  ipotizzato.
+- **Chiusure di corsie:** quale corsia chiudere si deduce dall'ordine del feed solo quando il
+  numero di corsie coincide.
+- **Deviazioni:** si usa il percorso più rapido di SUMO, non il percorso alternativo indicato
+  dal feed ("detour").
+- Le auto tolte per mancanza di strada non entrano nelle medie.
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
