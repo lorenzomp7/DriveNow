@@ -1,0 +1,2863 @@
+{
+ "about": "Public and commercial traffic data sources found for DriveNow: flow, speed, travel times, roadworks, closures, incidents, queues, lights. Built on 23 November 2026 from graphhopper/open-traffic-collection, USDOT's WZDx registry and sources checked by hand. 'adapter' names the module in drivenow/sources that reads the format; 'checked' is a live check from DriveNow's development environment.",
+ "sources": [
+  {
+   "name": "Victoria",
+   "area": "Victoria",
+   "region": "Australia",
+   "url": "http://api.vicroads.vic.gov.au/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Austria",
+   "area": "Austria",
+   "region": "Austria",
+   "url": "https://contentportal.asfinag.at/data",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "paid or restricted",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Belgium: Brussels Region",
+   "area": "Belgium",
+   "region": "Belgium",
+   "url": "http://opendatastore.brussels/en/dataset/traffic-count",
+   "kinds": [
+    "counts",
+    "flow"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Verkeerscentrum Vlaanderen DATEX II",
+   "area": "Flanders",
+   "region": "Belgium",
+   "url": "https://www.verkeerscentrum.be/uitwisseling/datex2full",
+   "kinds": [
+    "roadworks",
+    "incidents",
+    "queues"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "Locations in Alert-C only: need Belgium's location table.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "British Columbia",
+   "area": "British Columbia",
+   "region": "Canada",
+   "url": "http://www.th.gov.bc.ca/trafficData/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Czechia",
+   "area": "Czechia",
+   "region": "Czechia",
+   "url": "http://registr.dopravniinfo.cz/en/",
+   "kinds": [
+    "restrictions",
+    "weather",
+    "incidents"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Estonia",
+   "area": "Estonia",
+   "region": "Estonia",
+   "url": "https://tarktee.mnt.ee/#/en/datex",
+   "kinds": [
+    "flow",
+    "restrictions"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Datex-II v3 XML",
+   "area": "Datex-II v3 XML",
+   "region": "Europe",
+   "url": "https://opendata.porto.digital/dataset/cb350387-ceb0-4aac-8a27-adfcf512a456/resource/6758556c-bddf-4c87-a98c-9af08d6932c3/download/condicionamentos_nao_programados.xml",
+   "kinds": [
+    "closures",
+    "restrictions",
+    "incidents"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "European Data Portal",
+   "area": "European Data Portal",
+   "region": "Europe",
+   "url": "http://www.europeandataportal.eu/data/en/group/transport?q=traffic",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "OSM Wiki",
+   "area": "OSM Wiki",
+   "region": "Europe",
+   "url": "https://wiki.openstreetmap.org/wiki/TMC#Available_datasets",
+   "kinds": [
+    "counts",
+    "restrictions"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "UNECE traffic census 2020",
+   "area": "UNECE traffic census 2020",
+   "region": "Europe",
+   "url": "https://unece.org/transport/transport-statistics/traffic-census-2020",
+   "kinds": [
+    "counts"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "an open rss feed",
+   "area": "an open rss feed",
+   "region": "Europe",
+   "url": "https://publiccontent.asfinag.at/rss/feed/de/trafficmessages",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "paid or restricted",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "full catalogue",
+   "area": "full catalogue",
+   "region": "Europe",
+   "url": "https://transportdata.gov.lv/en",
+   "kinds": [
+    "counts"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "traff-libalertclocation",
+   "area": "traff-libalertclocation",
+   "region": "Europe",
+   "url": "https://gitlab.com/traffxml/traff-libalertclocation",
+   "kinds": [
+    "counts"
+   ],
+   "format": "XML",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Digitraffic traffic messages",
+   "area": "Finland",
+   "region": "Finland",
+   "url": "https://tie.digitraffic.fi/api/traffic-message/v1/messages",
+   "kinds": [
+    "roadworks",
+    "incidents",
+    "restrictions"
+   ],
+   "format": "GeoJSON",
+   "access": "open",
+   "adapter": "digitraffic",
+   "notes": "Needs Accept-Encoding: gzip and a Digitraffic-User header.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Finland: Digitraffic",
+   "area": "Finland",
+   "region": "Finland",
+   "url": "https://www.digitraffic.fi/en/road-traffic/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Finland: InfoXML",
+   "area": "Finland",
+   "region": "Finland",
+   "url": "https://aineistot.vayla.fi/roadworks/roadworks_infoxml.xml",
+   "kinds": [
+    "roadworks"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Finland: Weight restrictions",
+   "area": "Finland",
+   "region": "Finland",
+   "url": "https://aineistot.vayla.fi/painorajoitukset/painorajoitukset_d2.xml",
+   "kinds": [
+    "restrictions"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Väylä roadworks (DATEX II)",
+   "area": "Finland",
+   "region": "Finland",
+   "url": "https://aineistot.vayla.fi/roadworks/roadworks_d2.xml",
+   "kinds": [
+    "roadworks"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "Answered 400 on 23 Nov 2026.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "France: Datex-II event data",
+   "area": "France",
+   "region": "France",
+   "url": "https://transport.data.gouv.fr/datasets/evenements-routiers-sur-le-reseau-routier-national-non-concede",
+   "kinds": [
+    "incidents"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "France: Datex-II live traffic data",
+   "area": "France",
+   "region": "France",
+   "url": "https://transport.data.gouv.fr/datasets/etat-de-circulation-en-temps-reel-sur-le-reseau-national-routier-non-concede",
+   "kinds": [
+    "flow"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "France: Paris",
+   "area": "France",
+   "region": "France",
+   "url": "https://opendata.paris.fr/explore/dataset/comptages-routiers-permanents/",
+   "kinds": [
+    "counts",
+    "flow"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "France: Traffic count",
+   "area": "France",
+   "region": "France",
+   "url": "https://www.quandl.com/data/INSEE?keyword=traffic",
+   "kinds": [
+    "counts"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "BayernInfo / VIZ Bayern",
+   "area": "Bavaria",
+   "region": "Germany",
+   "url": "https://bayerninfo.de/en/about-bayerninfo-1/data-offer/private-transport-data",
+   "kinds": [
+    "queues",
+    "incidents",
+    "roadworks"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "Jams from connected vehicles and apps, every 3 min, via Mobilithek.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Germany: Cologne",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "http://www.offenedaten-koeln.de/dataset/verkehrskalender-der-stadt-k%C3%B6ln",
+   "kinds": [
+    "flow"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Germany: Darmstadt",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://datenplattform.darmstadt.de/verkehr/apps/opendata/#/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Germany: Düsseldorf traffic interruptions, DL-DE->Zero-2.0",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://opendata.duesseldorf.de/dataset/verkehrsmeldungen-mobilit%C3%A4tsdaten",
+   "kinds": [
+    "incidents"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Germany: Entire DE",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://autobahn.api.bund.dev/",
+   "kinds": [
+    "roadworks",
+    "incidents"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Germany: Entire DE (broken)",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://www.mcloud.de/web/guest/suche/-/results/detail/verkehrsdatenautomatischedauerzhlstellen",
+   "kinds": [
+    "counts"
+   ],
+   "format": "portal",
+   "access": "unavailable",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Germany: Entire DE BASt",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://www.bast.de/BASt_2017/DE/Verkehrstechnik/Fachthemen/v2-verkehrszaehlung/Daten/2017_1/Jawe2017.html?nn=1819490",
+   "kinds": [
+    "counts"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Germany: Hamburg",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "http://suche.transparenz.hamburg.de/dataset/geo-online-portal-hamburg",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "WFS",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Germany: Jena",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://opendata.jena.de/group/mobilitat",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Germany: Nordrhein-Westfalen, DE",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://open.nrw/dataset/verkehrszentrale-verkehrsinformationen-der-viz-nrw-fuer-nordrhein-westfalen-1476687235163",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Germany: WFS Daten",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://geodienste.hamburg.de/HH_WFS_Verkehr_opendata?REQUEST=GetCapabilities&SERVICE=WFS",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "WFS",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "error (HTTP 404)"
+   }
+  },
+  {
+   "name": "Germany: other data",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://open.nrw/dataset/verkehrszentrale-verkehrslage-los-1476688071631",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Mobilithek (German national access point)",
+   "area": "Germany",
+   "region": "Germany",
+   "url": "https://mobilithek.info/",
+   "kinds": [
+    "flow",
+    "incidents",
+    "roadworks",
+    "travel_time"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "Many datasets open, some need registration (e.g. Bavaria's jams every 3 min).",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Autobahn GmbH API (roadworks, warnings, closures)",
+   "area": "Germany motorways",
+   "region": "Germany",
+   "url": "https://verkehr.autobahn.de/o/autobahn/",
+   "kinds": [
+    "roadworks",
+    "closures",
+    "incidents",
+    "queues"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": "autobahn",
+   "notes": "No key. A7 alone: 217 roadworks, 26 closures on 23 Nov 2026.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Hamburg police traffic messages (in force now)",
+   "area": "Hamburg",
+   "region": "Germany",
+   "url": "https://geodienste.hamburg.de/wfs_verkehrsinformation",
+   "kinds": [
+    "roadworks",
+    "closures",
+    "queues",
+    "incidents",
+    "signals"
+   ],
+   "format": "WFS (GML)",
+   "access": "open",
+   "adapter": "hamburg_police",
+   "notes": "Roadworks, closures, queues, accidents, lights out of order. DL-DE BY 2.0.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Hamburg traffic lights and loop detectors (live, MQTT)",
+   "area": "Hamburg",
+   "region": "Germany",
+   "url": "wss://tld.iot.hamburg.de/mqtt",
+   "kinds": [
+    "signals",
+    "counts",
+    "queues"
+   ],
+   "format": "SensorThings + MQTT",
+   "access": "open",
+   "adapter": "hamburg.live",
+   "notes": "Signal colours, cycle seconds, car loop detectors; ~1-2 s late.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "not checked"
+   }
+  },
+  {
+   "name": "Hamburg traffic state per road (Verkehrslage)",
+   "area": "Hamburg",
+   "region": "Germany",
+   "url": "https://geodienste.hamburg.de/wfs_hh_verkehrslage",
+   "kinds": [
+    "flow"
+   ],
+   "format": "WFS (GML)",
+   "access": "open",
+   "adapter": "hamburg_traffic",
+   "notes": "State class per stretch (fliessend/dicht/zäh/stockend), every 5 min.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Italy: Bolzano",
+   "area": "Italy",
+   "region": "Italy",
+   "url": "http://traffic.bz.it/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Italy: mountain pass conditions and closures",
+   "area": "Italy",
+   "region": "Italy",
+   "url": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-mountainroadsandpasses",
+   "kinds": [
+    "roadworks",
+    "closures",
+    "incidents"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Italy: reports from neighboring regions",
+   "area": "Italy",
+   "region": "Italy",
+   "url": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-outofprovince",
+   "kinds": [
+    "roadworks",
+    "closures",
+    "incidents"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Italy: roadworks and closures",
+   "area": "Italy",
+   "region": "Italy",
+   "url": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-works-closings",
+   "kinds": [
+    "roadworks",
+    "closures",
+    "incidents"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Italy: traffic reports",
+   "area": "Italy",
+   "region": "Italy",
+   "url": "https://www.europeandataportal.eu/data/#/datasets/p_bz-webservices-southtyrolean-trafficreport-currentsituation",
+   "kinds": [
+    "roadworks",
+    "closures",
+    "incidents"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Bolzano / South Tyrol Open Data Hub",
+   "area": "South Tyrol",
+   "region": "Italy",
+   "url": "https://mobility.api.opendatahub.com/",
+   "kinds": [
+    "flow",
+    "speed",
+    "travel_time"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": null,
+   "notes": "Traffic sensors and Bluetooth travel times.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "5T Turin real-time flows",
+   "area": "Turin",
+   "region": "Italy",
+   "url": "https://opendata.5t.torino.it/get_fdt",
+   "kinds": [
+    "flow",
+    "speed"
+   ],
+   "format": "XML",
+   "access": "open",
+   "adapter": "torino",
+   "notes": "Flow and speed per point, 5-minute periods.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Latvia: Accidents and incidents",
+   "area": "Latvia",
+   "region": "Latvia",
+   "url": "https://transportdata.gov.lv/card/e8659cdd-9372-41fd-8b28-e7c742895bdd",
+   "kinds": [
+    "incidents"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Latvia: Road closures",
+   "area": "Latvia",
+   "region": "Latvia",
+   "url": "https://transportdata.gov.lv/card/75611a36-e66b-40cf-af2c-69db48c278cf",
+   "kinds": [
+    "closures"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Latvia: Road works",
+   "area": "Latvia",
+   "region": "Latvia",
+   "url": "https://transportdata.gov.lv/card/35fa5c41-90ce-4b74-a4a3-08216d470134",
+   "kinds": [
+    "speed",
+    "closures"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Latvia: intensity",
+   "area": "Latvia",
+   "region": "Latvia",
+   "url": "https://old.eismoinfo.lt/traffic-intensity-service",
+   "kinds": [
+    "counts",
+    "flow"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Latvia: restrictions",
+   "area": "Latvia",
+   "region": "Latvia",
+   "url": "http://restrictions.eismoinfo.lt/",
+   "kinds": [
+    "roadworks",
+    "closures",
+    "restrictions",
+    "incidents"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Latvia: traffic count",
+   "area": "Latvia",
+   "region": "Latvia",
+   "url": "http://lakd.lrv.lt/lt/atviri-duomenys",
+   "kinds": [
+    "counts"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Luxembourg",
+   "area": "Luxembourg",
+   "region": "Luxembourg",
+   "url": "http://www.cita.lu/info_trafic/datex/situationrecord",
+   "kinds": [
+    "incidents"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "NDW open data (speeds, travel times, situations, bridges)",
+   "area": "Netherlands",
+   "region": "Netherlands",
+   "url": "https://opendata.ndw.nu/",
+   "kinds": [
+    "speed",
+    "flow",
+    "travel_time",
+    "roadworks",
+    "closures",
+    "incidents",
+    "bridges",
+    "restrictions"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "Updated every minute; situations with coordinates (DATEX II v3).",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Netherlands",
+   "area": "Netherlands",
+   "region": "Netherlands",
+   "url": "http://83.247.110.3/ndwOpenAVG/Default.aspx",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Norway",
+   "area": "Norway",
+   "region": "Norway",
+   "url": "https://www.vegvesen.no/om+statens+vegvesen/om+organisasjonen/apne-data/Datex/publikasjoner",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Poland: NAP",
+   "area": "Poland",
+   "region": "Poland",
+   "url": "https://kpd.gddkia.gov.pl/",
+   "kinds": [
+    "flow"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Poland: Traffic events",
+   "area": "Poland",
+   "region": "Poland",
+   "url": "https://www.gddkia.gov.pl/dane/zima_html/utrdane.xml",
+   "kinds": [
+    "incidents"
+   ],
+   "format": "XML",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Poland: traff-gddkia",
+   "area": "Poland",
+   "region": "Poland",
+   "url": "https://gitlab.com/traffxml/traff-gddkia",
+   "kinds": [
+    "incidents"
+   ],
+   "format": "XML",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Porto unplanned road conditions (DATEX II v3)",
+   "area": "Porto",
+   "region": "Portugal",
+   "url": "https://opendata.porto.digital/dataset/condicionamentos-nao-programados",
+   "kinds": [
+    "closures",
+    "restrictions"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "Did not answer from here on 23 Nov 2026.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Slovenia",
+   "area": "Slovenia",
+   "region": "Slovenia",
+   "url": "https://www.promet.si/portal/en/etd.aspx",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Catalonia",
+   "area": "Catalonia",
+   "region": "Spain",
+   "url": "http://www.gencat.cat/transit/opendata/incidenciesGML.xml",
+   "kinds": [
+    "incidents"
+   ],
+   "format": "GML",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Spain: Madrid",
+   "area": "Spain",
+   "region": "Spain",
+   "url": "https://datos.madrid.es/portal/site/egob/menuitem.c05c1f754a33a9fbe4b2e4b284f1a5a0/?vgnextoid=33cb30c367e78410VgnVCM1000000b205a0aRCRD&vgnextchannel=374512b9ace9f310VgnVCM100000171f5a0aRCRD&vgnextfmt=default",
+   "kinds": [
+    "flow"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Sweden: Gothenbury",
+   "area": "Sweden",
+   "region": "Sweden",
+   "url": "http://www.statistik.tkgbg.se/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Sweden: Various data sets in Datex-II",
+   "area": "Sweden",
+   "region": "Sweden",
+   "url": "https://www.trafikverket.se/tjanster/Oppna_data/oppna-data-vi-erbjuder/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Switzerland",
+   "area": "Switzerland",
+   "region": "Switzerland",
+   "url": "https://www.astra.admin.ch/astra/de/home/dokumentation/daten-informationsprodukte/verkehrsdaten.html",
+   "kinds": [
+    "counts"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Entire UK",
+   "area": "UK",
+   "region": "UK",
+   "url": "http://www.dft.gov.uk/traffic-counts/",
+   "kinds": [
+    "counts"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "UK: England",
+   "area": "UK",
+   "region": "UK",
+   "url": "https://www.trafficengland.com/services-info",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "UK: Scotland",
+   "area": "UK",
+   "region": "UK",
+   "url": "https://trafficscotland.org/datex/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "registration",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "UK: Traffic flow data",
+   "area": "UK",
+   "region": "UK",
+   "url": "https://data.gov.uk/dataset/dft-eng-srn-routes-journey-times",
+   "kinds": [
+    "flow"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Alabama",
+   "area": "Alabama",
+   "region": "USA",
+   "url": "https://www.dot.state.al.us/maweb/trafficMonitoring/trafficMonitoring.html",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Arizona",
+   "area": "Arizona",
+   "region": "USA",
+   "url": "http://www.azdot.gov/planning/DataandAnalysis",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Arlington",
+   "area": "Arlington",
+   "region": "USA",
+   "url": "https://www.arlingtonva.us/Government/Projects/22202-Data/Traffic-Transit-Data",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "California",
+   "area": "California",
+   "region": "USA",
+   "url": "http://traffic-counts.dot.ca.gov/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Chicago",
+   "area": "Chicago",
+   "region": "USA",
+   "url": "https://data.cityofchicago.org/browse?tags=traffic",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Colorado",
+   "area": "Colorado",
+   "region": "USA",
+   "url": "http://dtdapps.coloradodot.info/otis",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Delaware Valley",
+   "area": "Delaware Valley",
+   "region": "USA",
+   "url": "http://www.dvrpc.org/webmaps/trafficcounts/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Florida",
+   "area": "Florida",
+   "region": "USA",
+   "url": "http://www.dot.state.fl.us/planning/statistics/trafficdata/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Illinois: WZDx: IDOT (idot_cwz)",
+   "area": "Illinois",
+   "region": "USA",
+   "url": "https://wzad-idot.illinois.gov/cwz/01.00?api_key=YOUR-CWZ-API-KEY",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx CWZ 1.0",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Indiana",
+   "area": "Indiana",
+   "region": "USA",
+   "url": "http://www.in.gov/indot/2720.htm",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Maine",
+   "area": "Maine",
+   "region": "USA",
+   "url": "http://www.maine.gov/mdot/traffic/ytc/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Massachusetts",
+   "area": "Massachusetts",
+   "region": "USA",
+   "url": "http://www.massdot.state.ma.us/highway/TrafficVolumeCounts.aspx",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Michigan",
+   "area": "Michigan",
+   "region": "USA",
+   "url": "http://www.michigan.gov/mdot/0,4616,7-151-9615---,00.html",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "unavailable",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Minnesota",
+   "area": "Minnesota",
+   "region": "USA",
+   "url": "http://www.dot.state.mn.us/traffic/data/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "New Hampshire, Vermont, Maine: WZDx: NHDOT/VTAOT/MEDOT (necdot)",
+   "area": "New Hampshire, Vermont, Maine",
+   "region": "USA",
+   "url": "https://api.dx.ne-compass.com/wzdx-latest/",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "New York",
+   "area": "New York",
+   "region": "USA",
+   "url": "https://www.dot.ny.gov/highway-data-services",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "NYC real-time traffic speed",
+   "area": "New York City",
+   "region": "USA",
+   "url": "https://data.cityofnewyork.us/Transportation/Real-Time-Traffic-Speed-Data/xsat-x5sa",
+   "kinds": [
+    "speed",
+    "travel_time"
+   ],
+   "format": "JSON/CSV",
+   "access": "open",
+   "adapter": null,
+   "notes": "Speeds and travel times on major roads.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "North Carolina",
+   "area": "North Carolina",
+   "region": "USA",
+   "url": "http://www.ncdot.gov/projects/trafficsurvey/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "WZDx: North Dakota DOT (nddot)",
+   "area": "North Dakota",
+   "region": "USA",
+   "url": "https://travelfiles.dot.nd.gov/geojson_nc/wzdx_geojson.json",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Ohio",
+   "area": "Ohio",
+   "region": "USA",
+   "url": "http://www.dot.state.oh.us/Divisions/Planning/TechServ/traffic/Pages/Traffic-Count-Reports-and-Maps.aspx",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Oregon",
+   "area": "Oregon",
+   "region": "USA",
+   "url": "http://www.oregon.gov/ODOT/td/tdata/Pages/tsm/tvt.aspx",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "South Carolina",
+   "area": "South Carolina",
+   "region": "USA",
+   "url": "http://www.scdot.org/getting/trafficcounts.aspx",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Tennessee",
+   "area": "Tennessee",
+   "region": "USA",
+   "url": "http://www.tdot.state.tn.us/projectplanning/adt.asp",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "unavailable",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "USDOT Work Zone Data Feed Registry",
+   "area": "USA",
+   "region": "USA",
+   "url": "https://data.transportation.gov/Transportation/Work-Zone-Data-Exchange-WZDx-Feed-Registry/69qe-yiui",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "The list of public WZDx feeds (43 on 23 Nov 2026).",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Washington",
+   "area": "Washington",
+   "region": "USA",
+   "url": "http://www.wsdot.wa.gov/mapsdata/travel/annualtrafficreport.htm",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Wisconsin",
+   "area": "Wisconsin",
+   "region": "USA",
+   "url": "http://wisconsindot.gov/Pages/projects/data-plan/traf-counts/default.aspx",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "arizona: WZDx: Maricopa County DOT (mcdot)",
+   "area": "arizona",
+   "region": "USA",
+   "url": "https://wzdxapi.aztech.org/construction",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "california: WZDx: Metropolitan Transportation Commission San Francisco (mtc)",
+   "area": "california",
+   "region": "USA",
+   "url": "https://api.511.org/traffic/wzdx?api_key=%3ckey%3e",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "colorado: WZDx: Colorado DOT (cdot)",
+   "area": "colorado",
+   "region": "USA",
+   "url": "https://data.cotrip.org/api/v1/wzdx?apiKey=",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "colorado: WZDx: Colorado DOT (cdot_cwz)",
+   "area": "colorado",
+   "region": "USA",
+   "url": "https://data.cotrip.org/api/v1/cwz?apiKey=[INSERT_API_KEY]",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx CWZ 1.0",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "delaware: WZDx: Delaware DOT (dedot)",
+   "area": "delaware",
+   "region": "USA",
+   "url": "https://wzdx.e-dot.com/del_dot_feed_wzdx_v4.1.geojson",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "florida: WZDx: Florida DOT (fdot)",
+   "area": "florida",
+   "region": "USA",
+   "url": "https://api.depot.fdot.gov/wzdx-latest",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "florida: WZDx: Florida DOT (fldot)",
+   "area": "florida",
+   "region": "USA",
+   "url": "https://us-datacloud.one.network/fdot/feed.json?app_key=c4090b04-26de-c9ee-873b2bd9a38c",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "hawaii: WZDx: Hawaii DOT (hidot)",
+   "area": "hawaii",
+   "region": "USA",
+   "url": "https://ai.blyncsy.io/wzdx/hidot/feed",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "idaho: WZDx: Idaho DOT (iddot)",
+   "area": "idaho",
+   "region": "USA",
+   "url": "https://511.idaho.gov/api/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "illinois: WZDx: Illinois Tollway (iltollway)",
+   "area": "illinois",
+   "region": "USA",
+   "url": "https://tims2go.tollway.state.il.us/wzdx/v4.2?api_key=[Your-API-Key-Here]",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "indiana: WZDx: Indiana DOT (indot)",
+   "area": "indiana",
+   "region": "USA",
+   "url": "https://in.carsprogram.org/carsapi_v1/api/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "iowa: WZDx: Iowa DOT (idot)",
+   "area": "iowa",
+   "region": "USA",
+   "url": "https://iowa-atms.cloud-q-free.com/api/rest/dataprism/wzdx/wzdxfeed",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "WZDx: Kansas DOT (kansas)",
+   "area": "kansas",
+   "region": "USA",
+   "url": "https://ks.carsprogram.org/carsapi_v1/api/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "kentucky: WZDx: Kentucky Transportation Cabinet (kytc)",
+   "area": "kentucky",
+   "region": "USA",
+   "url": "https://storage.googleapis.com/kytc-its-2020-openrecords/public/feeds/WZDx/kytc_wzdx_v4.1.geojson",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "louisiana: WZDx: Louisiana DOTD (ladotd)",
+   "area": "louisiana",
+   "region": "USA",
+   "url": "https://wzdx.e-dot.com/la_dot_d_feed_wzdx_v4.1.geojson",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "maryland: WZDx: Maryland DOT (mdot)",
+   "area": "maryland",
+   "region": "USA",
+   "url": "https://filter.ritis.org/wzdx_v4.1/mdot.geojson",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "massachusetts: WZDx: Massachusetts DOT (massdot__cwz)",
+   "area": "massachusetts",
+   "region": "USA",
+   "url": "https://api.massdot-swzm.com/api/v1/cwz/work-zone-feed",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx CWZ 1.0",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "michigan: WZDx: Michigan DOT (mdot_4)",
+   "area": "michigan",
+   "region": "USA",
+   "url": "https://mdotridedata.state.mi.us//api/v1/organization/michigan_department_of_transportation/dataset/work_zone_information/query?limit=200&_format=json",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "minnesota: WZDx: Minnesota DOT (mndot)",
+   "area": "minnesota",
+   "region": "USA",
+   "url": "https://mn.carsprogram.org/carsapi_v1/api/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "mississippi: WZDx: Mississippi DOT (msdot)",
+   "area": "mississippi",
+   "region": "USA",
+   "url": "https://api.mdottraffic.com/prod/v3/data/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "missouri: WZDx: Missouri DOT (modot)",
+   "area": "missouri",
+   "region": "USA",
+   "url": "https://traveler.modot.org/timconfig/feed/desktop/mo_wzdx.json",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "missouri: WZDx: St. Charles County (stcharlesco_v4)",
+   "area": "missouri",
+   "region": "USA",
+   "url": "https://scc.ridsi-dash.com:5000/wzdx.geojson",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "n/a: WZDx: CivicLink (CivicLink_CrewCast)",
+   "area": "n/a",
+   "region": "USA",
+   "url": "https://road-connect-community-bry7272.replit.app/api/wzdx/work-zones.geojson",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "n/a: WZDx: PurposeBuilt Systems, LLC (pbs)",
+   "area": "n/a",
+   "region": "USA",
+   "url": "https://feeds.purposebuilt.systems/cwz",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx CWZ 1.0",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "n/a: WZDx: Quebec City (quebec)",
+   "area": "n/a",
+   "region": "USA",
+   "url": "https://quebec.gewi.com/wzdx/pull",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 3.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "nationwide",
+   "area": "nationwide",
+   "region": "USA",
+   "url": "http://www.fhwa.dot.gov/policyinformation/travel_monitoring/tvt.cfm",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "new jersey: WZDx: New Jersey Institute of Technology (njdot)",
+   "area": "new jersey",
+   "region": "USA",
+   "url": "https://smartworkzones.njit.edu/nj/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "new york: WZDx: New York DOT (nysdot)",
+   "area": "new york",
+   "region": "USA",
+   "url": "https://511ny.org/api/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "north carolina: WZDx: North Carolina DOT (ncdot)",
+   "area": "north carolina",
+   "region": "USA",
+   "url": "https://drivenc.gov/api/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "WZDx: National Park Service (nps)",
+   "area": "nps",
+   "region": "USA",
+   "url": "https://developer.nps.gov/api/v1/roadevents?type=workzone&api_key=",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "WZDx: Ohio DOT (ohio)",
+   "area": "ohio",
+   "region": "USA",
+   "url": "https://publicapi.ohgo.com/api/work-zones/wzdx/4.2?api-key=INSERT-API-KEY-HERE",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "oklahoma: WZDx: Oklahoma DOT (odot)",
+   "area": "oklahoma",
+   "region": "USA",
+   "url": "https://oktraffic.org/api/Geojsons/workzones?&access_token=feOPynfHRJ5sdx8tf3IN5yOsGz89TAUuzHsN3V0jo1Fg41LcpoLhIRltaTPmDngD",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "one specific set",
+   "area": "one specific set",
+   "region": "USA",
+   "url": "https://data.cityofchicago.org/Transportation/Average-Daily-Traffic-Counts/pfsx-4n4m",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "oregon: WZDx: Oregon DOT (ordot)",
+   "area": "oregon",
+   "region": "USA",
+   "url": "https://api.odot.state.or.us/WZDx/v4.0/Workzones",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "pennsylvania: WZDx: Pennsylvania Turnpike Commission (ptc)",
+   "area": "pennsylvania",
+   "region": "USA",
+   "url": "https://atms.paturnpike.com/api/WZDxWorkZoneFeed?api_key=INSERT-API-KEY-HERE",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "south dakota: WZDx: South Dakota DOT (sddot)",
+   "area": "south dakota",
+   "region": "USA",
+   "url": "https://sd.cdn.iteris-atis.com/wzdx/sd_wzdx_v1.geojson",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx CWZ 1.0",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "texas: WZDx: City of Austin (austin)",
+   "area": "texas",
+   "region": "USA",
+   "url": "https://data.austintexas.gov/download/d9mm-cjw9",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "texas: WZDx: Texas DOT (txdot_v4_2)",
+   "area": "texas",
+   "region": "USA",
+   "url": "https://api.drivetexas.org/api/conditions.wzdx.geojson?key=",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "virginia: WZDx: Virginia DOT (vdot)",
+   "area": "virginia",
+   "region": "USA",
+   "url": "https://data.511-atis-ttrip-prod.iteriscloud.com/smarterRoads/workzone/workZoneJSON/current/workZone.json?token=INSERT-API-KEY-HERE",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4",
+   "access": "API key",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "washington: WZDx: Washington State DOT (wsdot)",
+   "area": "washington",
+   "region": "USA",
+   "url": "https://wzdx.wsdot.wa.gov/api/v4/WorkZoneFeed",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.2",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "wisconsin: WZDx: Wisconsin DOT (wisdot)",
+   "area": "wisconsin",
+   "region": "USA",
+   "url": "https://511wi.gov/api/wzdx",
+   "kinds": [
+    "roadworks",
+    "closures"
+   ],
+   "format": "WZDx 4.1",
+   "access": "open",
+   "adapter": "wzdx",
+   "notes": "From USDOT's Work Zone Data Feed Registry",
+   "from": "data.transportation.gov 69qe-yiui",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Ukraine: Hazardous road sections",
+   "area": "Ukraine",
+   "region": "Ukraine",
+   "url": "https://data.gov.ua/dataset/7576fcf4-d79f-49af-ab1e-be0671116a57",
+   "kinds": [
+    "incidents"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Ukraine: Kyiv road closures and repairs",
+   "area": "Ukraine",
+   "region": "Ukraine",
+   "url": "https://data.gov.ua/dataset/f8ae215b-a8e1-4242-a26f-5df5c909f673",
+   "kinds": [
+    "closures"
+   ],
+   "format": "GeoJSON",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Datex2 Portal",
+   "area": "Datex2 Portal",
+   "region": "World",
+   "url": "https://www.datex2.eu/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "DATEX II",
+   "access": "open",
+   "adapter": "datex2",
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "EU - Historic Road data",
+   "area": "EU - Historic Road data",
+   "region": "World",
+   "url": "http://open-data.europa.eu/en/data/dataset/4t2lYOaJNRsEgDA37hrUgg",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "MDM-Portal",
+   "area": "MDM-Portal",
+   "region": "World",
+   "url": "http://www.mdm-portal.de/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "NYC Taxi and Limousine Commission",
+   "area": "NYC Taxi and Limousine Commission",
+   "region": "World",
+   "url": "http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml",
+   "kinds": [
+    "trips"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Open Traffic Data project",
+   "area": "Open Traffic Data project",
+   "region": "World",
+   "url": "http://www.worldbank.org/en/news/feature/2016/12/19/open-traffic-data-to-revolutionize-transport",
+   "kinds": [
+    "flow"
+   ],
+   "format": "portal",
+   "access": "open",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "OpenTraffic.io",
+   "area": "OpenTraffic.io",
+   "region": "World",
+   "url": "http://opentraffic.io/",
+   "kinds": [
+    "traffic"
+   ],
+   "format": "portal",
+   "access": "unavailable",
+   "adapter": null,
+   "notes": "",
+   "from": "graphhopper/open-traffic-collection",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Apple MapKit",
+   "area": "World",
+   "region": "World",
+   "url": "https://developer.apple.com/documentation/mapkit",
+   "kinds": [
+    "travel_time"
+   ],
+   "format": "SDK",
+   "access": "developer account",
+   "adapter": null,
+   "notes": "Shows traffic and ETAs; no traffic data API found.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Google Maps Platform (Routes API)",
+   "area": "World",
+   "region": "World",
+   "url": "https://developers.google.com/maps/documentation/routes/policies",
+   "kinds": [
+    "travel_time"
+   ],
+   "format": "JSON",
+   "access": "API key, restrictive terms",
+   "adapter": null,
+   "notes": "Traffic-aware route times only; caching restricted, results on Google maps: not usable as a database.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "HERE Traffic API v7",
+   "area": "World",
+   "region": "World",
+   "url": "https://docs.here.com/traffic-api/docs/here-traffic-api-v7-concepts",
+   "kinds": [
+    "flow",
+    "speed",
+    "incidents",
+    "roadworks",
+    "closures"
+   ],
+   "format": "JSON",
+   "access": "API key",
+   "adapter": "here",
+   "notes": "5,000 free transactions a month listed on HERE's pricing page.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "OpenStreetMap via Overpass (lights, limits, roadworks)",
+   "area": "World",
+   "region": "World",
+   "url": "https://overpass-api.de/api/interpreter",
+   "kinds": [
+    "signals",
+    "roadworks",
+    "speed_limits"
+   ],
+   "format": "JSON",
+   "access": "open",
+   "adapter": "osm",
+   "notes": "Connection reset from this environment on 23 Nov 2026.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "unreachable"
+   }
+  },
+  {
+   "name": "Telraam",
+   "area": "World",
+   "region": "World",
+   "url": "https://telraam.net",
+   "kinds": [
+    "counts"
+   ],
+   "format": "JSON",
+   "access": "API key (free)",
+   "adapter": null,
+   "notes": "Citizen traffic counters in many cities.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "TomTom Traffic Flow",
+   "area": "World",
+   "region": "World",
+   "url": "https://developer.tomtom.com/traffic-api",
+   "kinds": [
+    "flow",
+    "speed"
+   ],
+   "format": "JSON",
+   "access": "API key",
+   "adapter": "traffic_sources.TomTomFlow",
+   "notes": "Free quota; probe data from >600 million devices.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  },
+  {
+   "name": "Waze for Cities data feed",
+   "area": "World",
+   "region": "World",
+   "url": "https://support.google.com/waze/partners/answer/10618035",
+   "kinds": [
+    "queues",
+    "incidents",
+    "closures"
+   ],
+   "format": "JSON/XML GeoRSS",
+   "access": "public bodies only",
+   "adapter": "traffic_sources.WazeJams",
+   "notes": "Jams with speed, length, delay; every 2 min; free for partners.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "blocked"
+   }
+  }
+ ]
+}

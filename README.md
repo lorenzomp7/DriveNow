@@ -891,6 +891,107 @@ Gärtnerstraße e nessuna altrove. Il flusso dal vivo quindi c'è, ed è quasi
 immediato. Che le spire mute fossero ferme per il poco traffico o per un guasto
 va visto con un ascolto nelle ore di punta.
 
+### Dati pubblici su traffico, percorrenze, semafori, code e cantieri
+
+Non c'è una fonte unica: ci sono centinaia di portali, ma usano pochi formati.
+DriveNow ha quindi un adattatore per formato (`drivenow/sources/`), e ognuno scrive
+nel database delle auto (`fleet.py`) tre cose:
+- la velocità per tratto;
+- le percorrenze;
+- gli intralci (`drivenow/road_events.py`): cantieri, chiusure, restrizioni,
+  limiti temporanei, incidenti, ostacoli, code con la loro lunghezza, meteo,
+  ponti mobili, semafori fuori servizio. Ognuno ha la sua linea o il suo punto
+  in lon/lat, inizio e fine, ed è abbinato ai tratti della rete.
+
+| Adattatore | Fonte e formato | Cosa dà | Accesso |
+|---|---|---|---|
+| `datex2.py` | DATEX II v2 e v3, lo standard europeo: Paesi Bassi (NDW), Germania (Mobilithek), Francia, Belgio, Lussemburgo, Finlandia, Lettonia, Porto, Regno Unito, Scandinavia | situazioni, velocità e flussi per sito, percorrenze | aperto o registrazione |
+| `autobahn.py` | API di Autobahn GmbH | cantieri (con limite), avvisi, chiusure sulle autostrade tedesche | aperto, senza chiave |
+| `hamburg_traffic.py` | "Verkehrslage Hamburg" (WFS) | stato del traffico su ogni strada, ogni 5 minuti | aperto |
+| `hamburg_police.py` | messaggi della polizia di Amburgo (WFS) | cantieri, chiusure, code, incidenti, semafori fuori servizio | aperto (DL-DE BY 2.0) |
+| `hamburg/live.py` | semafori e spire di Amburgo (MQTT) | colori, secondi di ciclo, passaggi sulle spire | aperto |
+| `digitraffic.py` | Fintraffic (Finlandia) | cantieri con limite e date, avvisi, limiti di peso | aperto |
+| `torino.py` | 5T Torino | flusso e velocità per punto, ogni 5 minuti | aperto |
+| `wzdx.py` | Work Zone Data Exchange (USA) e il registro dei feed USDOT | cantieri con limite e corsie chiuse | aperto o chiave |
+| `here.py` | HERE Traffic API v7 | velocità, intensità delle code, incidenti, chiusure | chiave |
+| `traffic_sources.py` | TomTom Traffic Flow; Waze for Cities | velocità per tratto; code | chiave; solo enti pubblici |
+| `osm.py` | OpenStreetMap via Overpass | dove sono i semafori, limiti, strade in cantiere | aperto |
+
+**DATEX II:** si leggono solo le posizioni date in coordinate. Quelle date solo in
+codici Alert-C servono le tabelle di ogni paese: si contano e si scartano, senza
+indovinarle. Il Belgio, per esempio, oggi ne ha 213 su 213.
+
+**Cosa si ricava:**
+- **Percorrenza di ogni tratto** (`FleetDB.travel_time`), con la sua fonte e la
+  sua età. Si prende la più diretta che c'è:
+  1. quella misurata (DATEX II, NDW);
+  2. quella delle auto DriveNow che l'hanno attraversato;
+  3. la lunghezza divisa per la velocità per tratto (TomTom, HERE, Verkehrslage, DATEX);
+  4. il limite.
+- **Code:** una coda segnalata con la sua lunghezza (Waze, DATEX II, HERE,
+  Autobahn) diventa auto ferme in fondo ai suoi tratti. Sugli accessi con
+  semaforo noto resta lo stimatore delle spire.
+- **Nella consulenza:**
+  - un cantiere più avanti con limite più basso fa rallentare in tempo, senza
+    nascondere i semafori dopo di lui (nuovo controllo `limit` nel motore);
+  - una chiusura fa arrivare fermi prima, anche subito dopo un semaforo;
+  - un semaforo segnalato fuori servizio non si usa: non è mai un verde;
+  - sul pannello compaiono "Cantiere" e "Strada chiusa".
+- **In simulazione:** `SumoWorld.load_road_events` dà gli intralci alla
+  consulenza e, se richiesto, anche alle corsie di SUMO, così vi si attengono
+  tutte le auto simulate.
+
+**Il catalogo:** `data/traffic_sources.json` raccoglie 153 fonti in 25 paesi,
+costruito con `tools/build_sources_catalog.py`:
+- dai link di `graphhopper/open-traffic-collection`;
+- dal registro USDOT dei cantieri (43 feed);
+- dalle fonti verificate a mano.
+
+Per ognuna ci sono:
+- paese o zona;
+- tipi di dato;
+- formato;
+- accesso (aperto, registrazione, chiave, solo enti);
+- l'adattatore che la legge (80 fonti);
+- l'esito del controllo da questo ambiente.
+
+`tools/sources_catalog.py` le elenca per paese, tipo, accesso o adattatore, e con
+`--check` prova a raggiungerle. Esito del controllo del 23 novembre 2026:
+
+| Esito | Fonti |
+|---|---|
+| Raggiunte | 19 |
+| Bloccate dalla rete di questo ambiente | 91 |
+| Senza risposta | 41 |
+| Errore | 1 |
+
+Oltre agli host sbloccati per questa prova, aprire altri host è una scelta
+dell'ambiente di sviluppo.
+
+**Letture dal vivo** (`tools/public_data_check.py`, 23 novembre 2026, ore 11 UTC):
+
+| Fonte | Arrivato | Sulle reti di Amburgo |
+|---|---|---|
+| Polizia di Amburgo | 243 segnalazioni attive: 156 chiusure, 62 cantieri, 18 restrizioni, 7 code | Willy-Brandt-Straße: 2 chiusure, 2 cantieri, 3 restrizioni; Gärtnerstraße: nessuna |
+| Verkehrslage Amburgo | 632 + 353 tratti, dati di 6 minuti prima | velocità su 607 dei 867 tratti di Willy-Brandt-Straße e su 91 dei 105 di Gärtnerstraße |
+| Autostrade intorno ad Amburgo (A1, A7, A23, A24, A25, A255) | 598 intralci: 527 cantieri (252 con limite), 67 chiusure | nessuno: le due reti sono strade di città |
+| NDW (Paesi Bassi) | 1.250 situazioni (1.243 con coordinate), 104 limiti temporanei, 1.625 aperture di ponti in programma, 20.619 siti con velocità, 67.795 tratti con percorrenza | — |
+| Finlandia | 816 cantieri (611 con limite), 19 avvisi, 20 limiti di peso | — |
+| Torino | 112 punti, velocità media 62 km/h | — |
+| Belgio | 213 situazioni, tutte solo in Alert-C | — |
+
+**Limiti:**
+- **HERE e TomTom:** sono provati solo su risposte scritte secondo il formato
+  pubblicato, perché manca la chiave. Lo stesso vale per WZDx e Overpass, i cui
+  host da qui non rispondono; questi file di prova finiscono in `_written.json`.
+- **Direzione:** i messaggi della polizia di Amburgo sono punti senza direzione.
+  Una chiusura in un senso solo si abbina a entrambi.
+- **Velocità dalla Verkehrslage:** è stimata da una classe (scorrevole 100%,
+  densa 70%, lenta 40%, a singhiozzo 15% della velocità libera). Sono ipotesi
+  mie, non numeri della città.
+- **Google Maps, Waze e Apple Maps** il traffico ce l'hanno, ma non lo danno
+  come dato: si veda "Dove sono le altre auto".
+
 ### Gärtnerstraße: un corridoio coperto
 
 Qui 9 degli 11 impianti semaforici della zona hanno dati reali, e così il
@@ -1164,6 +1265,8 @@ drivenow/
   positioning.py  il GPS di un telefono (rumore, ritardo, buchi) e il filtro di Kalman lungo la strada
   fleet.py        il database delle auto in movimento: auto DriveNow una per una e traffico per tratto
   traffic_sources.py  traffico aggregato da TomTom Traffic Flow e dalle code di Waze for Cities
+  road_events.py  intralci comuni a tutte le fonti: cantieri, chiusure, code, semafori fuori servizio
+  sources/        adattatori per formato: DATEX II, Autobahn, Amburgo, Finlandia, Torino, WZDx, HERE, OSM
   estimator.py    code ai semafori dalle spire e dai telefoni
   perception.py   sensori dell'auto (telecamera, radar, lidar, meteo) e loro fusione
   autopilot.py    guida autonoma sui pedali, da quello che vedono i sensori
@@ -1172,7 +1275,8 @@ drivenow/
   server.py       server della mappa (HTTP + Server-Sent Events, solo libreria standard)
 web/              mappa: index.html, style.css, app.js
 data/sumo/        reti a griglia 1×1–4×4 (dalla vecchia Traffc_light_control)
-data/hamburg/     scenario reale di Amburgo (rete, semafori registrati, traffico)
+data/hamburg/     scenario reale di Amburgo (rete, semafori registrati, traffico, lon/lat dei tratti)
+data/traffic_sources.json  catalogo delle fonti di dati di traffico trovate (153 in 25 paesi)
 tools/            costruzione dello scenario di Amburgo, esperimenti (anche sensori e meteo:
                   perception_experiment.py), accuratezza delle previsioni imparate dalle
                   auto, registrazione delle pagine

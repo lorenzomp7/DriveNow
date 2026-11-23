@@ -181,3 +181,18 @@ def test_a_light_out_of_order_is_not_used_by_the_advice():
     db.event(RoadEvent("f", "signal_fault", "hamburg-police", [], edges=[edge.id]))
     adv.signal_fault_fn = db.signal_fault
     assert adv._signal(edge.id, None, 0.0) is None
+
+
+def test_the_catalogue_names_only_adapters_that_exist():
+    import importlib
+    cat = json.load(open(os.path.join(os.path.dirname(DATA), "..", "data", "traffic_sources.json"), encoding="utf-8"))
+    assert len(cat["sources"]) > 100
+    for s in cat["sources"]:
+        assert s["url"] and s["kinds"] and s["access"] and s["region"]
+        if s.get("adapter"):
+            mod, _, attr = s["adapter"].partition(".")
+            if mod in ("traffic_sources", "hamburg"):
+                m = importlib.import_module(f"drivenow.{mod}" + (".live" if mod == "hamburg" else ""))
+                assert attr in ("", "live") or hasattr(m, attr)
+            else:
+                importlib.import_module(f"drivenow.sources.{mod}")
