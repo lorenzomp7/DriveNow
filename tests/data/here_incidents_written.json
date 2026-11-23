@@ -1,0 +1,10 @@
+{"_note": "Written to HERE Traffic API v7's published format, not a recorded answer (no key).",
+ "sourceUpdated": "2026-11-23T10:58:00Z",
+ "results": [
+  {"location": {"length": 200.0, "shape": {"links": [{"points": [{"lat": 53.55, "lng": 9.9890}, {"lat": 53.55, "lng": 9.9930}]}]}},
+   "incidentDetails": {"id": "1001", "type": "construction", "roadClosed": false, "criticality": "minor",
+     "startTime": "2026-11-20T06:00:00Z", "endTime": "2026-12-20T18:00:00Z", "description": {"value": "Roadworks", "language": "en"}}},
+  {"location": {"length": 50.0, "shape": {"links": [{"points": [{"lat": 53.55, "lng": 9.9930}, {"lat": 53.55, "lng": 9.9890}]}]}},
+   "incidentDetails": {"id": "1002", "type": "accident", "roadClosed": true, "criticality": "major",
+     "startTime": "2026-11-23T10:40:00Z", "description": {"value": "Accident, road closed", "language": "en"}}}
+ ]}

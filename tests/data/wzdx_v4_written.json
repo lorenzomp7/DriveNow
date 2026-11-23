@@ -1,0 +1,15 @@
+{"_note": "Written to the WZDx 4.2 specification, not a recorded feed (the feeds' hosts are not reachable here).",
+ "feed_info": {"publisher": "Example DOT", "version": "4.2", "update_date": "2026-11-23T10:00:00Z"},
+ "type": "FeatureCollection",
+ "features": [
+  {"id": "wz-1", "type": "Feature",
+   "properties": {"core_details": {"event_type": "work-zone", "data_source_id": "ds1", "road_names": ["I-80"], "direction": "eastbound"},
+     "start_date": "2026-11-20T06:00:00Z", "end_date": "2026-12-20T18:00:00Z", "vehicle_impact": "some-lanes-closed",
+     "reduced_speed_limit_kph": 72.4,
+     "lanes": [{"order": 1, "type": "general", "status": "closed"}, {"order": 2, "type": "general", "status": "open"}]},
+   "geometry": {"type": "LineString", "coordinates": [[-111.90, 40.76], [-111.89, 40.76]]}},
+  {"id": "wz-2", "type": "Feature",
+   "properties": {"core_details": {"event_type": "work-zone", "data_source_id": "ds1", "road_names": ["US-89"], "direction": "northbound"},
+     "start_date": "2026-11-21T20:00:00Z", "end_date": "2026-11-22T05:00:00Z", "vehicle_impact": "all-lanes-closed"},
+   "geometry": {"type": "MultiPoint", "coordinates": [[-111.88, 40.75], [-111.88, 40.76]]}}
+ ]}

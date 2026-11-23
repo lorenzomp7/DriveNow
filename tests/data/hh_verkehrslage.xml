@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='utf-8'?>
+<wfs:FeatureCollection xmlns:de.hh.up="https://registry.gdi-de.org/id/de.hh.up" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd https://registry.gdi-de.org/id/de.hh.up https://geodienste.hamburg.de/wfs_hh_verkehrslage?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=DescribeFeatureType&amp;OUTPUTFORMAT=application%2Fgml%2Bxml%3B+version%3D3.2&amp;TYPENAME=de.hh.up:verkehrslage&amp;NAMESPACES=xmlns(de.hh.up,https%3A%2F%2Fregistry.gdi-de.org%2Fid%2Fde.hh.up)" timeStamp="2026-11-23T11:01:19Z" numberMatched="unknown" numberReturned="0">
+  
+  <wfs:member>
+    <de.hh.up:verkehrslage gml:id="DE.HH.UP_VERKEHRSLAGE_91">
+      <de.hh.up:zustandsklasse>fliessend</de.hh.up:zustandsklasse>
+      <de.hh.up:zeitstempel>2026-11-23T11:55:00</de.hh.up:zeitstempel>
+      <de.hh.up:zeitstempel_utc>2026-11-23T10:55:00</de.hh.up:zeitstempel_utc>
+      <de.hh.up:strassenklasse>Anliegerstraße</de.hh.up:strassenklasse>
+      <de.hh.up:geom>
+        
+        <gml:LineString gml:id="DE.HH.UP_VERKEHRSLAGE_91_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.553553 10.002412 53.552911 10.000792</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:verkehrslage>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:verkehrslage gml:id="DE.HH.UP_VERKEHRSLAGE_397">
+      <de.hh.up:zustandsklasse>dicht</de.hh.up:zustandsklasse>
+      <de.hh.up:zeitstempel>2026-11-23T11:55:00</de.hh.up:zeitstempel>
+      <de.hh.up:zeitstempel_utc>2026-11-23T10:55:00</de.hh.up:zeitstempel_utc>
+      <de.hh.up:strassenklasse>Anliegerstraße</de.hh.up:strassenklasse>
+      <de.hh.up:geom>
+        
+        <gml:LineString gml:id="DE.HH.UP_VERKEHRSLAGE_397_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.552176 10.001613 53.552413 10.001841 53.553333 10.002813</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:verkehrslage>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:verkehrslage gml:id="DE.HH.UP_VERKEHRSLAGE_670">
+      <de.hh.up:zustandsklasse>fliessend</de.hh.up:zustandsklasse>
+      <de.hh.up:zeitstempel>2026-11-23T11:55:00</de.hh.up:zeitstempel>
+      <de.hh.up:zeitstempel_utc>2026-11-23T10:55:00</de.hh.up:zeitstempel_utc>
+      <de.hh.up:strassenklasse>Hauptverkehrsstraße</de.hh.up:strassenklasse>
+      <de.hh.up:geom>
+        
+        <gml:LineString gml:id="DE.HH.UP_VERKEHRSLAGE_670_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.547762 10.006008 53.547705 10.006156 53.547700 10.006172 53.547696 10.006188 53.547667 10.006353 53.547665 10.006368 53.547664 10.006383 53.547618 10.008741 53.547618 10.008752 53.547632 10.009140 53.547618 10.009690 53.547618 10.009705 53.547650 10.010323 53.547651 10.010331 53.547788 10.011873 53.547819 10.013048 53.547819 10.013055 53.547839 10.013394 53.547841 10.013407 53.547885 10.013754 53.547886 10.013764 53.547961 10.014175 53.547963 10.014185 53.548062 10.014596 53.548066 10.014608 53.548461 10.015858 53.549030 10.017897</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:verkehrslage>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:verkehrslage gml:id="DE.HH.UP_VERKEHRSLAGE_739">
+      <de.hh.up:zustandsklasse>dicht</de.hh.up:zustandsklasse>
+      <de.hh.up:zeitstempel>2026-11-23T11:55:00</de.hh.up:zeitstempel>
+      <de.hh.up:zeitstempel_utc>2026-11-23T10:55:00</de.hh.up:zeitstempel_utc>
+      <de.hh.up:strassenklasse>Anliegerstraße</de.hh.up:strassenklasse>
+      <de.hh.up:geom>
+        
+        <gml:LineString gml:id="DE.HH.UP_VERKEHRSLAGE_739_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.547191 9.993671 53.547298 9.993884</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:verkehrslage>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:verkehrslage gml:id="DE.HH.UP_VERKEHRSLAGE_2762">
+      <de.hh.up:zustandsklasse>dicht</de.hh.up:zustandsklasse>
+      <de.hh.up:zeitstempel>2026-11-23T11:55:00</de.hh.up:zeitstempel>
+      <de.hh.up:zeitstempel_utc>2026-11-23T10:55:00</de.hh.up:zeitstempel_utc>
+      <de.hh.up:strassenklasse>Anliegerstraße</de.hh.up:strassenklasse>
+      <de.hh.up:geom>
+        
+        <gml:LineString gml:id="DE.HH.UP_VERKEHRSLAGE_2762_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.552910 10.000790 53.552885 10.000729 53.552876 10.000711 53.552865 10.000697 53.552853 10.000686 53.552828 10.000669</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:verkehrslage>
+  </wfs:member>
+  <wfs:member>
+    <de.hh.up:verkehrslage gml:id="DE.HH.UP_VERKEHRSLAGE_2877">
+      <de.hh.up:zustandsklasse>dicht</de.hh.up:zustandsklasse>
+      <de.hh.up:zeitstempel>2026-11-23T11:55:00</de.hh.up:zeitstempel>
+      <de.hh.up:zeitstempel_utc>2026-11-23T10:55:00</de.hh.up:zeitstempel_utc>
+      <de.hh.up:strassenklasse>Verbindungsstraße</de.hh.up:strassenklasse>
+      <de.hh.up:geom>
+        
+        <gml:LineString gml:id="DE.HH.UP_VERKEHRSLAGE_2877_DE.HH.UP_GEOM" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:posList>53.547115 10.004682 53.546268 10.003358 53.546266 10.003354 53.545945 10.002893 53.545940 10.002887 53.545782 10.002697 53.545674 10.002454</gml:posList>
+        </gml:LineString>
+      </de.hh.up:geom>
+    </de.hh.up:verkehrslage>
+  </wfs:member>
+  </wfs:FeatureCollection>

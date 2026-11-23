@@ -1,0 +1,11 @@
+{"_note": "Written to HERE Traffic API v7's published format, not a recorded answer (no key).",
+ "sourceUpdated": "2026-11-23T10:58:00Z",
+ "results": [
+  {"location": {"description": "Willy-Brandt-Straße", "length": 180.0,
+    "shape": {"links": [{"points": [{"lat": 53.55, "lng": 9.9890}, {"lat": 53.55, "lng": 9.9910}], "length": 133.0},
+                        {"points": [{"lat": 53.55, "lng": 9.9910}, {"lat": 53.55, "lng": 9.9930}], "length": 133.0}]}},
+   "currentFlow": {"speed": 4.2, "speedUncapped": 4.2, "freeFlow": 13.9, "jamFactor": 6.1, "confidence": 0.91, "traversability": "open"}},
+  {"location": {"description": "Gegenrichtung", "length": 180.0,
+    "shape": {"links": [{"points": [{"lat": 53.55, "lng": 9.9930}, {"lat": 53.55, "lng": 9.9890}], "length": 266.0}]}},
+   "currentFlow": {"speed": 12.5, "freeFlow": 13.9, "jamFactor": 0.8, "confidence": 0.3, "traversability": "open"}}
+ ]}

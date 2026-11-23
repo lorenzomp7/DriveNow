@@ -1,0 +1,12 @@
+{"_note": "Written to the Overpass API's JSON output format (out geom), not a recorded answer (the server resets connections from here).",
+ "version": 0.6, "generator": "Overpass API",
+ "elements": [
+  {"type": "node", "id": 11, "lat": 53.5500, "lon": 9.9900, "tags": {"highway": "traffic_signals"}},
+  {"type": "node", "id": 12, "lat": 53.5510, "lon": 9.9950, "tags": {"crossing": "traffic_signals", "highway": "crossing"}},
+  {"type": "way", "id": 21, "tags": {"highway": "construction", "construction": "primary", "name": "Ost-West-Straße"},
+   "geometry": [{"lat": 53.5490, "lon": 9.9880}, {"lat": 53.5490, "lon": 9.9900}]},
+  {"type": "way", "id": 22, "tags": {"highway": "primary", "maxspeed": "50"},
+   "geometry": [{"lat": 53.5500, "lon": 9.9890}, {"lat": 53.5500, "lon": 9.9930}]},
+  {"type": "way", "id": 23, "tags": {"highway": "residential", "maxspeed": "DE:zone30"},
+   "geometry": [{"lat": 53.5520, "lon": 9.9890}, {"lat": 53.5520, "lon": 9.9900}]}
+ ]}
