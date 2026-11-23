@@ -771,6 +771,60 @@
    }
   },
   {
+   "name": "Hamburg official speed limits (Zulässige Höchstgeschwindigkeiten, WFS)",
+   "area": "Hamburg",
+   "region": "Germany",
+   "url": "https://geodienste.hamburg.de/HH_WFS_Zulaessige_Hoechstgeschwindigkeiten",
+   "kinds": [
+    "speed_limits"
+   ],
+   "format": "WFS (GML)",
+   "access": "open",
+   "adapter": "hamburg_speed_limits",
+   "notes": "Limit per section and direction, zones 30/20, rules by hours (e.g. Mo-Fr 6-19 h). DL-DE BY 2.0.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Hamburg traffic volumes on main roads (DTV 2019, WFS)",
+   "area": "Hamburg",
+   "region": "Germany",
+   "url": "https://geodienste.hamburg.de/HH_WFS_Verkehrsmengen",
+   "kinds": [
+    "counts"
+   ],
+   "format": "WFS (GML)",
+   "access": "open",
+   "adapter": "hamburg_volumes",
+   "notes": "Average daily traffic, both directions, and heavy-vehicle share per section (2019). DL-DE BY 2.0.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
+   "name": "Hamburg zebra crossings (Fußgängerüberwege, WFS)",
+   "area": "Hamburg",
+   "region": "Germany",
+   "url": "https://geodienste.hamburg.de/wfs_fussgaengerueberwege",
+   "kinds": [
+    "crossings"
+   ],
+   "format": "WFS (GML)",
+   "access": "open",
+   "adapter": "hamburg_crossings",
+   "notes": "Points with the street name. DL-DE BY 2.0.",
+   "from": "checked by hand",
+   "checked": {
+    "date": "2026-11-23",
+    "status": "reached"
+   }
+  },
+  {
    "name": "LSBG Hamburg roadworks (Traffic Disturbance Roadworks, DATEX II v2)",
    "area": "Hamburg",
    "region": "Germany",
