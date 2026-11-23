@@ -123,6 +123,7 @@ class SumoWorld:
         self.flow_window = 60.0
         self.flow_delay = (60.0, 120.0)
         self.fleet: Optional[FleetDB] = None
+        self.estimator = None   # with "fused": a QueueEstimator from loop detectors (see hamburg/world.py)
         self._fleet_clock = 0.0
         self._flow_rng = random.Random(seed * 15485863 + 7)
         self._flow_sum: Dict[str, List[float]] = {}   # edge -> [sum of speeds, samples] this window
@@ -207,7 +208,8 @@ class SumoWorld:
 
         for vid in c.simulation.getDepartedIDList():
             c.vehicle.subscribe(vid, [tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION, tc.VAR_SPEED,
-                                      tc.VAR_POSITION, tc.VAR_ANGLE, tc.VAR_ROUTE_INDEX])
+                                      tc.VAR_POSITION, tc.VAR_ANGLE, tc.VAR_ROUTE_INDEX,
+                                      tc.VAR_LANE_INDEX])
             veh = Vehicle(vid, self.routes.get(vid, []), self.rng.random() < self.penetration, self.t,
                           display=AdviceDisplay(**self.display_options))
             self.vehicles[vid] = veh
@@ -251,6 +253,7 @@ class SumoWorld:
                 continue  # teleporting or not on the road: SUMO reports invalid values
             veh.idx = max(d[tc.VAR_ROUTE_INDEX], 0)
             veh.v = d[tc.VAR_SPEED]
+            veh.lane = d.get(tc.VAR_LANE_INDEX, 0)
             on_internal = road.startswith(":") or road not in self.net.edges
             if on_internal:
                 self._internal.add(vid)
@@ -326,8 +329,8 @@ class SumoWorld:
             self.fleet = FleetDB({e.id: e.length for e in self.net.edges.values()},
                                  car_space=self.advisor.car_space, share=self.penetration)
             self.advisor.gap_trust_fn = self.fleet.gap_trust
-            if self.occupancy_source == "fleet+flow":
-                self.advisor.segment_speed_fn = self.fleet.segment_speed
+            if self.occupancy_source in ("fleet+flow", "fused"):
+                self.advisor.segment_speed_fn = self._segment_speed
         self._fleet_clock -= self.dt
         if self._fleet_clock > 1e-9:
             return
@@ -338,8 +341,14 @@ class SumoWorld:
             where = (veh.idx, veh.pos, veh.v) if veh.phone is None else self._estimated(veh)
             if where is not None:
                 self.fleet.report(vid, self.t, veh.route[where[0]], where[1], where[2])
-        if self.occupancy_source == "fleet+flow":
+        if self.occupancy_source in ("fleet+flow", "fused"):
             self._emulate_flow()
+
+    def _segment_speed(self, edge: str, t: float) -> Optional[float]:
+        # Where loops count the queue at the light, the edge's mean speed (low on red) is left out.
+        if self.estimator is not None and edge in self.estimator.edges:
+            return None
+        return self.fleet.segment_speed(edge, t)
 
     def _emulate_flow(self) -> None:
         """Aggregated speed per edge from every car on it, as a provider would publish it."""
@@ -394,7 +403,8 @@ class SumoWorld:
 
     def occupancy(self) -> Occupancy:
         if self.occupancy_source != "truth" and self.fleet is not None:
-            return self.fleet.occupancy(self.t)
+            occ = self.fleet.occupancy(self.t)
+            return occ if self.estimator is None else self.estimator.merge(occ, self.t)
         occ: Occupancy = {}
         for veh in self.vehicles.values():
             if veh.route:

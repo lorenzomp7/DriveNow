@@ -19,10 +19,12 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
 from ..advisor import Advisor
+from ..estimator import QueueEstimator
 from ..network import SIGNAL
 from ..probe import ProbeLearner
 from ..simulation import GroupStats
 from ..sumo_world import SumoWorld
+from .detectors import LoopEmulator, place_loops, recorded_passages
 from .signals import GREEN, CyclePredictor, SignalHistory
 
 DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "hamburg")
@@ -73,6 +75,15 @@ class HamburgWorld(SumoWorld):
         self._probe_edges = {e for n in self.net.nodes.values() if n.kind == SIGNAL
                              for e in self.net.in_edges[n.id] if e not in self.edge_ds}
         self._probe_prev: Dict[str, Tuple[str, bool]] = {}
+        # Hamburg's loop detectors at the lights, emulated (see detectors.py). With the "fused"
+        # source the advice sees the queues they imply (estimator.py); every 5 s the standing
+        # cars at each light are compared with what "fleet" and "fused" would show.
+        self._data_dir = data_dir
+        self.det_offset = 2.0
+        self.loops = None
+        self._loop_em: Optional[LoopEmulator] = None
+        self._queue_clock = 0.0
+        self.queue_errors: Dict[str, Dict[str, List[Tuple[int, int]]]] = {}  # group -> source -> [(estimated, true)]
 
     # -- which recorded signal controls which movement ------------------------
 
@@ -136,9 +147,72 @@ class HamburgWorld(SumoWorld):
     # -- learning lights without data -------------------------------------------
 
     def step(self) -> None:
+        if self.occupancy_source == "fused" and self.loops is None:
+            self._setup_loops()
         super().step()
         if self.learn_lights:
             self._report_probes()
+        if self.loops is not None:
+            self._step_loops()
+
+    # -- loop detectors ---------------------------------------------------------
+
+    def _upstream(self, edge: str) -> Optional[str]:
+        """The edge a queue on ``edge`` reaches back over: the one leading straight into it."""
+        e = self.net.edges[edge]
+        prev = [p for p in self.net.in_edges.get(e.from_node, []) if edge in self.net.edges[p].next_edges]
+        straight = [p for p in prev if self.net.turn(p, edge) == "s"]
+        cand = straight if straight else prev
+        return cand[0] if len(cand) == 1 and self.net.nodes[e.from_node].kind != SIGNAL else None
+
+    def _setup_loops(self) -> None:
+        lengths = {e.id: e.length for e in self.net.edges.values()}
+        self.loops = place_loops(self._data_dir, lengths, self.det_offset)
+        self._loop_em = LoopEmulator(self.loops)
+        self.estimator = QueueEstimator([(lp.edge, lp.lane) for lp in self.loops], lengths, self._upstream,
+                                        car_space=self.advisor.car_space)
+        # Each approach to a light: its last edge and the edges before it that its queue reaches over.
+        self._approaches: Dict[str, List[str]] = {}
+        for n in self.net.nodes.values():
+            if n.kind == SIGNAL:
+                for e in self.net.in_edges[n.id]:
+                    chain, x = [], e
+                    while x is not None and len(chain) < 6 and x not in chain:
+                        chain.append(x)
+                        x = self._upstream(x)
+                    self._approaches[e] = chain
+
+    def _step_loops(self) -> None:
+        cars = [(v.edge, v.lane, v.pos) for vid, v in self.vehicles.items() if v.route and vid not in self._internal]
+        for lp, occ in self._loop_em.step(cars):
+            self.estimator.event(lp.edge, lp.lane, self.t, occ)
+        # A DriveNow car driving through close to the line without stopping: no queue left there.
+        for vid, v in self.vehicles.items():
+            if v.equipped and v.route and v.edge in self.estimator.edges and v.v > 5.0 \
+                    and self.net.edges[v.edge].length - v.pos < 15.0:
+                self.estimator.drove_through(v.edge)
+        self._queue_clock -= self.dt
+        if self._queue_clock <= 1e-9 and self.fleet is not None:
+            self._queue_clock = 5.0
+            truth: Dict[str, int] = defaultdict(int)
+            for vid, v in self.vehicles.items():
+                if v.route and vid not in self._internal and v.v < 2.0:
+                    truth[v.edge] += 1
+            fleet = self.fleet.occupancy(self.t)
+            fused = self.estimator.merge(fleet, self.t)
+            for e, chain in self._approaches.items():
+                group = "loops" if e in self.estimator.edges else "others"
+                real = sum(truth[x] for x in chain)
+                for name, occ in (("fleet", fleet), ("fused", fused)):
+                    est = sum(1 for x in chain for _, u in occ.get(x, []) if u < 2.0)
+                    self.queue_errors.setdefault(group, {}).setdefault(name, []).append((est, real))
+                    self.queue_errors.setdefault("all", {}).setdefault(name, []).append((est, real))
+
+    def loop_counts(self) -> List[Tuple[str, int, int]]:
+        """(Hamburg lane connection, cars the emulated loop counted, cars the real one counted)
+        over the time simulated so far."""
+        rec = recorded_passages(self._data_dir, self.loops, self.T0, self.T0 + self.t)
+        return [(lp.thing, lp.passages, rec.get(lp.ds, 0)) for lp in self.loops]
 
     def _report_probes(self) -> None:
         """What each DriveNow car tells about the light ahead: waiting, driving off, crossing."""

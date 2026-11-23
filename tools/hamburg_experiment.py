@@ -39,8 +39,9 @@ ap.add_argument("--gps", choices=["perfect", "raw", "filtered"], default="perfec
 ap.add_argument("--gps-max-sigma", type=float, default=15.0, help="m: more uncertain than this, the advice is suspended")
 ap.add_argument("--gps-sigma", type=float, default=None, help="m: error of a phone fix (default 5)")
 ap.add_argument("--gps-delay", type=float, default=None, help="s: how late a fix arrives (default 1)")
-ap.add_argument("--occupancy", choices=["truth", "fleet", "fleet+flow"], default="truth",
-                help="where the advice sees the other cars: all of them, only DriveNow's, or also aggregated speed")
+ap.add_argument("--occupancy", choices=["truth", "fleet", "fleet+flow", "fused"], default="truth",
+                help="where the advice sees the other cars: all of them, only DriveNow's, also aggregated speed, also loop detectors")
+ap.add_argument("--det-offset", type=float, default=2.0, help="m before the stop line where the emulated loops lie")
 ap.add_argument("--penetration", type=float, default=1.0, help="share of DriveNow cars (predict/oracle)")
 ap.add_argument("--seed", type=int, default=1)
 ap.add_argument("--scale", type=float, default=1.0, help="share of the hour's traffic to run (1 = all)")
@@ -61,6 +62,7 @@ w.advisor.commit_distance = a.commit
 w.profiles = a.profiles
 w.gps, w.gps_max_sigma = a.gps, a.gps_max_sigma
 w.occupancy_source = a.occupancy
+w.det_offset = a.det_offset
 if a.gps_sigma is not None:
     w.gps_options["sigma_pos"] = a.gps_sigma
 if a.gps_delay is not None:
@@ -98,6 +100,13 @@ if w.gps_errors:
     res["gps_error_m"] = {"median": round(e[len(e) // 2], 1), "p90": round(e[int(0.9 * len(e))], 1),
                           "mean_signed": round(sum(w.gps_errors) / len(w.gps_errors), 1)}
 res["occupancy"], res["penetration"] = a.occupancy, a.penetration
+if w.queue_errors:
+    def qerr(xs):
+        n = len(xs)
+        return {"samples": n, "true_mean": round(sum(b for _, b in xs) / n, 2),
+                "mae": round(sum(abs(e - b) for e, b in xs) / n, 2), "bias": round(sum(e - b for e, b in xs) / n, 2)}
+    res["queue_error"] = {g: {k: qerr(v) for k, v in d.items()} for g, d in w.queue_errors.items()}
+    res["loops"] = [{"thing": th, "emulated": em, "recorded": rec} for th, em, rec in w.loop_counts()]
 res["unequipped"] = w.stats[False].summary() if a.mode != "none" else None
 print(json.dumps(res))
 if a.out:
