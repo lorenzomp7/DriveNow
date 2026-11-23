@@ -783,16 +783,28 @@ di quante sono ferme a ogni semaforo:
 - **la velocità per tratto tipo TomTom:** emulata in simulazione, come nella
   sezione precedente.
 
-**Lo stimatore delle code** (`drivenow/estimator.py`) per ogni corsia con spira
-fa tre cose:
-- dai passaggi degli ultimi 5 minuti ricava il ritmo degli arrivi;
-- se la spira resta occupata più di 3 s c'è un'auto ferma in testa, e dietro di
-  lei la coda cresce di quel ritmo;
-- quando la spira si libera la coda riparte, e ogni passaggio toglie un'auto.
+**Lo stimatore delle code** (`drivenow/estimator.py`) parte sempre dal colore del
+semaforo; le spire danno i due numeri che il colore lascia aperti.
+- **Col rosso:** ogni auto che arriva si mette in coda. La coda comincia quando
+  la prima auto si ferma sulla spira davanti alla linea, e poi cresce al ritmo
+  degli arrivi, cioè i passaggi degli ultimi 5 minuti, congelati quando scatta il
+  rosso, perché col rosso nessuno passa. Se col rosso la spira è libera, la coda
+  non c'è. Quello che restava alla fine del verde si porta nel rosso.
+- **Col verde:** la coda riparte, e ogni passaggio sulla spira è un'auto che
+  esce. Finisce quando il conto arriva a zero o quando sulla spira non passa
+  nessuno per 3 s.
+- **Il giallo conta come rosso**, come nella consulenza.
+- **Una corsia ha il verde se ce l'ha una qualsiasi delle direzioni che partono
+  da lì** (dritto, destra…). Una prima versione guardava una sola direzione, e
+  alcune corsie risultavano rosse per minuti mentre le auto passavano.
 
-Non servono i tempi del semaforo. Il ritmo degli arrivi si congela quando
-un'auto si ferma sulla spira: durante un rosso lungo nessuno ci passa, e
-altrimenti il ritmo calerebbe da solo.
+Solo dove il colore non è noto le spire vengono usate da sole:
+- un'auto ferma sulla spira per più di 3 s è la testa di una coda, che cresce al
+  ritmo degli arrivi;
+- quando la spira si libera, la coda si svuota un passaggio alla volta.
+
+In simulazione i colori vengono dalla registrazione che comanda i semafori di
+SUMO; dal vivo dal flusso della città.
 
 La coda stimata si somma a quella che mostrano i telefoni, dalla linea
 all'indietro, anche sui tratti precedenti. La rete di Amburgo spezza gli accessi
@@ -820,42 +832,42 @@ registrazione:
 
 A Gärtnerstraße alcune spire vere contano poco o niente.
 
-**Risultati** per le sole auto DriveNow, media di 2 semi, 60 min, `--occupancy fused`, confrontati con la sezione precedente:
+**Risultati** per le sole auto DriveNow, media di 2 semi, 60 min, `--occupancy fused`, confrontati con la sezione precedente. La colonna "Spire senza semaforo" è la prima versione dello stimatore:
 
-| | Tutte le auto | Solo DriveNow | Più velocità per tratto | Tre fonti |
-|---|---|---|---|---|
-| Willy-Brandt-Straße 25%: energia nei freni | 245 kJ | 269 kJ | 264 kJ | 258 kJ |
-| tempo | 334 s | 343 s | 340 s | 335 s |
-| Willy-Brandt-Straße 50%: energia nei freni | 234 kJ | 249 kJ | 239 kJ | 239 kJ |
-| tempo | 349 s | 336 s | 338 s | 347 s |
-| Gärtnerstraße 25%: energia nei freni | 110 kJ | 115 kJ | 110 kJ | 110 kJ |
-| tempo | 186 s | 187 s | 198 s | 181 s |
-| Gärtnerstraße 50%: energia nei freni | 102 kJ | 106 kJ | 101 kJ | 100 kJ |
-| tempo | 175 s | 176 s | 183 s | 178 s |
-
-- **A Gärtnerstraße sparisce il costo in tempo** della velocità per tratto: da
-  +6% a −3% al 25%, da +5% a +2% al 50%. L'energia resta al livello di quando si
-  vedevano tutte le auto.
-- **A Willy-Brandt-Straße al 25%** l'energia nei freni recupera quasi metà della
-  perdita (+6% invece di +10%) e il tempo torna come con tutte le auto.
-- **Al 50%** l'energia è come con la sola velocità per tratto.
+| | Tutte le auto | Solo DriveNow | Più velocità per tratto | Spire senza semaforo | Spire con semaforo |
+|---|---|---|---|---|---|
+| Willy-Brandt-Straße 25%: energia nei freni | 245 kJ | 269 kJ | 264 kJ | 258 kJ | 265 kJ |
+| tempo | 334 s | 343 s | 340 s | 335 s | 344 s |
+| Willy-Brandt-Straße 50%: energia nei freni | 234 kJ | 249 kJ | 239 kJ | 239 kJ | 238 kJ |
+| tempo | 349 s | 336 s | 338 s | 347 s | 333 s |
+| Gärtnerstraße 25%: energia nei freni | 110 kJ | 115 kJ | 110 kJ | 110 kJ | 109 kJ |
+| tempo | 186 s | 187 s | 198 s | 181 s | 175 s |
+| Gärtnerstraße 50%: energia nei freni | 102 kJ | 106 kJ | 101 kJ | 100 kJ | 100 kJ |
+| tempo | 175 s | 176 s | 183 s | 178 s | 172 s |
 
 **Errore sulle code.** Ogni 5 s, per ogni accesso con spira, confronto le auto
-ferme vere con quelle stimate:
+ferme vere con quelle stimate. Errore medio assoluto, media dei due semi; tra
+parentesi lo sbilanciamento medio:
 
-| Accessi con spira, auto ferme | In media | Errore solo DriveNow | Errore tre fonti |
-|---|---|---|---|
-| Willy-Brandt-Straße 25% | 2,4 | 1,13–1,28 (−1,1) | 0,97–1,16 (−0,7) |
-| Willy-Brandt-Straße 50% | 2,9 | 0,75–0,90 (−0,7) | 0,74–0,88 (−0,4) |
-| Gärtnerstraße 25% | 1,2 | 0,76–0,85 (−0,8) | 0,60–0,65 (+0,5) |
-| Gärtnerstraße 50% | 1,3 | 0,60 (−0,6) | 0,59–0,63 (+0,5) |
+| Accessi con spira | Auto ferme in media | Solo DriveNow | Spire senza semaforo | Spire con semaforo |
+|---|---|---|---|---|
+| Willy-Brandt-Straße 25% | 2,3–2,4 | 1,2 (−1,1) | 1,06 (−0,7) | 0,96 (−0,7) |
+| Willy-Brandt-Straße 50% | 2,6–2,9 | 0,7–0,8 (−0,6) | 0,81 (−0,4) | 0,61 (−0,3) |
+| Gärtnerstraße 25% | 1,1–1,2 | 0,8 (−0,8) | 0,62 (+0,5) | 0,42 (+0,1) |
+| Gärtnerstraße 50% | 1,2–1,3 | 0,6 (−0,6) | 0,61 (+0,5) | 0,36 (+0,1) |
 
-Errore medio assoluto per i due semi; tra parentesi lo sbilanciamento medio.
-
-- **Solo DriveNow:** sottostima sempre, perché le auto che non vede mancano.
-- **Con le spire:** a Willy-Brandt-Straße la sottostima cala di quasi il 40%. A
-  Gärtnerstraße diventa una sovrastima di mezza auto, e l'errore scende solo al
-  25%.
+- **Col semaforo la stima delle code è la migliore in tutti e quattro i casi.**
+  A Gärtnerstraße l'errore è circa la metà di quello con i soli telefoni e lo
+  sbilanciamento sparisce. A Willy-Brandt-Straße l'errore scende del 10–20%
+  rispetto ai soli telefoni.
+- **Sulla consulenza:**
+  - a Gärtnerstraße l'energia resta al livello di quando si vedevano tutte le
+    auto, e il costo in tempo della velocità per tratto (+5–6%) sparisce del
+    tutto;
+  - a Willy-Brandt-Straße al 50% l'energia è a +2% da quel livello;
+  - a Willy-Brandt-Straße al 25% non migliora rispetto alla velocità per tratto
+    (265 kJ contro 264): il tempo dei due semi è molto diverso (357 s e 331 s),
+    e lì le spire coprono solo strade laterali.
 - **Sugli accessi senza spira non cambia niente**, e sono la maggior parte: sul
   totale degli accessi l'errore resta quasi lo stesso. Il limite è la copertura
   delle spire, non il metodo.
