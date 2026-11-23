@@ -952,7 +952,7 @@ Per ognuna ci sono:
 - tipi di dato;
 - formato;
 - accesso (aperto, registrazione, chiave, solo enti);
-- l'adattatore che la legge (80 fonti);
+- l'adattatore che la legge (79 fonti);
 - l'esito del controllo da questo ambiente.
 
 `tools/sources_catalog.py` le elenca per paese, tipo, accesso o adattatore, e con
