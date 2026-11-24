@@ -1684,7 +1684,8 @@ data/traffic_sources.json  catalogo delle fonti di dati di traffico trovate (153
 tools/            costruzione degli scenari di Amburgo e dei cantieri USA (wzdx_build.py), esperimenti (anche sensori e meteo:
                   perception_experiment.py), accuratezza delle previsioni imparate dalle
                   auto, registrazione delle pagine, agente PPO (ppo_train.py, ppo_bench.py),
-                  carichi fissi per misurare i tempi (sim_profile.py)
+                  carichi fissi per misurare i tempi (sim_profile.py), schede delle app
+                  dall'APK con REA (app_scan.py)
 docs/app-analizzate/  schede sulle app di riferimento (fonti dei dati semaforici, annunci, Android Auto)
 tests/            pytest (i test SUMO si saltano se SUMO non è installato)
 ```

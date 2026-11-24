@@ -60,17 +60,39 @@ SPATEM/MAPEM, MQTT, FROST/SensorThings), motore e frasi della sintesi vocale.
 
 Le prove (`evidence.json`) restano fuori dalla repo, come gli APK.
 
-## App da analizzare
+## Dall'APK alla scheda: `tools/app_scan.py`
 
-| App | Perché | Scheda | Stato |
+Lo script passa l'APK a REA (`decode-android-resources`, che usa Apktool, e
+`inspect-apk-signature`) e scrive le tabelle della scheda: versione, firma, permessi, servizi
+in primo piano, Android Auto, librerie riconoscibili dall'elenco dei file, stringhe sui temi
+della scheda. Le prove REA vanno nella cartella indicata, fuori dalla repo; lo script rifiuta
+APK e prove dentro la repo.
+
+```bash
+npm install --global rea-agents                     # REA 6.10.1
+# Apktool 2.12 nel PATH: java -jar apktool_2.12.1.jar (github.com/iBotPeaches/Apktool)
+python tools/app_scan.py ../apks/base.apk ../apks/split_config.arm64_v8a.apk --app "trafficpilot" \
+    --evidence-dir ../apks/evidence --source "telefono proprio, adb" --out docs/app-analizzate/trafficpilot-apk.md
+```
+
+Cosa resta da leggere a mano: come l'app usa ciò che dichiara (da dove arrivano i dati dei
+semafori, quando parla). Per questo REA usa JADX con il suo ponte `jadx-headless-mcp`
+(`REA_JADX_MCP_JAR`), che va scaricato e verificato da chi analizza; qui non è installato.
+
+## App analizzate
+
+| App | Perché | Scheda | Fonte |
 |---|---|---|---|
-| PrioBike (TU Dresden) | consigli ai semafori di Amburgo, open source | [priobike.md](priobike.md) | fatta dal codice sorgente |
-| trafficpilot | consigli di velocità sui semafori reali | [modello](_modello.md) | serve l'APK |
-| Priotalker | idem, per auto | [modello](_modello.md) | serve l'APK |
-| Sway | idem | [modello](_modello.md) | serve l'APK |
-| Google Maps | quando e come parla, Android Auto | [modello](_modello.md) | serve l'APK |
-| Waze | idem | [modello](_modello.md) | serve l'APK |
-| Traffic Lanes 2, Traffix | interfaccia (giochi di traffico) | [modello](_modello.md) | serve l'APK |
+| PrioBike (TU Dresden) | consigli ai semafori di Amburgo, open source | [priobike.md](priobike.md) | codice sorgente |
+| Organic Maps | navigatore open source con Android Auto e voce | [organic-maps.md](organic-maps.md) | APK ufficiale, `tools/app_scan.py` |
+| trafficpilot (GEVAS) | prognosi rosso/verde dalle centrali del traffico, Android Auto | [trafficpilot.md](trafficpilot.md) | fonti pubbliche |
+| Priotalker (Yunex) | collaudo degli iVRI olandesi, richiesta di priorità | [priotalker.md](priotalker.md) | fonti pubbliche |
+| Sway (Be-Mobile) | tempo al verde e annuncio d'arrivo agli iVRI fiamminghi | [sway.md](sway.md) | fonti pubbliche |
+| Google Maps | interfaccia in Android Auto, semafori sulla mappa | [google-maps.md](google-maps.md) | fonti pubbliche |
+| Waze | annunci a voce riferiti ai semafori | [waze.md](waze.md) | fonti pubbliche |
+| Traffic Lanes 2 | interfaccia (gioco) | [traffic-lanes-2.md](traffic-lanes-2.md) | fonti pubbliche |
+| Traffix | interfaccia (gioco) | [traffix.md](traffix.md) | fonti pubbliche |
 
-Per le app chiuse la scheda si compila solo dopo l'analisi dell'APK della versione indicata:
-finché manca, nella tabella resta «serve l'APK» e nessuna scoperta viene scritta a memoria.
+Le schede da fonti pubbliche segnano «da verificare (APK)» dove serve il manifest: si
+completano con `tools/app_scan.py` su un APK preso dal proprio telefono con
+`rea pull-adb-package`. Nessuna scoperta è scritta a memoria: ogni riga ha la sua fonte.
