@@ -1256,14 +1256,36 @@ Willy-Brandt-Straße:
   - in base alla simulazione, cioè la velocità media sul limite, assegnata alla classe di
     `SPEED_SHARE` più vicina. Quelle quote (fliessend 1,0, dicht 0,7, zäh 0,4, stockend 0,15)
     sono ipotesi.
-- **Lettura disponibile ora:** martedì 24 novembre 2026, 00:19 ora di Amburgo (notte).
-  - Willy-Brandt-Straße: 538 tratti scorrevoli e 26 densi su 564.
-  - Gärtnerstraße: 87 scorrevoli e 2 densi su 89.
-- **Risultato:** su 59 e 39 tratti principali la simulazione è sempre uguale o più lenta della
-  notte. Con il traffico ipotizzato coincide nel 44–53% dei tratti, con quello tarato nel 5–23%.
-- **Perché non è un confronto valido:** la notte non si confronta con le 17:00, quindi questo
-  dice solo che il controllo funziona. Il confronto vero richiede una lettura in un giorno
-  feriale vicino alle 17:00. La lettura salvata è in `data/hamburg/<scenario>/verkehrslage.json`.
+- **Lettura usata:** martedì 24 novembre 2026, 17:07 ora di Amburgo, un giorno feriale all'ora
+  della registrazione. Classi osservate sui tratti della rete:
+  - Willy-Brandt-Straße: 393 scorrevoli, 203 densi e 12 rallentati (zäh), su 608.
+  - Gärtnerstraße: 42 scorrevoli e 50 densi, su 92.
+- **Quanto spesso la classe simulata coincide** con quella letta, su 61 tratti principali a
+  Willy-Brandt-Straße e 40 a Gärtnerstraße:
+
+  | Condizione | Willy-Brandt-Straße | Gärtnerstraße |
+  |---|---|---|
+  | senza DriveNow, traffico ipotizzato | 49% | 35% |
+  | DriveNow, traffico ipotizzato | 39% | 38% |
+  | senza DriveNow, traffico tarato | 5% | 32% |
+  | DriveNow, traffico tarato | 8% | 32% |
+  | senza DriveNow, tarato + limiti + strisce | 3% | 32% |
+  | DriveNow, tarato + limiti + strisce | 5% | 30% |
+
+- **Cosa dice:**
+  - A Willy-Brandt-Straße il traffico tarato è molto più lento della realtà: la simulazione è
+    più lenta della lettura nel 90–93% dei tratti. È coerente con il blocco descritto sopra, quindi
+    lì la quota del 9% per l'ora di punta è probabilmente troppo alta per questa rete simulata.
+  - Il traffico ipotizzato è più vicino: coincide nel 39–49% dei tratti, ed è più lento nel 46–56%.
+  - A Gärtnerstraße le due varianti coincidono in modo simile (30–38%). Con il traffico ipotizzato
+    la simulazione è più veloce della lettura nel 28–30% dei tratti, con quello tarato nel 5–12%.
+- **Cautele:**
+  - Una sola lettura di 5 minuti, di un altro giorno e di un altro anno rispetto ai semafori
+    (2023) e ai volumi (2019).
+  - Le quote di `SPEED_SHARE` che traducono la velocità in classe sono ipotesi: con quote diverse
+    le percentuali cambiano.
+  - La lettura notturna delle 00:19 dello stesso giorno, usata prima come prova del controllo, è
+    stata sostituita. La lettura salvata è in `data/hamburg/<scenario>/verkehrslage.json`.
 
 **Limiti:**
 - **Anni diversi:** volumi del 2019, semafori e traffico laterale del 2023, limiti e strisce di
