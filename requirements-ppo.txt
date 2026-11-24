@@ -1,0 +1,13 @@
+# Optional environment for tools/ppo_train.py and tools/ppo_bench.py (docs/ppo-semafori.md).
+# The PPO repository is checked out separately: it declares no licence, so it is not vendored.
+# Versions used for docs/benchmarks/ppo-2x2.* (Python 3.13, CPU only).
+eclipse-sumo==1.28.0
+traci==1.28.0
+sumolib==1.28.0
+torch==2.15.0
+numpy==2.5.3
+scipy==1.18.1
+pandas==3.0.5
+networkx==3.7
+matplotlib==3.11.2
+scikit-learn==1.9.1

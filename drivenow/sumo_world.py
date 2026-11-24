@@ -86,6 +86,7 @@ class SumoWorld:
         route_file: Optional[str] = None,
         teleport: float = -1,
         scale: float = 1.0,
+        additional: Optional[str] = None,
     ) -> None:
         import traci
 
@@ -166,6 +167,8 @@ class SumoWorld:
             # stopping (cars are rerouted first, see _reroute). Valid routes are not affected.
             "--ignore-route-errors", "true",
         ]
+        if additional:   # SUMO additional file(s), e.g. the detectors an agent reads (tools/ppo_bench.py)
+            cmd += ["-a", additional]
         traci.start(cmd, label=label)
         self.conn = traci.getConnection(label)
         self._install_plans()
