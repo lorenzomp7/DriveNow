@@ -191,7 +191,10 @@ Da dove vengono i dati:
 - **Traffico: in parte reale.** Dove esistono, i volumi sono tarati sui
   conteggi dei rilevatori di Amburgo in quell'ora. Dove mancano rilevatori
   (l'asse principale di Willy-Brandt-Straße, alcuni tratti di Gärtnerstraße)
-  il volume è un'ipotesi, scritta in `scenario.json`.
+  il volume è un'ipotesi, scritta in `scenario.json`. Quell'ipotesi è bassa: sull'asse
+  principale è circa 6,6 volte (Willy-Brandt-Straße) e 7 volte (Gärtnerstraße) sotto i volumi
+  ufficiali 2019 (DTV × 9% ÷ 2 per senso). C'è perciò anche una variante tarata, vedi
+  "Altri dati aperti di Amburgo" più sotto.
 
 Dettagli, fonti e licenze sono in [`data/hamburg/README.md`](data/hamburg/README.md).
 Tutto si ricostruisce con

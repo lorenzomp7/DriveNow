@@ -20,6 +20,9 @@ In ogni cartella:
 | `links.json` | per ogni link semaforico di SUMO, la corsia di Amburgo corrispondente e la qualità dell'abbinamento (`direct`, `relaxed`, `along`, `none`) | calcolato da `tools/hamburg_build.py` |
 | `routes.rou.xml` | un'ora di traffico (1.507 viaggi a Gärtnerstraße, 4.103 a Willy-Brandt-Straße) | conteggi reali dei rilevatori di Amburgo dove esistono, più un volume ipotizzato sull'asse principale dove mancano |
 | `scenario.json` | inizio dell'ora di prova, storico, impianti, ipotesi di traffico | |
+| `routes_dtv.rou.xml` | variante tarata: asse principale a DTV × 9% ÷ 2 per senso (49.037 viaggi a Willy-Brandt-Straße, 9.780 a Gärtnerstraße) | volumi 2019 della città più i conteggi dei rilevatori |
+| `public_data.json` | risposte grezze di limiti ufficiali, volumi 2019 e strisce pedonali, con l'ora di lettura | WFS di `geodienste.hamburg.de` |
+| `verkehrslage.json` | una lettura dello stato del traffico, con l'ora di Amburgo | WFS Verkehrslage di `geodienste.hamburg.de` |
 
 Note sui dati:
 
@@ -53,6 +56,10 @@ python tools/hamburg_build.py --scenario willy-brandt --cache /tmp/hamburg-cache
   sono della Freie und Hansestadt Hamburg (LSBG), con licenza
   [Datenlizenz Deutschland – Namensnennung – 2.0](https://www.govdata.de/dl-de/by-2-0).
 - **Corsie e geometrie.** Freie und Hansestadt Hamburg, servizio *Traffic Lights Data*,
+  [dl-de/by-2-0](https://www.govdata.de/dl-de/by-2-0).
+- **Volumi, limiti, strisce pedonali, stato del traffico.** Freie und Hansestadt Hamburg,
+  Behörde für Verkehr und Mobilitätswende, servizi WFS *Verkehrsmengen*, *Zulässige
+  Höchstgeschwindigkeiten*, *Fußgängerüberwege* e *Verkehrslage*,
   [dl-de/by-2-0](https://www.govdata.de/dl-de/by-2-0).
 - **Mappa.** © i contributori di [OpenStreetMap](https://www.openstreetmap.org/copyright),
   licenza [ODbL](https://opendatacommons.org/licenses/odbl/).
