@@ -81,6 +81,25 @@ toglie il 90 % delle fermate, con l'agente le fermate non calano ma l'energia ne
 tempo, certe + probabili no. Dettagli, comandi e limiti in
 [docs/ppo-semafori.md](docs/ppo-semafori.md).
 
+### Repository integrate (`third_party/`)
+
+Tre repository del Piano sono dentro DriveNow come sottomoduli git, fissati a un commit:
+
+| Cartella | Repository | Licenza | Usato da |
+|---|---|---|---|
+| `third_party/ppo-traffic-light` | [MagMueller/Multi-Agent-Distributed-PPO-Traffc-light-control](https://github.com/MagMueller/Multi-Agent-Distributed-PPO-Traffc-light-control) | nessuna dichiarata: solo collegato, non copiato | `tools/ppo_train.py`, `tools/ppo_bench.py` (pesi in `data/ppo/`) |
+| `third_party/flameox` | [morluto/flameox](https://github.com/morluto/flameox) | MIT | profilazione, `tools/sim_profile.py` |
+| `third_party/rea` | [morluto/REA](https://github.com/morluto/REA) | MIT | schede delle app dall'APK, `tools/app_scan.py` |
+
+```bash
+git submodule update --init --depth 1          # scarica le tre repo
+python tools/devtools.py setup ppo flameox rea # ambienti e strumenti in .tools/
+python tools/devtools.py run ppo               # confronto PPO (docs/ppo-semafori.md)
+python tools/devtools.py run flameox           # profilo del simulatore (docs/operational.md)
+```
+
+Il server (`python -m drivenow.server`) non le richiede.
+
 ### Opzioni
 
 | Opzione | Default | Cosa fa |

@@ -47,15 +47,16 @@ confronto.
 
 ## Addestrare il PPO (`tools/ppo_train.py`)
 
-Il repository non dichiara una licenza: il codice non è copiato in DriveNow. Lo script lo
-importa da una copia separata e usa le sue classi (`IntersectionsEnv`, `NN_Model`,
-`PPOWorker`) in un solo processo, senza interfaccia grafica. I pesi vanno fuori dalla repo,
-con un file JSON accanto (parametri, rollout, tempo, commit del repository esterno).
+Il repository è integrato in DriveNow come sottomodulo git, `third_party/ppo-traffic-light`,
+fissato al commit `66786e3`. Non dichiara una licenza, quindi DriveNow non ne copia il codice:
+il sottomodulo è un collegamento al repository originale. Lo script ne usa le classi
+(`IntersectionsEnv`, `NN_Model`, `PPOWorker`) in un solo processo, senza interfaccia grafica.
+I pesi addestrati (4,5 kB) sono in `data/ppo/ppo_2x2.pt`, con `ppo_2x2.json` accanto
+(parametri, rollout, tempo, commit del repository).
 
 ```bash
-pip install -r requirements-ppo.txt
-git clone https://github.com/MagMueller/Multi-Agent-Distributed-PPO-Traffc-light-control ../ppo_ext
-python tools/ppo_train.py --ppo-repo ../ppo_ext --out ../ppo_weights/ppo_2x2.pt --rollouts 200
+python tools/devtools.py setup ppo        # sottomodulo + ambiente con requirements-ppo.txt
+python tools/ppo_train.py --rollouts 200  # riaddestra e sovrascrive data/ppo/ppo_2x2.pt
 ```
 
 Il repository è del 2023: lo script supplisce a due cose cambiate da allora (TraCI tiene le
@@ -66,9 +67,11 @@ i file. Iperparametri del repository (`constants/constants.json`), rete 2×2, 20
 ## Il confronto (`tools/ppo_bench.py`)
 
 ```bash
-python tools/ppo_bench.py --ppo-repo ../ppo_ext --weights ../ppo_weights/ppo_2x2.pt \
-    --seeds 1 2 3 --out docs/benchmarks/ppo-2x2
+python tools/devtools.py run ppo -- --seeds 1 2 3 --out docs/benchmarks/ppo-2x2
 ```
+
+Senza argomenti usa il sottomodulo e i pesi di `data/ppo/`; `--agent random` prova le finestre
+con un agente casuale e richiede solo SUMO.
 
 Stessi veicoli in tutti i casi (punto 9): per ogni seme il file degli arrivi è scritto una
 volta e dato a ogni caso (l'hash è in `docs/benchmarks/ppo-2x2.json`); la quota DriveNow è

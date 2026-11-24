@@ -1,0 +1,13 @@
+[submodule "third_party/ppo-traffic-light"]
+	path = third_party/ppo-traffic-light
+	url = https://github.com/MagMueller/Multi-Agent-Distributed-PPO-Traffc-light-control
+	ignore = untracked
+	shallow = true
+[submodule "third_party/flameox"]
+	path = third_party/flameox
+	url = https://github.com/morluto/flameox
+	shallow = true
+[submodule "third_party/rea"]
+	path = third_party/rea
+	url = https://github.com/morluto/REA
+	shallow = true

@@ -1,0 +1,31 @@
+{
+  "weights": "ppo_2x2.pt",
+  "external_repo": "https://github.com/MagMueller/Multi-Agent-Distributed-PPO-Traffc-light-control",
+  "external_commit": "66786e3f4727e40101c6c95f7623f5ff71d639df",
+  "net": "2_2_intersections.net.xml",
+  "state_size": 7,
+  "action_size": 2,
+  "hidden_layer_size": 32,
+  "rollouts": 200,
+  "rollout_length": 2048,
+  "max_ep_steps": 1250,
+  "generation_ep_steps": 1000,
+  "uniform_generation_probability": 0.06,
+  "ppo": {
+    "gae_tau": 0.85,
+    "entropy_weight": 0.2,
+    "minibatch_size": 256,
+    "optimization_epochs": 5,
+    "ppo_ratio_clip": 0.3,
+    "discount": 0.99,
+    "learning_rate": 0.0001,
+    "clip_grads": true,
+    "gradient_clip": 1.0,
+    "value_loss_coef": 1.0,
+    "hidden_layer_size": 32
+  },
+  "seed": 1,
+  "train_seconds": 1289,
+  "torch": "2.15.0+cu132",
+  "trained_at": "2026-11-23T23:48:05+0000"
+}

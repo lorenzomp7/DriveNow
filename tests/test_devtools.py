@@ -33,3 +33,23 @@ def test_setup_without_names_installs_all_profiles(monkeypatch):
     monkeypatch.setattr(devtools, 'setup', called.append)
     assert devtools.main(['setup']) == 0
     assert called == devtools.NAMES
+
+
+def test_integrated_repositories_are_pinned_submodules():
+    gitmodules = (devtools.ROOT / '.gitmodules').read_text()
+    for path in devtools.SUBMODULES.values():
+        assert f'path = {path}' in gitmodules
+    assert (devtools.ROOT / 'data/ppo/ppo_2x2.pt').is_file()
+    report = devtools.status()
+    assert {'ppo', 'flameox', 'rea'} <= set(report)
+    assert all(report[n]['test_executed'] is False for n in ('ppo', 'flameox', 'rea'))
+
+
+def test_ppo_and_flameox_run_the_drivenow_tools(tmp_path, monkeypatch):
+    monkeypatch.setattr(devtools, 'ROOT', tmp_path)
+    with pytest.raises(RuntimeError, match='setup ppo'):
+        devtools.tool_command('ppo')
+    with pytest.raises(RuntimeError, match='setup flameox'):
+        devtools.tool_command('flameox')
+    with pytest.raises(ValueError):
+        devtools.tool_command('rea')

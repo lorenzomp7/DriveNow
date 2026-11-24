@@ -34,8 +34,13 @@ npm `rea-agents`, verificato su 6.10.1) è un server MCP e una CLI. Per gli APK 
 Apktool già installati sulla macchina e l'`adb` di chi lo usa; tutto gira in locale. Costo:
 0 € (REA, JADX, Apktool, adb sono gratuiti).
 
+REA è integrato come sottomodulo git `third_party/rea` (commit `b1b0bdf`, versione 6.10.1);
+`python tools/devtools.py setup rea` installa in `.tools/` il pacchetto npm della stessa
+versione e Apktool 2.12.1 (controllato con SHA-256), che `tools/app_scan.py` usa da lì.
+
 ```bash
-npm install --global rea-agents          # oppure npx -y rea-agents@latest <comando>
+python tools/devtools.py setup rea
+export PATH="$PWD/.tools/rea/node_modules/.bin:$PWD/.tools/bin:$PATH"
 rea inspect-adb-client                   # adb trovato? (REA_ADB_PATH per sceglierlo)
 rea list-adb-devices
 rea resolve-adb-packages <serial> trafficpilot   # nome del pacchetto
@@ -69,8 +74,7 @@ della scheda. Le prove REA vanno nella cartella indicata, fuori dalla repo; lo s
 APK e prove dentro la repo.
 
 ```bash
-npm install --global rea-agents                     # REA 6.10.1
-# Apktool 2.12 nel PATH: java -jar apktool_2.12.1.jar (github.com/iBotPeaches/Apktool)
+python tools/devtools.py setup rea
 python tools/app_scan.py ../apks/base.apk ../apks/split_config.arm64_v8a.apk --app "trafficpilot" \
     --evidence-dir ../apks/evidence --source "telefono proprio, adb" --out docs/app-analizzate/trafficpilot-apk.md
 ```

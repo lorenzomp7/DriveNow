@@ -4,13 +4,12 @@ The repository (https://github.com/MagMueller/Multi-Agent-Distributed-PPO-Traffc
 is the one Traffc_light_control, and so DriveNow, came from: same ``.net.xml`` grids, same
 SUMO. It declares no licence, so DriveNow does not copy its code: this script imports it
 from a separate checkout (``--ppo-repo``) and drives its own classes (``IntersectionsEnv``,
-``NN_Model``, ``PPOWorker``) in a single process, headless. The weights are written where
-``--out`` says, which must be outside this repository, with a JSON note next to them
-(settings, rollouts, time, the external commit).
+``NN_Model``, ``PPOWorker``) in a single process, headless. The repository is the git
+submodule ``third_party/ppo-traffic-light`` (a pinned link, not a copy); the weights go to
+``data/ppo/`` with a JSON note next to them (settings, rollouts, time, the external commit).
 
-    git clone https://github.com/MagMueller/Multi-Agent-Distributed-PPO-Traffc-light-control ../ppo_ext
-    pip install eclipse-sumo traci torch numpy scipy pandas networkx matplotlib scikit-learn
-    python tools/ppo_train.py --ppo-repo ../ppo_ext --out ../ppo_weights/ppo_2x2.pt --rollouts 150
+    python tools/devtools.py setup ppo        # submodule + environment (requirements-ppo.txt)
+    python tools/ppo_train.py --rollouts 200  # about 20 minutes on 2 CPUs
 
 Not a server dependency: ``python -m drivenow.server`` never imports this.
 """
@@ -26,18 +25,16 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
-
-
-def _inside(path: str, folder: str) -> bool:
-    path, folder = os.path.realpath(path), os.path.realpath(folder)
-    return os.path.commonpath([path, folder]) == folder
+PPO_REPO = os.path.join(REPO, "third_party", "ppo-traffic-light")
+WEIGHTS = os.path.join(REPO, "data", "ppo", "ppo_2x2.pt")
 
 
 def import_external(ppo_repo: str):
     """Put the external checkout on the path; SUMO_HOME from the eclipse-sumo wheel if unset."""
     ppo_repo = os.path.abspath(ppo_repo)
     if not os.path.isfile(os.path.join(ppo_repo, "models", "ppo_model.py")):
-        raise SystemExit(f"{ppo_repo}: not a checkout of Multi-Agent-Distributed-PPO-Traffc-light-control")
+        raise SystemExit(f"{ppo_repo}: not a checkout of Multi-Agent-Distributed-PPO-Traffc-light-control "
+                         "(git submodule update --init third_party/ppo-traffic-light)")
     if "SUMO_HOME" not in os.environ:
         import sumo  # the eclipse-sumo wheel
 
@@ -77,16 +74,14 @@ def external_commit(ppo_repo: str) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--ppo-repo", required=True, help="checkout of the external repository")
-    ap.add_argument("--out", required=True, help="weights file (.pt), outside the DriveNow repository")
+    ap.add_argument("--ppo-repo", default=PPO_REPO, help="checkout of the repository (default: the submodule)")
+    ap.add_argument("--out", default=WEIGHTS, help="weights file (.pt), default data/ppo/ppo_2x2.pt")
     ap.add_argument("--shape", type=int, nargs=2, default=[2, 2], help="grid: 1 1, 2 2, 3 3 or 4 4")
     ap.add_argument("--rollouts", type=int, default=150, help="training rollouts (the repository uses 300)")
     ap.add_argument("--rollout-length", type=int, default=None, help="steps per rollout (repository: 2048)")
     ap.add_argument("--seed", type=int, default=1)
     args = ap.parse_args(argv)
 
-    if _inside(args.out, REPO):
-        raise SystemExit("--out must be outside the DriveNow repository: the weights are not committed")
     ppo_repo = import_external(args.ppo_repo)
     out = os.path.abspath(args.out)
     os.makedirs(os.path.dirname(out), exist_ok=True)

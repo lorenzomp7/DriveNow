@@ -13,8 +13,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 REQUIREMENTS = {'browser':'requirements-ui.txt', 'vibetest':'requirements-vibetest.txt',
                 'darts':'requirements-darts.txt', 'libsignal':'requirements-libsignal.txt',
-                'container':'requirements-container-use.txt'}
-NAMES = [*REQUIREMENTS, 'playwriter', 'skills']
+                'container':'requirements-container-use.txt', 'ppo':'requirements-ppo.txt'}
+NAMES = [*REQUIREMENTS, 'flameox', 'rea', 'playwriter', 'skills']
+# Repositories integrated as git submodules (third_party/): pinned links, not copies.
+SUBMODULES = {'ppo':'third_party/ppo-traffic-light', 'flameox':'third_party/flameox', 'rea':'third_party/rea'}
+APKTOOL = ('https://github.com/iBotPeaches/Apktool/releases/download/v2.12.1/apktool_2.12.1.jar',
+           '66cf4524a4a45a7f56567d08b2c9b6ec237bcdd78cee69fd4a59c8a0243aeafa')
+TOOLS_BIN = ROOT / '.tools/bin'
+REA_BIN = ROOT / '.tools/rea/node_modules/.bin' / ('rea.cmd' if os.name == 'nt' else 'rea')
 LIBSIGNAL_REVISION = '127af9f93902778e556de2eedb2b606c4c9447e6'
 LIBSIGNAL_ROOT = ROOT / '.tools/src/LibSignal'
 
@@ -64,7 +70,39 @@ def execute(command, **kwargs):
     return subprocess.run([str(c) for c in command], cwd=ROOT, check=True, **kwargs)
 
 
+def submodule(name):
+    path = SUBMODULES[name]
+    if not (ROOT / path / '.git').exists():
+        execute(['git','submodule','update','--init','--depth','1',path])
+    return ROOT / path
+
+
+def rea_version():
+    return json.loads((ROOT / SUBMODULES['rea'] / 'package.json').read_text())['version']
+
+
+def install_apktool():
+    import hashlib
+    import urllib.request
+    TOOLS_BIN.mkdir(parents=True, exist_ok=True)
+    jar = TOOLS_BIN / 'apktool.jar'
+    if not jar.is_file():
+        with urllib.request.urlopen(APKTOOL[0]) as response:
+            data = response.read()
+        if hashlib.sha256(data).hexdigest() != APKTOOL[1]:
+            raise RuntimeError('Apktool download does not match its pinned SHA-256')
+        jar.write_bytes(data)
+    if os.name == 'nt':
+        (TOOLS_BIN / 'apktool.bat').write_text(f'@java -jar "{jar}" %*\r\n')
+    else:
+        wrapper = TOOLS_BIN / 'apktool'
+        wrapper.write_text(f'#!/bin/sh\nexec java -jar "{jar}" "$@"\n')
+        wrapper.chmod(0o755)
+
+
 def setup(name):
+    if name in SUBMODULES:
+        submodule(name)
     if name in REQUIREMENTS:
         python = python_for(name)
         if not python.is_file():
@@ -80,6 +118,17 @@ def setup(name):
         execute(['npm.cmd' if os.name == 'nt' else 'npm','ci','--prefix','tools/playwriter','--no-audit','--no-fund'])
     if name == 'container':
         execute([sys.executable,'tools/container_use.py','install'])
+    if name == 'flameox':
+        python = python_for(name)
+        if not python.is_file():
+            venv.EnvBuilder(with_pip=True).create(python.parent.parent)
+        execute([python,'-m','pip','install','-e',f"{SUBMODULES['flameox']}[cpu]"])
+    if name == 'rea':
+        if not shutil.which('node') or not shutil.which('npm') or not shutil.which('java'):
+            raise RuntimeError('Install Node 22+, npm and Java 17+ before REA setup')
+        execute(['npm.cmd' if os.name == 'nt' else 'npm','install','--prefix','.tools/rea','--no-audit','--no-fund',
+                 f'rea-agents@{rea_version()}'])
+        install_apktool()
     if name == 'libsignal':
         if not LIBSIGNAL_ROOT.exists():
             LIBSIGNAL_ROOT.parent.mkdir(parents=True, exist_ok=True)
@@ -111,10 +160,13 @@ def tool_command(name, extra=()):
         'libsignal':[python,'tools/libsignal_smoke.py','--libsignal-root',LIBSIGNAL_ROOT,'--steps','900','--learn-signals'],
         'container':[python,'tools/container_use_smoke.py'],
         'playwriter':[sys.executable,'tools/playwriter_check.py'],
+        'ppo':[python,'tools/ppo_bench.py'],
+        'flameox':[python.parent / ('flameox.exe' if os.name == 'nt' else 'flameox'),'capture','--provider','py-spy',
+                   '--operation','rank_cpu_hotspots','--cwd',ROOT,'--',sys.executable,'tools/sim_profile.py','sim'],
     }
     if name not in commands:
         raise ValueError('This tool provides instructions, not an executable test')
-    if name in REQUIREMENTS and not python.is_file():
+    if (name in REQUIREMENTS or name == 'flameox') and not python.is_file():
         raise RuntimeError(f'Run python tools/devtools.py setup {name} first')
     return [*commands[name], *extra]
 
@@ -122,11 +174,15 @@ def tool_command(name, extra=()):
 def status():
     result = {}
     for name in NAMES:
-        installed = python_for(name).is_file() if name in REQUIREMENTS else (
-            (ROOT / 'tools/playwriter/node_modules/playwriter/bin.js').is_file() if name == 'playwriter' else True)
+        installed = python_for(name).is_file() if name in REQUIREMENTS or name == 'flameox' else (
+            (ROOT / 'tools/playwriter/node_modules/playwriter/bin.js').is_file() if name == 'playwriter' else
+            REA_BIN.is_file() and (TOOLS_BIN / 'apktool.jar').is_file() if name == 'rea' else True)
+        if name in SUBMODULES:
+            installed = installed and (ROOT / SUBMODULES[name] / '.git').exists()
         if installed and name in REQUIREMENTS:
             modules = {'browser':['playwright'], 'vibetest':['vibetest','browser_use'],
-                       'darts':['darts'], 'libsignal':['traci','sumo','libsumo'], 'container':['mcp']}[name]
+                       'darts':['darts'], 'libsignal':['traci','sumo','libsumo'], 'container':['mcp'],
+                       'ppo':['torch','traci','sumo']}[name]
             probe = 'import importlib.util,sys; sys.exit(not all(importlib.util.find_spec(m) for m in ' + repr(modules) + '))'
             installed = subprocess.run([str(python_for(name)),'-c',probe], stdout=subprocess.DEVNULL,
                                        stderr=subprocess.DEVNULL, timeout=30).returncode == 0

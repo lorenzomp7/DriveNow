@@ -99,10 +99,13 @@ viaggi, fermate, energia nei freni e tempo dei due gruppi), da confrontare prima
 un'ottimizzazione con lo stesso seme.
 
 [flameox](https://github.com/morluto/flameox) (MIT, 0.2.9) coordina i profiler e restituisce
-le funzioni più costose con la loro copertura. Non è una dipendenza del server.
+le funzioni più costose con la loro copertura. È integrato come sottomodulo git
+`third_party/flameox` (commit `c7ea167`) e si installa da lì in un ambiente suo; non è una
+dipendenza del server.
 
 ```bash
-pip install "flameox[cpu]==0.2.9"        # flameox + py-spy (Python 3.12 o più recente)
+python tools/devtools.py setup flameox   # flameox[cpu] dal sottomodulo + py-spy (Python 3.12+)
+python tools/devtools.py run flameox -- --seconds 900   # simulatore interno, come sotto
 flameox capture --provider py-spy --operation rank_cpu_hotspots --cwd "$PWD" \
     -- python tools/sim_profile.py sim --seconds 900
 flameox capture --provider py-spy --operation rank_cpu_hotspots --cwd "$PWD" \

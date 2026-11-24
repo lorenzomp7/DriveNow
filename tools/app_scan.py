@@ -11,7 +11,7 @@ search-android-classes`` once JADX is configured for REA.
 
 The APK and REA's evidence stay outside the repository; only the Markdown goes in.
 
-    npm install --global rea-agents          # REA 6.10.1; Apktool 2.12 on PATH (java -jar apktool.jar)
+    python tools/devtools.py setup rea       # REA at the submodule's version (third_party/rea) + Apktool
     python tools/app_scan.py ../apks/base.apk --app "Organic Maps" \
         --evidence-dir ../apks/evidence --out docs/app-analizzate/organic-maps-apk.md
 
@@ -34,6 +34,8 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+TOOLS_BIN = os.path.join(REPO, ".tools", "bin")
+LOCAL_REA = os.path.join(REPO, ".tools", "rea", "node_modules", ".bin", "rea.cmd" if os.name == "nt" else "rea")
 A = "{http://schemas.android.com/apk/res/android}"
 
 LOCATION_PERMS = ("ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "ACCESS_BACKGROUND_LOCATION",
@@ -69,11 +71,23 @@ def _inside(path: str, folder: str) -> bool:
     return os.path.commonpath([path, folder]) == folder
 
 
-def run_rea(args: List[str], rea: str = "rea") -> dict:
-    exe = shutil.which(rea)
+def default_rea() -> str:
+    """REA installed by ``devtools.py setup rea`` (the submodule's version), else one on PATH."""
+    return LOCAL_REA if os.path.isfile(LOCAL_REA) else "rea"
+
+
+def tool_env() -> dict:
+    env = dict(os.environ)
+    if os.path.isdir(TOOLS_BIN):   # Apktool installed by devtools.py setup rea
+        env["PATH"] = TOOLS_BIN + os.pathsep + env.get("PATH", "")
+    return env
+
+
+def run_rea(args: List[str], rea: Optional[str] = None) -> dict:
+    exe = shutil.which(rea or default_rea())
     if exe is None:
-        raise SystemExit("rea not found: npm install --global rea-agents")
-    proc = subprocess.run([exe] + args + ["--json"], capture_output=True, text=True)
+        raise SystemExit("rea not found: python tools/devtools.py setup rea")
+    proc = subprocess.run([exe] + args + ["--json"], capture_output=True, text=True, env=tool_env())
     try:
         out = json.loads(proc.stdout)
     except json.JSONDecodeError:
@@ -243,7 +257,7 @@ def main(argv=None) -> int:
     ap.add_argument("--out", help="Markdown sheet to write (default: print)")
     ap.add_argument("--source", default="APK fornito dall'utente",
                     help="where the APK comes from (own phone via adb, publisher download)")
-    ap.add_argument("--rea", default="rea")
+    ap.add_argument("--rea", default=None, help="REA executable (default: .tools/rea, then PATH)")
     args = ap.parse_args(argv)
 
     for p in list(args.apks) + [args.evidence_dir]:
@@ -264,7 +278,7 @@ def main(argv=None) -> int:
     if signature:
         with open(os.path.join(args.evidence_dir, f"{stamp}.signature.json"), "w") as f:
             json.dump(signature, f)
-    rea_version = subprocess.run([shutil.which(args.rea), "--version"], capture_output=True,
+    rea_version = subprocess.run([shutil.which(args.rea or default_rea()), "--version"], capture_output=True,
                                  text=True).stdout.strip().splitlines()[-1]
     apktool = decode["normalized_result"]["client"].get("apktool_version", "?")
     text = sheet(args.app, decode, signature, [os.path.abspath(p) for p in args.apks], rea_version, apktool,

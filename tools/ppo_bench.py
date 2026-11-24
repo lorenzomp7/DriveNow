@@ -21,12 +21,13 @@ Each run counts ``false_green_s``: seconds a light was not green inside a certai
 handed to the advice (must be 0), and reports stops, brake energy and travel time of the
 trips completed after the warm-up.
 
-    python tools/ppo_bench.py --ppo-repo ../ppo_ext --weights ../ppo_weights/ppo_2x2.pt \
-        --seeds 1 2 3 --out docs/benchmarks/ppo-2x2
+    python tools/devtools.py setup ppo
+    python tools/ppo_bench.py --seeds 1 2 3 --out docs/benchmarks/ppo-2x2
 
-Needs SUMO and TraCI; with ``--weights`` also PyTorch and the external checkout. Without
-``--weights`` the agent is ``random`` (switches with probability 0.1 at each allowed
-decision): a check of the windows, not of the PPO. Not a server dependency.
+By default the agent is the PPO of the submodule ``third_party/ppo-traffic-light`` with the
+weights in ``data/ppo/ppo_2x2.pt``; needs SUMO, TraCI and PyTorch (requirements-ppo.txt).
+``--agent random`` switches with probability 0.1 at each allowed decision instead: a check of
+the windows, not of the PPO, that needs only SUMO. Not a server dependency.
 """
 
 from __future__ import annotations
@@ -319,8 +320,11 @@ def markdown(summary: Sequence[Dict], meta: Dict) -> str:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--net", default=os.path.join(NET_DIR, "2_2_intersections.net.xml"))
-    ap.add_argument("--ppo-repo", help="checkout of the external repository (with --weights)")
-    ap.add_argument("--weights", help="weights from tools/ppo_train.py; without: a random agent")
+    ap.add_argument("--agent", choices=["ppo", "random"], default="ppo")
+    ap.add_argument("--ppo-repo", default=os.path.join(REPO, "third_party", "ppo-traffic-light"),
+                    help="checkout of the PPO repository (default: the submodule)")
+    ap.add_argument("--weights", default=os.path.join(REPO, "data", "ppo", "ppo_2x2.pt"),
+                    help="weights from tools/ppo_train.py (default: data/ppo/ppo_2x2.pt)")
     ap.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3])
     # The repository spawns a car at each entry with probability 0.06 a second (216 an hour)
     # for 1000 s and ends its episodes at 1250 s; its agent sees the time normalised to that.
@@ -333,9 +337,9 @@ def main(argv=None) -> int:
     ap.add_argument("--out", help="write OUT.csv, OUT.json and OUT.md")
     args = ap.parse_args(argv)
 
-    if args.weights:
-        if not args.ppo_repo:
-            raise SystemExit("--weights needs --ppo-repo")
+    if args.agent == "ppo":
+        if not os.path.isfile(args.weights):
+            raise SystemExit(f"{args.weights}: no weights; train them with tools/ppo_train.py or use --agent random")
         weights = os.path.abspath(args.weights)
         factory = lambda seed: PPOPolicy(args.ppo_repo, weights, seed)  # noqa: E731
         note = os.path.splitext(weights)[0] + ".json"
