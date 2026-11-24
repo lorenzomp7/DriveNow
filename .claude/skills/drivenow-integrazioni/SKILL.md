@@ -51,8 +51,11 @@ conclusi (AGENTS.md); dopo un'ottimizzazione l'impronta `results.sha256` deve re
 4. Mai copiare in DriveNow APK, codice decompilato o risorse dell'app.
 
 Per leggere il codice (da dove arrivano i dati dei semafori, quando parla) REA vuole JADX e
-il ponte `jadx-headless-mcp` (`REA_JADX_MCP_JAR`): è un file di terzi, chiedi all'utente il
-permesso prima di scaricarlo e verificane lo SHA-256 indicato da REA.
+il ponte `jadx-headless-mcp` (`REA_JADX_MCP_JAR`). L'utente ha chiesto REA utilizzabile dalla
+chat in tutte le repo: `.claude/rea/installa.sh` scarica il JAR 0.7.1 con lo SHA-256 indicato da
+REA (nel cloud all'avvio della sessione) e il server MCP `rea` di `.mcp.json` ha già gli
+strumenti `inspect_android_class`, `inspect_android_method` e `trace_android_references`:
+vedi la skill `rea`.
 
 ## Chiusura
 
