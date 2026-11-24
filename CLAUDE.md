@@ -16,6 +16,7 @@ AGENTS.md (importato sopra) vale per tutti gli agenti; qui solo ciò che riguard
 ### Ambiente (sessioni cloud)
 
 - All'avvio di ogni sessione cloud `.claude/hooks/session_start.sh` verifica pytest (i test usano solo la libreria standard). Il messaggio iniziale della sessione riporta l'esito.
+- Lo stesso hook prepara in background sottomoduli e strumenti delle repo integrate (`third_party/`): prima di usarli `bash .claude/hooks/wait_setup.sh integrazioni`.
 - Se qualcosa manca, i dettagli sono in `.claude/hooks/.state/session-setup.log`; per ripetere la preparazione: `CLAUDE_SETUP_FORCE=1 bash .claude/hooks/session_start.sh`.
 
 ### Hook automatici (`.claude/settings.json`)
@@ -27,6 +28,7 @@ AGENTS.md (importato sopra) vale per tutti gli agenti; qui solo ciò che riguard
 ### Skill
 
 - Le 7 procedure di `addyosmani/agent-skills` sono in `.agents/skills/` e collegate in `.claude/skills/`: Claude Code le trova da solo. Usa quella indicata dalla tabella in AGENTS.md.
+- `.claude/skills/drivenow-integrazioni/` dice come usare per l'utente le repo integrate in `third_party/` (PPO, flameox, REA): esegui tu i comandi, l'utente vuole fare tutto da chat.
 
 ### Server MCP
 
