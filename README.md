@@ -1133,6 +1133,129 @@ non avevano un'altra strada.
 
 Risultati per condizione: `data/hamburg/willy-brandt/road_events_results_2026-11-23.json`.
 
+### Altri dati aperti di Amburgo: volumi, limiti ufficiali, strisce pedonali, stato del traffico
+
+Quattro dataset della città (Behörde für Verkehr und Mobilitätswende, servizi WFS su
+`geodienste.hamburg.de`, licenza [DL-DE BY 2.0](https://www.govdata.de/dl-de/by-2-0)):
+
+| Dataset | Cosa contiene | Uso qui | Lettore |
+|---|---|---|---|
+| Verkehrsmengen 2019 (DTV) | veicoli al giorno per tratto di strada principale, i due sensi insieme | traffico tarato (`routes_dtv.rou.xml`) | `drivenow/sources/hamburg_volumes.py` |
+| Zulässige Höchstgeschwindigkeiten | limite per tratto e senso, con le regole a orario ("Mo-Fr 6-19 h, sonst 50") | limiti ufficiali in simulazione | `drivenow/sources/hamburg_speed_limits.py` |
+| Fußgängerüberwege | strisce pedonali (punti) | regola prudente nel consiglio | `drivenow/sources/hamburg_crossings.py` |
+| Verkehrslage | classe di scorrimento ogni 5 minuti, solo dal vivo | controllo delle velocità simulate | `drivenow/sources/hamburg_traffic.py` |
+
+Le prime tre si leggono con `python tools/hamburg_public_data.py` e si salvano in
+`data/hamburg/<scenario>/public_data.json` (risposte grezze più l'ora di lettura). Il traffico
+tarato si costruisce con `python tools/hamburg_build.py --scenario ... --demand dtv`.
+
+**Cosa cambia nelle simulazioni** (opzioni di `tools/hamburg_experiment.py`; senza opzioni
+tutto resta come prima):
+
+- **`--demand dtv`, traffico tarato.**
+  - Sull'asse principale ogni tratto con un volume ufficiale riceve DTV × 9% ÷ 2 auto nell'ora,
+    per senso. Il 9% come quota dell'ora di punta e la divisione a metà tra i sensi sono
+    ipotesi, scritte in `scenario.json`.
+  - I volumi sono del 2019, i semafori del 2023.
+  - Le strade laterali tengono il traffico di prima, perché non hanno conteggi aperti.
+  - Willy-Brandt-Straße: 372 tratti con volume, 49.037 viaggi caricati nell'ora (prima 4.103).
+    Gärtnerstraße: 48 tratti, 9.780 viaggi (prima 1.507).
+  - Il flusso ottenuto rispetto all'obiettivo, per tratto: mediana 0,92 a Willy-Brandt-Straße,
+    0,98 a Gärtnerstraße.
+- **`--official-limits`, limiti ufficiali.** All'ora registrata (giovedì, dalle 17:00) il
+  limite della città sostituisce quello di OpenStreetMap, sia per il consiglio sia per le auto
+  in SUMO.
+  - Differiscono 38 tratti su 830 a Willy-Brandt-Straße: 16 da 50 a 30, 15 da 50 a 20 e 2 da
+    100 a 50.
+  - A Gärtnerstraße ne differiscono 4 su 105.
+- **`--crossings`, strisce pedonali.**
+  - Nei 30 m prima delle strisce il consiglio non chiede mai di accelerare: "accelera" diventa
+    "mantieni" (`hold:crossing`). Il pannello le mostra come prossimo controllo.
+  - Il limite di velocità non cambia.
+  - Le reti SUMO non hanno pedoni, quindi cambia solo il consiglio, non la sicurezza misurata.
+  - Le strisce cadono su 42 tratti a Willy-Brandt-Straße e su 5 a Gärtnerstraße.
+
+**Risultati.**
+- **Impostazione:**
+  - 36 esecuzioni: 2 reti, 6 condizioni, 3 seed (1, 2, 3).
+  - Ogni esecuzione dura 60 minuti, con 10 di riscaldamento.
+  - Semafori registrati, previsione "predict", penetrazione di DriveNow 0,5.
+- **Cosa contano le colonne:**
+  - "Viaggi contati" sono i viaggi completati dopo il riscaldamento, il minimo e il massimo tra
+    i seed. Con DriveNow contano solo le auto DriveNow.
+  - Tempo e frenata sono medie per viaggio, ± la deviazione standard tra i seed.
+  - "Velocità sulle principali" è la mediana, tra i tratti principali, della velocità media
+    divisa per il limite.
+
+Gärtnerstraße:
+
+| Condizione | Seed | Viaggi contati | Tempo (s) | Fermate | Frenata (kJ) | Altre auto: tempo (s) / frenata (kJ) | In rete alla fine | Velocità sulle principali (mediana, % del limite) |
+|---|---|---|---|---|---|---|---|---|
+| senza DriveNow, traffico ipotizzato | 3 | 927–951 | 175,6 ± 4,0 | 1,08 | 146 ± 2 | — | 293 | 76% |
+| DriveNow, traffico ipotizzato | 3 | 430–482 | 181,6 ± 14,1 | 1,02 | 88 ± 1 | 177,6 ± 12,9 / 145 | 300 | 78% |
+| senza DriveNow, traffico tarato | 3 | 4.569–4.623 | 121,6 ± 4,2 | 1,20 | 117 ± 2 | — | 556 | 55% |
+| DriveNow, traffico tarato | 3 | 2.187–2.236 | 156,8 ± 0,9 | 1,48 | 51 ± 0 | 147,6 ± 1,9 / 100 | 657 | 51% |
+| senza DriveNow, tarato + limiti + strisce | 3 | 4.448–4.628 | 123,6 ± 2,4 | 1,19 | 116 ± 1 | — | 587 | 51% |
+| DriveNow, tarato + limiti + strisce | 3 | 2.142–2.195 | 160,6 ± 12,8 | 1,45 | 50 ± 3 | 154,3 ± 6,1 / 98 | 637 | 54% |
+
+Willy-Brandt-Straße:
+
+| Condizione | Seed | Viaggi contati | Tempo (s) | Fermate | Frenata (kJ) | Altre auto: tempo (s) / frenata (kJ) | In rete alla fine | Velocità sulle principali (mediana, % del limite) |
+|---|---|---|---|---|---|---|---|---|
+| senza DriveNow, traffico ipotizzato | 3 | 2.395–2.442 | 328,2 ± 7,3 | 3,43 | 376 ± 5 | — | 739 | 87% |
+| DriveNow, traffico ipotizzato | 3 | 1.014–1.092 | 356,1 ± 10,2 | 2,97 | 222 ± 3 | 339,3 ± 15,6 / 338 | 930 | 73% |
+| senza DriveNow, traffico tarato | 3 | 19.752–19.876 | 142,8 ± 6,3 | 0,85 | 50 ± 1 | — | 4.343 | 11% |
+| DriveNow, traffico tarato | 3 | 8.477–8.683 | 135,5 ± 9,8 | 0,72 | 25 ± 0 | 133,8 ± 13,0 / 38 | 4.571 | 8% |
+| senza DriveNow, tarato + limiti + strisce | 3 | 19.100–19.648 | 133,6 ± 6,9 | 0,77 | 48 ± 1 | — | 4.367 | 10% |
+| DriveNow, tarato + limiti + strisce | 3 | 8.487–8.849 | 127,8 ± 11,4 | 0,70 | 25 ± 1 | 129,5 ± 9,9 / 40 | 4.601 | 8% |
+
+**Cosa mostrano** (media ± deviazione standard su 3 seed; non è una prova definitiva):
+- **DriveNow frena molto meno**, in ogni condizione. A Gärtnerstraße 88 kJ per viaggio contro 146
+  senza DriveNow (traffico ipotizzato) e 51 contro 117 (traffico tarato). A Willy-Brandt-Straße 222
+  contro 376 e 25 contro 50. Frena meno anche delle altre auto nella stessa esecuzione.
+- **Il tempo di DriveNow è un po' più lungo** di quello delle altre auto nella stessa esecuzione:
+  +5% a Willy-Brandt-Straße con il traffico ipotizzato (356,1 contro 339,3 s) e +6% a Gärtnerstraße
+  con quello tarato (156,8 contro 147,6 s). Negli altri casi la differenza sta dentro la dispersione
+  tra i seed.
+- **Nel traffico denso DriveNow rallenta anche gli altri.** A Gärtnerstraße con il traffico tarato,
+  quando metà delle auto usa DriveNow, le altre impiegano 147,6 s contro 121,6 s senza DriveNow
+  (+21%), e alla fine restano in rete 657 auto invece di 556. Con il traffico ipotizzato questo
+  effetto non si vede.
+- **Willy-Brandt-Straße con il traffico tarato si blocca**: sulle principali la velocità mediana è
+  l'8–11% del limite e alla fine restano in rete circa 4.300–4.600 auto. I tempi contano solo i
+  viaggi che riescono a finire, quindi in quella condizione i numeri dicono poco.
+- **Limiti ufficiali e strisce pedonali** cambiano i risultati meno della dispersione tra i seed
+  (per esempio a Gärtnerstraße senza DriveNow 121,6 ± 4,2 s contro 123,6 ± 2,4 s).
+- **Le due varianti di traffico non si confrontano sul tempo**: i viaggi sono diversi (con quello tarato
+  sono molti di più e su percorsi diversi). Si confronta solo dentro la stessa variante.
+
+**Confronto con lo stato del traffico (Verkehrslage).**
+- **Come funziona:** `python tools/hamburg_verkehrslage_check.py --read` legge lo stato dal
+  vivo. Poi `--compare FILE` mette ogni tratto principale in una classe in due modi e conta
+  quanto spesso coincidono:
+  - in base alla lettura;
+  - in base alla simulazione, cioè la velocità media sul limite, assegnata alla classe di
+    `SPEED_SHARE` più vicina. Quelle quote (fliessend 1,0, dicht 0,7, zäh 0,4, stockend 0,15)
+    sono ipotesi.
+- **Lettura disponibile ora:** martedì 24 novembre 2026, 00:19 ora di Amburgo (notte).
+  - Willy-Brandt-Straße: 538 tratti scorrevoli e 26 densi su 564.
+  - Gärtnerstraße: 87 scorrevoli e 2 densi su 89.
+- **Risultato:** su 59 e 39 tratti principali la simulazione è sempre uguale o più lenta della
+  notte. Con il traffico ipotizzato coincide nel 44–53% dei tratti, con quello tarato nel 5–23%.
+- **Perché non è un confronto valido:** la notte non si confronta con le 17:00, quindi questo
+  dice solo che il controllo funziona. Il confronto vero richiede una lettura in un giorno
+  feriale vicino alle 17:00. La lettura salvata è in `data/hamburg/<scenario>/verkehrslage.json`.
+
+**Limiti:**
+- **Anni diversi:** volumi del 2019, semafori e traffico laterale del 2023, limiti e strisce di
+  oggi.
+- **Ora di punta ipotizzata:** la quota del 9% è un'ipotesi. Con questa quota Willy-Brandt-Straße
+  si blocca nella simulazione; nella realtà forse no, perché la rete simulata ha meno
+  alternative e nessun ingresso graduale prima delle 17:00.
+- **Niente pedoni:** la regola delle strisce non si può valutare per la sicurezza.
+
+Risultati per condizione: `data/hamburg/open_data_results_2026-11-24.json` (con l'impostazione delle esecuzioni).
+
 ### Cantieri USA (WZDx) in simulazione
 
 I cantieri dei feed WZDx sono negli Stati Uniti, quindi le prove girano su reti americane
