@@ -69,6 +69,18 @@ in SUMO il ciclo fisso del `CycleRuleSet` della repository (20 s di verde per
 direzione più 3 s di giallo), così la previsione e ciò che fa SUMO sono la
 stessa cosa. Un test lo verifica confrontando ogni passo.
 
+### Semafori comandati dall'agente PPO
+
+Con `tools/ppo_bench.py` i semafori della griglia 2×2 li comanda davvero l'agente PPO del
+repository da cui viene Traffc_light_control (addestrato con `tools/ppo_train.py`, pesi fuori
+dalla repo), e il consiglio riceve solo le finestre a cui l'agente è impegnato
+(`drivenow/committed.py`: verde minimo, prossima decisione, giallo, verde massimo).
+Sugli stessi veicoli, tre semi: nessun verde promesso falso; con il piano noto il consiglio
+toglie il 90 % delle fermate, con l'agente le fermate non calano ma l'energia nei freni sì
+(12-31 %); usare solo le finestre certe con un agente che ha un verde minimo costa il 9 % di
+tempo, certe + probabili no. Dettagli, comandi e limiti in
+[docs/ppo-semafori.md](docs/ppo-semafori.md).
+
 ### Opzioni
 
 | Opzione | Default | Cosa fa |
@@ -1519,6 +1531,7 @@ fonti:
 drivenow/
   glosa.py        calcolo: tempi d'arrivo, fasce, consiglio (nessuna dipendenza)
   signals.py      piani semaforici a tempo fisso e finestre di verde
+  committed.py    finestre di verde certe e probabili di un semaforo comandato da un agente
   network.py      rete: città demo e caricatore .net.xml di SUMO
   advisor.py      unisce rete, traffico e calcolo: consiglio per veicolo e campo per la mappa
   simulation.py   simulatore interno (IDM, semafori, rotonda, precedenza)
@@ -1547,7 +1560,9 @@ data/wzdx/        tre scenari intorno a cantieri USA reali (rete OSM, traffico i
 data/traffic_sources.json  catalogo delle fonti di dati di traffico trovate (153 in 25 paesi)
 tools/            costruzione degli scenari di Amburgo e dei cantieri USA (wzdx_build.py), esperimenti (anche sensori e meteo:
                   perception_experiment.py), accuratezza delle previsioni imparate dalle
-                  auto, registrazione delle pagine
+                  auto, registrazione delle pagine, agente PPO (ppo_train.py, ppo_bench.py),
+                  carichi fissi per misurare i tempi (sim_profile.py)
+docs/app-analizzate/  schede sulle app di riferimento (fonti dei dati semaforici, annunci, Android Auto)
 tests/            pytest (i test SUMO si saltano se SUMO non è installato)
 ```
 

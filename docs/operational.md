@@ -90,6 +90,68 @@ Darts è operativo nel confronto offline. Il modello provato non viene promosso
 al motore online perché produce più falsi verdi nel campione misurato. Una
 libreria installata non implica un miglioramento matematico dimostrato.
 
+## Prestazioni della simulazione (flameox)
+
+Quanti casi e semi si possono confrontare (Piano, punti 9, 24 e 25) dipende dal tempo di
+calcolo per secondo simulato. `tools/sim_profile.py` ha tre carichi fissi; ognuno stampa una
+riga JSON con tempo reale, tempo simulato e un'impronta dei risultati (`results.sha256`:
+viaggi, fermate, energia nei freni e tempo dei due gruppi), da confrontare prima e dopo
+un'ottimizzazione con lo stesso seme.
+
+[flameox](https://github.com/morluto/flameox) (MIT, 0.2.9) coordina i profiler e restituisce
+le funzioni più costose con la loro copertura. Non è una dipendenza del server.
+
+```bash
+pip install "flameox[cpu]==0.2.9"        # flameox + py-spy (Python 3.12 o più recente)
+flameox capture --provider py-spy --operation rank_cpu_hotspots --cwd "$PWD" \
+    -- python tools/sim_profile.py sim --seconds 900
+flameox capture --provider py-spy --operation rank_cpu_hotspots --cwd "$PWD" \
+    -- python tools/sim_profile.py server --speed 10 --wall 30
+flameox capture --provider py-spy --operation rank_cpu_hotspots --cwd "$PWD" \
+    -- python tools/sim_profile.py sumo --seconds 900
+```
+
+Gli stessi strumenti sono raggiungibili da un client MCP con `npx flameox@latest setup`
+(`capture_and_rank_cpu_hotspots`, `inspect_cpu_callers`).
+
+Misura del 2026-11-24, sessione cloud a 2 CPU x86_64, Python 3.13, SUMO dal pacchetto
+`eclipse-sumo`, seme 1, domanda 240 veicoli/h per ingresso, quota DriveNow 50 %, passo 0,2 s.
+Tempi senza profiler, tre ripetizioni:
+
+| Carico | Secondi simulati | Tempo reale | Per secondo simulato | Impronta |
+|---|---|---|---|---|
+| Simulatore interno, città demo | 900 | 6,1-6,5 s | 6,8-7,2 ms | `462d1f821b7936e0` (uguale nelle tre) |
+| SUMO, griglia 2×2 (parte Python + SUMO) | 900 | 14,3-15,3 s | 15,9-16,9 ms | `d26faae8c81526a3` (uguale nelle tre) |
+| Server a velocità 10, senza HTTP | 299,8 in 30 s | – | tiene 9,98× | – |
+
+Il server tiene anche la velocità massima che accetta (20×: 19,94× misurata). Le corse di
+`tools/ppo_bench.py` (1250 s simulati in SUMO) durano 10-12 s con il ciclo fisso senza
+consiglio, 22-25 s con il consiglio e 28-38 s con i semafori del PPO e il consiglio, quindi
+3 semi × 8 casi stanno in circa 10 minuti.
+
+Funzioni con più tempo proprio (campioni py-spy a 100 Hz; flameox restituisce le 100 righe
+più costose, che coprono il 71 % dei campioni nel simulatore interno e l'81 % in SUMO):
+
+| Simulatore interno | % | SUMO | % |
+|---|---|---|---|
+| `glosa.arrival_time` | 11,7 | TraCI `_recvExact` (attesa risposte) | 26,2 |
+| `SignalPlan.green_windows` | 9,9 | TraCI `_sendExact` | 8,5 |
+| `Advisor.controls_ahead` | 9,6 | TraCI `Storage.read` | 7,5 |
+| `Simulation._acceleration` | 4,4 | `glosa.arrival_time` | 7,3 |
+| `Simulation.step` | 4,0 | `Advisor.controls_ahead` | 2,6 |
+| `SignalPlan._locate` + `cycle` | 4,9 | `SignalPlan.green_windows` | 2,5 |
+
+Nel server a velocità 10 metà dei campioni sono attese (`time.sleep` nel ciclo del Runner e
+nel carico); il resto è la stessa catena del simulatore interno.
+
+Cosa dice: nel simulatore interno quasi un terzo del tempo è il calcolo del consiglio
+(`arrival_time`, finestre di verde, controlli lungo il percorso), che si ripete ogni 0,6 s per
+ogni auto; finestre di verde e cicli si potrebbero tenere in cache per semaforo e istante. In
+SUMO quasi metà del tempo è nella comunicazione TraCI (un comando per auto e passo):
+`libsumo` al posto di TraCI, o meno chiamate per passo, è la prima cosa da provare. Dopo
+un'ottimizzazione: stessi comandi, stessa impronta (risultati uguali), tempo nuovo in questa
+tabella.
+
 ## Verifiche automatiche
 
 Il workflow **Operational toolchain** installa ed esegue ogni profilo con gli

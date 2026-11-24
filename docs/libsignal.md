@@ -62,6 +62,13 @@ Il chiamante deve mantenere la previsione coerente con le successive azioni
 semaforiche: il solo colore attuale o l'XML non bastano per un agente adattivo.
 Questa integrazione non aggiunge un previsore di azioni RL.
 
+Per un agente che rispetta regole note (verde minimo, intervallo di decisione, giallo, verde
+massimo) le finestre certe si ricavano dallo stato presente con
+`drivenow.committed.CommittedSignalSource(world.eng, rete, AgentTiming(...), mode="certain")`,
+che rispetta questo contratto; `mode="committed"` aggiunge le finestre probabili segnate non
+certe. Funziona con programmi a due verdi (verde, giallo, verde, giallo) come le griglie di
+`data/sumo/`; misure e limiti in [ppo-semafori.md](ppo-semafori.md).
+
 ## Verifica ripetibile con LibSignal reale
 
 Da DriveNow, con Python 3.12, creare un ambiente separato:
